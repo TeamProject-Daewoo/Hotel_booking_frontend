@@ -1,47 +1,35 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import Footer from './components/Footer.vue';
+import Header from './components/Header.vue';
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <div class="container">
+    <header class="header-container">
+      <Header/>
+    </header>
+    <main class="main-container">
+      <router-view/>
+    </main>
+    <footer class="footer-container">
+      <Footer/>
+    </footer>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
+.container {
+  text-align: center;
 }
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+.header-container {
+    height: 100px;
+    background-color: rgb(255, 255, 130);
 }
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.main-container {
+    background-color: rgb(189, 255, 244);
+}
+.footer-container {
+    height: 100px;
+    background-color: rgb(219, 255, 165);
 }
 </style>
