@@ -1,24 +1,29 @@
 <template>
     <div class="search-form-container">
         <div class="search-container">
-            <InputForm/>
+            <InputForm @search-trigger="setResponse"/>
         </div>
         <div class="view-container">
             <div class="filter-container">
                 <FilterForm/>
             </div>
             <div class="result-container">
-                <ResultForm/>
+                <ResultForm :response="response"/>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import FilterForm from './FilterForm.vue';
 import InputForm from './InputForm.vue';
 import ResultForm from './ResultForm.vue';
 
+const response = ref(null);
+const setResponse = (data) => {
+    response.value = data;
+}
 </script>
 
 <style scoped>

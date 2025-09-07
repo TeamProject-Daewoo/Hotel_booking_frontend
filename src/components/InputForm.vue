@@ -86,6 +86,16 @@ const tempGuestCount = ref(1);
 const roomCount = ref(1);
 const guestCount = ref(1);
 
+const emit = defineEmits(['search-trigger']);
+const search = () => {
+    //백엔드 호출
+    const response = [
+        {'contentid':'143017', 'title':'가보호텔', 'image':'http://tong.visitkorea.or.kr/cms/resource/83/1942883_image2_1.jpg', 'price':'240000', 'address':'경기도 평택시 평택5로76번길 18-10', 'rating':'4.5', 'totalAminities':'20', 'totalReviews':'371'},
+        {'contentid':'1865597', 'title':'가람초연재', 'image':'http://tong.visitkorea.or.kr/cms/resource/48/2993048_image2_1.jpg', 'price':'145000', 'address':'경상북도 안동시 풍천면 하회종가길 76-6', 'rating':'4.3', 'totalAminities':'10', 'totalReviews':'140'},
+        {'contentid':'1896032', 'title':'가름게스트하우스', 'image':'http://tong.visitkorea.or.kr/cms/resource/88/3516088_image2_1.JPG', 'price':'183000', 'address':'제주특별자치도 서귀포시 법환하로9번길 10', 'rating':'4.4', 'totalAminities':'16', 'totalReviews':'200'}
+    ];
+    emit('search-trigger', response);
+}
 // 날짜 포맷 함수
 const formatDate = (date) => {
     const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
@@ -98,21 +108,24 @@ const formatDate = (date) => {
 const checkInDate = ref(formatDate(new Date()));
 const checkOutDate = ref(formatDate(new Date()));
 
-const checkDate = (date, curDate) => {
-    const temp = formatDate(date).substring(2);
-    let res = (temp < curDate.substring(2)) ? true : false; 
-    return (curDate === checkInDate.value) ? res : !res; 
+const checkDate = (date, curDate, isCheckIn) => {
+    const [month, day] = formatDate(date).substring(2).split("/");
+    const [curMonth, curDay] = curDate.substring(2).split("/");
+    const date1 = new Date(month, day).getTime();
+    const date2 = new Date(curMonth, curDay).getTime();
+    if(isCheckIn) return date1 > date2 ? true : false; 
+    else return date1 < date2 ? true : false; 
 }
 // 날짜 선택 핸들러
 const handleDateSelect = (date) => {
     if (modalType.value === 'checkIn') {
         // 체크아웃 날짜가 체크인 날짜보다 이전이면 초기화
-        if (checkOutDate.value && checkDate(date, checkOutDate.value))
+        if (checkOutDate.value && checkDate(date, checkOutDate.value, true))
             checkOutDate.value = null;
         checkInDate.value = formatDate(date);
     } else if (modalType.value === 'checkOut') {
         // 체크인 날짜보다 이전 날짜를 선택할 수 없게 함
-        if (checkInDate.value && checkDate(date, checkInDate.value)) {
+        if (checkInDate.value && checkDate(date, checkInDate.value, false)) {
             alert('체크아웃 날짜는 체크인 날짜보다 이전일 수 없습니다.');
             return;
         }
@@ -354,6 +367,7 @@ const options = {
     color: white;
     font-size: 15pt;
     border: none;
+    cursor: pointer;
 }
 
 .counter-box {
