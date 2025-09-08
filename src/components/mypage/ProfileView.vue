@@ -13,6 +13,10 @@
 
       <div v-if="profile" class="form-vertical">
         <div class="form-group">
+          <label class="form-label">아이디</label>
+          <input type="text" :value="profile.username" disabled class="form-input">
+        </div>
+        <div class="form-group">
           <label class="form-label">이메일</label>
           <input type="email" :value="profile.email" disabled class="form-input">
         </div>
@@ -22,8 +26,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">휴대폰 번호</label>
-          <input type="text" v-model="profile.phoneNumber" :disabled="!isEditing" class="form-input">
+          <input type="text" v-model="profile.userPhone" :disabled="!isEditing" class="form-input">
         </div>
+      </div>
+      <div v-else>
+        <p>사용자 정보를 불러오는 중입니다...</p>
       </div>
 
       <div v-if="isEditing" class="password-section">
@@ -43,9 +50,12 @@
       </div>
 
       <div class="section separator">
-        <h2 class="section-title">회원 탈퇴</h2>
-        <p class="section-description">더 이상 여기어때 이용을 원하지 않으신가요?</p>
-        <a href="#" @click.prevent="withdraw" class="withdraw-link">회원탈퇴</a>
+        <h2 class="section-title">계정 관리</h2>
+        <p class="section-description">로그아웃하거나 계정을 영구적으로 삭제할 수 있습니다.</p>
+        <div class="account-actions">
+          <button @click="handleLogout" class="logout-button">로그아웃</button>
+          <a href="#" @click.prevent="withdraw" class="withdraw-link">회원탈퇴</a>
+        </div>
       </div>
     </div>
   </div>
@@ -53,8 +63,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { useRouter } from 'vue-router';
+import apiClient from '/src/api/axios.js'; // 중앙에서 관리하는 axios 인스턴스
 
+const router = useRouter();
 const isEditing = ref(false);
 const profile = ref(null);
 const originalProfile = ref(null);
@@ -63,18 +75,15 @@ const passwords = ref({
   newPassword: ''
 });
 
-const api = axios.create({
-  baseURL: 'http://localhost:8888'
-});
-
 const fetchProfile = async () => {
   try {
-    const response = await api.get('/api/mypage/profile');
+    const response = await apiClient.get('/api/user/me');
     profile.value = { ...response.data };
     originalProfile.value = { ...response.data };
   } catch (error) {
     console.error("프로필 정보를 불러오는 데 실패했습니다.", error);
-    alert("프로필 정보를 불러오는 데 실패했습니다.");
+    alert("세션이 만료되었거나 로그인이 필요합니다.");
+    router.push('/login');
   }
 };
 
@@ -85,6 +94,7 @@ const startEditing = () => {
 const cancelEditing = () => {
   profile.value = { ...originalProfile.value };
   isEditing.value = false;
+  passwords.value = { currentPassword: '', newPassword: '' };
 };
 
 const submitUpdate = async () => {
@@ -95,14 +105,14 @@ const submitUpdate = async () => {
 
   const payload = {
     name: profile.value.name,
-    phoneNumber: profile.value.phoneNumber,
+    userPhone: profile.value.userPhone,
     currentPassword: passwords.value.currentPassword,
-    newPassword: passwords.value.newPassword || null
+    newPassword: passwords.value.newPassword || ''
   };
 
   try {
-    await api.patch('/api/mypage/profile', payload);
-    originalProfile.value = { ...profile.value };
+    await apiClient.patch('/api/mypage/profile', payload);
+    await fetchProfile(); // 수정 후 최신 정보 다시 불러오기
     isEditing.value = false;
     alert('수정이 완료되었습니다.');
     passwords.value = { currentPassword: '', newPassword: '' };
@@ -115,12 +125,23 @@ const submitUpdate = async () => {
 const withdraw = async () => {
   if (confirm("정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.")) {
     try {
-      await api.delete('/api/mypage/member');
+      await apiClient.delete('/api/mypage/member');
       alert("회원 탈퇴가 완료되었습니다.");
+      router.push('/login');
     } catch (error) {
       console.error("회원 탈퇴에 실패했습니다.", error);
       alert(error.response?.data?.message || "회원 탈퇴 중 오류가 발생했습니다.");
     }
+  }
+};
+
+const handleLogout = async () => {
+  try {
+    await apiClient.post('/api/auth/logout');
+    alert('로그아웃되었습니다.');
+    router.push('/login');
+  } catch (error) {
+    console.error('로그아웃 실패:', error);
   }
 };
 
@@ -153,5 +174,7 @@ onMounted(() => {
 .button-primary:hover { background-color: #1d4ed8; }
 .button-secondary { background-color: white; color: #374151; border-color: #d1d5db; }
 .button-secondary:hover { background-color: #f9fafb; }
-.withdraw-link { color: #6b7280; text-decoration: underline; font-size: 0.875rem; cursor: pointer; display: inline-block; margin-top: 0.5rem; }
+.account-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+.logout-button { padding: 0.5rem 1rem; background-color: #6b7280; color: white; border: none; border-radius: 0.375rem; cursor: pointer; }
+.withdraw-link { color: #ef4444; text-decoration: underline; font-size: 0.875rem; cursor: pointer; }
 </style>
