@@ -26,7 +26,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">휴대폰 번호</label>
-          <input type="text" v-model="profile.userPhone" :disabled="!isEditing" class="form-input">
+          <input type="text" v-model="profile.phoneNumber" :disabled="!isEditing" class="form-input">
         </div>
       </div>
       <div v-else>
