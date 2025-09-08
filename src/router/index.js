@@ -6,10 +6,17 @@ import RegisterView from '@/components/RegisterView.vue'
 import ProfileView from '@/components/ProfileView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import MypageView from "@/views/MypageView.vue";
+import FailPage from '../components/toss/fail.vue';
+import SuccessPage from '../components/toss/success.vue';
+import Checkout from "@/views/checkout.vue";
 
 const routes = [
   {path: "/", name: "main", component: Main},
   {path: "/search", name: "search", component: SearchView},
+  {path: "/mypage", name: "mypage", component: MypageView},
+  { path: '/fail', component: FailPage },
+  { path: '/success', component: SuccessPage },
+  { path: '/toss', component: Checkout }
   {path: "/mypage", name: "mypage", component: MypageView}
   {path: "/login", name: "login", component: LoginView},
   {path: "/register", name: "register", component: RegisterView},
