@@ -16,8 +16,8 @@ const routes = [
   {path: "/mypage", name: "mypage", component: MypageView},
   { path: '/fail', component: FailPage },
   { path: '/success', component: SuccessPage },
-  { path: '/toss', component: Checkout }
-  {path: "/mypage", name: "mypage", component: MypageView}
+  { path: '/toss', component: Checkout },
+  {path: "/mypage", name: "mypage", component: MypageView},
   {path: "/login", name: "login", component: LoginView},
   {path: "/register", name: "register", component: RegisterView},
   {path: "/profile", name: "profile", component: ProfileView}
