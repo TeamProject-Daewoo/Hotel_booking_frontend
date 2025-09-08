@@ -3,7 +3,7 @@
         <div class="select-place">
             <button v-for="(count, place) in selectData" 
                     :key="place"
-                    :class="{ 'active': place === selectedPlace }"
+                    :class="{ 'active': place === searchStore.place }"
                     @click="selectPlace(place)">
                 {{ place }}
                 <span>{{ count }} places</span>
@@ -11,7 +11,7 @@
         </div>
         <div class="order-container">
             <p>Showing of {{ totalCount }} places</p>
-            <p>Sort By <button class="order-select-btn">{{ order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
+            <p>Sort By <button class="order-select-btn">{{ searchStore.order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
         </div>
         <div class="result-card" v-for="data in response" :key="data.id">
             <div class="image-container">
@@ -51,7 +51,10 @@
     </div>
 </template>
 <script setup>
+import { useSearchStore } from '@/api/searchRequestStore';
 import { defineProps, ref, watch } from 'vue';
+
+const searchStore = useSearchStore();
 
 const props = defineProps({
     response: {
@@ -60,13 +63,18 @@ const props = defineProps({
     }
 });
 const totalCount = ref(0);
+const selectData = ref({
+    'Hotels': 257,
+    'Motels': 51,
+    'Resorts': 72
+});
 
 watch(() => props.response, (newResponse) => {
     //console.log(newResponse);
     if (newResponse)
         totalCount.value = newResponse.length;
 }, { immediate: true });
-const order = ref('Recommended');
+
 const likeToggle = (event) => {
   const target = event.currentTarget.querySelector('i');
   if (target.classList.contains('fa-solid')) {
@@ -77,16 +85,9 @@ const likeToggle = (event) => {
     target.classList.add('fa-solid');
   }
 }
-const selectData = ref({
-    'Hotels': 257,
-    'Motels': 51,
-    'Resorts': 72
-});
-
-const selectedPlace = ref('Hotels');
 
 const selectPlace = (place) => {
-    selectedPlace.value = place;
+    searchStore.place = place;
 };
 </script>
 

@@ -14,8 +14,8 @@
             <div v-show="isFilterOpen[0]" class="price-range-container" style="width: 100%;">
                 <div ref="slider"></div>
                 <div class="price-label">
-                    <p>{{ minPrice }}</p>
-                    <p>{{ maxPrice }}</p>
+                    <p>${{ searchStore.minPrice }}</p>
+                    <p>${{ searchStore.maxPrice }}</p>
                 </div>
             </div>
         </div>
@@ -28,7 +28,7 @@
                 </button>
             </div>
             <div v-show="isFilterOpen[1]" class="price-range-container">
-                <button v-for="value in 5" :key="value">
+                <button v-for="value in 5" :key="value" @click="searchStore.rating=value">
                     {{ value }}+
                 </button>
             </div>
@@ -42,24 +42,24 @@
                 </button>
             </div>
             <div v-show="isFilterOpen[2]" class="price-range-container">
-                <div v-for="value in freebies" :key="value">
-                    <input :id=value type="checkbox" :value="value" style="zoom:1.2;">
-                    <label :for=value>{{ value }}</label>
+                <div v-for="(value, key) in searchStore.freebies" :key="key">
+                    <input :id=key type="checkbox" :value="key" v-model="searchStore.freebies[key]" style="zoom:1.2;">
+                    <label :for=key>{{ key }}</label>
                 </div>
             </div>
         </div>
         <div class="filter-item">
             <div class="filter-section-header">
-                <h3>Freebies</h3>
+                <h3>Amenities</h3>
                 <button class="toggle-button" @click="toggleFilter(3)">
                     <span v-if="isFilterOpen[3]"><i class="fa-solid fa-chevron-up"></i></span>
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
             </div>
             <div v-show="isFilterOpen[3]" class="price-range-container">
-                <div v-for="value in amenities" :key="value">
-                    <input :id="value" type="checkbox" :value="value" style="zoom:1.2;">
-                    <label :for=value>{{ value }}</label>
+                <div v-for="(value, key) in searchStore.amenities" :key="key">
+                    <input :id="key" type="checkbox" :value="key" v-model="searchStore.amenities[key]" style="zoom:1.2;">
+                    <label :for=key>{{ key }}</label>
                 </div>
             </div>
         </div>
@@ -70,17 +70,16 @@
 import { ref, computed, onMounted } from 'vue';
 import noUiSlider from "nouislider";
 import "nouislider/dist/nouislider.css";
+import { useSearchStore } from '@/api/searchRequestStore';
 
-const freebies = ref(['조식포함', '무료주차', 'WIFI', '공항셔틀버스', '무료취소']);
-const amenities = ref(['24시 프론트데스크', '에어컨', '피트니스', '수영장']);
+const searchStore = useSearchStore();
+
 const isFilterOpen = ref([true, true, true, true]);
 const slider = ref(null);
-const minPrice = ref(50);
-const maxPrice = ref(1200);
 
 onMounted(() => {
   noUiSlider.create(slider.value, {
-    start: [minPrice.value, maxPrice.value],
+    start: [searchStore.minPrice, searchStore.maxPrice],
     connect: true,
     range: {
       min: 0,
@@ -90,8 +89,8 @@ onMounted(() => {
 
   // update 이벤트로 값 반영
   slider.value.noUiSlider.on("update", (values) => {
-    minPrice.value = `$${Math.round(values[0])}`;
-    maxPrice.value = `$${Math.round(values[1])}`;
+    searchStore.minPrice = Math.round(values[0]);
+    searchStore.maxPrice = Math.round(values[1]);
   });
 });
 

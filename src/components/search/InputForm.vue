@@ -4,27 +4,27 @@
             <label for="destination">Enter Destination</label>
             <div class="destination-input-form">
                 <span><i class="fa-solid fa-hotel"></i>&nbsp;</span>
-                <span><input id="destination" type="text" placeholder="호텔명 또는 지역 입력"></span>
+                <span><input id="destination" type="text" v-model="searchStore.keyword" placeholder="호텔명 또는 지역 입력"></span>
             </div>
         </div>
         <div class="field-container" id="checkInForm">
             <label for="checkIn">Check In</label>
             <button class="search-input input-gap" id="checkIn" @click="openModal('checkIn')">
-                <span>{{ checkInDate }}</span>
+                <span>{{ checkInDateView }}</span>
                 <span><i class="fa-solid fa-calendar-days"></i></span>
             </button>
         </div>
         <div class="field-container" id="checkOutForm">
             <label for="checkOut">Check Out</label>
             <button class="search-input input-gap" id="checkOut" @click="openModal('checkOut')">
-                <span>{{ checkOutDate }}</span>
+                <span>{{ checkOutDateView }}</span>
                 <span><i class="fa-solid fa-calendar-days"></i></span>
             </button>
         </div>
         <div class="field-container" id="guestSelectForm">
             <label for="guestSelect">Rooms & Guests</label>
             <button class="search-input input-gap" id="guestSelect" @click="openModal('guests')">
-                <span><i class="fa-solid fa-user"></i>&nbsp;{{ roomCount }} room, {{ guestCount }} guests</span>
+                <span><i class="fa-solid fa-user"></i>&nbsp;{{ searchStore.roomCount }} room, {{ searchStore.guestCount }} guests</span>
                 <span><i class="fa-solid fa-chevron-down"></i></span>
             </button>
         </div>
@@ -73,22 +73,23 @@
 import { ref, computed } from 'vue';
 import SearchModal from './SearchModal.vue';
 import DatePicker from './DatePicker.vue';
+import { useSearchStore } from '@/api/searchRequestStore';
+
+const searchStore = useSearchStore();
 
 const isModalOpen = ref(false);
 const modalType = ref('');
 
-const destination = ref('호텔명, 지역');
-const checkIn = ref();
+const checkIn = ref('');
 const checkOut = ref('');
 
 const tempRoomCount = ref(1);
 const tempGuestCount = ref(1);
-const roomCount = ref(1);
-const guestCount = ref(1);
 
 const emit = defineEmits(['search-trigger']);
 const search = () => {
     //백엔드 호출
+    //console.log(searchStore.getRequestPayload());
     const response = [
         {'contentid':'143017', 'title':'가보호텔', 'image':'http://tong.visitkorea.or.kr/cms/resource/83/1942883_image2_1.jpg', 'price':'240000', 'address':'경기도 평택시 평택5로76번길 18-10', 'rating':'4.5', 'totalAminities':'20', 'totalReviews':'371'},
         {'contentid':'1865597', 'title':'가람초연재', 'image':'http://tong.visitkorea.or.kr/cms/resource/48/2993048_image2_1.jpg', 'price':'145000', 'address':'경상북도 안동시 풍천면 하회종가길 76-6', 'rating':'4.3', 'totalAminities':'10', 'totalReviews':'140'},
@@ -104,32 +105,27 @@ const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, '0');
     return `${dayName} ${month}/${day}`;
 };
-//초기는 현재 날짜
-const checkInDate = ref(formatDate(new Date()));
-const checkOutDate = ref(formatDate(new Date()));
 
-const checkDate = (date, curDate, isCheckIn) => {
-    const [month, day] = formatDate(date).substring(2).split("/");
-    const [curMonth, curDay] = curDate.substring(2).split("/");
-    const date1 = new Date(month, day).getTime();
-    const date2 = new Date(curMonth, curDay).getTime();
-    if(isCheckIn) return date1 > date2 ? true : false; 
-    else return date1 < date2 ? true : false; 
-}
+const checkInDateView = ref(formatDate(new Date()));
+const checkOutDateView = ref(formatDate(new Date()));
 // 날짜 선택 핸들러
 const handleDateSelect = (date) => {
     if (modalType.value === 'checkIn') {
         // 체크아웃 날짜가 체크인 날짜보다 이전이면 초기화
-        if (checkOutDate.value && checkDate(date, checkOutDate.value, true))
-            checkOutDate.value = null;
-        checkInDate.value = formatDate(date);
+        if (searchStore.checkOutDate && searchStore.checkOutDate < date) {
+            searchStore.checkOutDate = null;
+            checkOutDateView.value = null;
+        }
+        searchStore.checkInDate = date;
+        checkInDateView.value = formatDate(date)
     } else if (modalType.value === 'checkOut') {
         // 체크인 날짜보다 이전 날짜를 선택할 수 없게 함
-        if (checkInDate.value && checkDate(date, checkInDate.value, false)) {
+        if (searchStore.checkInDate && searchStore.checkInDate > date) {
             alert('체크아웃 날짜는 체크인 날짜보다 이전일 수 없습니다.');
             return;
         }
-        checkOutDate.value = formatDate(date);
+        searchStore.checkOutDate = date;
+        checkOutDateView.value = formatDate(date);
     }
     closeModal();
 };
@@ -147,14 +143,8 @@ const closeModal = () => {
     isModalOpen.value = false;
 };
 const save = () => {
-    guestCount.value = tempGuestCount.value;
-    roomCount.value = tempRoomCount.value;
-    closeModal();
-};
-
-// 각 필드에 값을 설정하는 예시 함수
-const selectDestination = (value) => {
-    destination.value = value;
+    searchStore.guestCount = tempGuestCount.value;
+    searchStore.roomCount = tempRoomCount.value;
     closeModal();
 };
 
@@ -166,27 +156,6 @@ const selectDate = (value) => {
     }
     closeModal();
 };
-
-const options = {
-    "전국":"",
-    "서울":"1",
-    "인천":"2",
-    "대전":"3",
-    "대구":"4",
-    "광주":"5",
-    "부산":"6",
-    "울산":"7",
-    "세종":"8",
-    "경기도":"31",
-    "강원도":"32",
-    "충청북도":"33",
-    "충청남도":"34",
-    "경상북도":"35",
-    "경상남도":"36",
-    "전라북도":"37",
-    "전라남도":"38",
-    "제주도":"39"
-}
 </script>
 <style scoped>
 .search-main-container {
