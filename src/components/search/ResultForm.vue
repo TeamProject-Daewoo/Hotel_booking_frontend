@@ -1,5 +1,18 @@
 <template>
     <div class="result-main-container" v-if="response">
+        <div class="select-place">
+            <button v-for="(count, place) in selectData" 
+                    :key="place"
+                    :class="{ 'active': place === selectedPlace }"
+                    @click="selectPlace(place)">
+                {{ place }}
+                <span>{{ count }} places</span>
+            </button>
+        </div>
+        <div class="order-container">
+            <p>Showing of {{ totalCount }} places</p>
+            <p>Sort By <button class="order-select-btn">{{ order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
+        </div>
         <div class="result-card" v-for="data in response" :key="data.id">
             <div class="image-container">
                 <img :src="data.image">
@@ -31,9 +44,14 @@
             </div>
         </div>
     </div>
+    <div class="result-main-container" v-else>
+        <div class="result-card">
+            <h3>검색결과가 없습니다!</h3>
+        </div>
+    </div>
 </template>
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, ref, watch } from 'vue';
 
 const props = defineProps({
     response: {
@@ -41,6 +59,14 @@ const props = defineProps({
         default: null
     }
 });
+const totalCount = ref(0);
+
+watch(() => props.response, (newResponse) => {
+    //console.log(newResponse);
+    if (newResponse)
+        totalCount.value = newResponse.length;
+}, { immediate: true });
+const order = ref('Recommended');
 const likeToggle = (event) => {
   const target = event.currentTarget.querySelector('i');
   if (target.classList.contains('fa-solid')) {
@@ -51,10 +77,20 @@ const likeToggle = (event) => {
     target.classList.add('fa-solid');
   }
 }
+const selectData = ref({
+    'Hotels': 257,
+    'Motels': 51,
+    'Resorts': 72
+});
+
+const selectedPlace = ref('Hotels');
+
+const selectPlace = (place) => {
+    selectedPlace.value = place;
+};
 </script>
 
 <style scoped>
-
 .result-main-container {
     /* background-color: aqua; */
     border-left: 1px solid rgb(190, 190, 190);
@@ -75,6 +111,70 @@ const likeToggle = (event) => {
     margin-bottom: 20px;
 }
 
+.select-place {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    border-bottom: 1px solid #e0e0e0;
+    font-family: Arial, sans-serif;
+    padding-top: 10px;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background-color: #fff;
+    box-sizing: border-box;
+}
+/* 각 버튼의 기본 스타일 */
+.select-place button {
+    flex-grow: 1; /* 모든 버튼이 동일한 너비를 갖도록 함 */
+    padding: 15px 10px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent; 
+    cursor: pointer;
+    text-align: center;
+    font-size: 1.1em;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: bold;
+}
+
+/* 버튼 위에 마우스를 올렸을 때의 스타일 */
+.select-place button:hover {
+    color: #333;
+}
+
+/* 버튼이 활성화(클릭)되었을 때의 스타일 */
+.select-place button.active {
+    color: #000;
+    border-bottom: 4px solid #80c883;
+}
+
+/* "257 places"와 같은 텍스트 스타일 */
+.select-place button span {
+    font-size: 0.8em;
+    color: #999;
+    margin-top: 5px;
+    font-weight: normal;
+}
+
+.select-place button.active span {
+    color: #000;
+}
+.order-container {
+    display: flex;
+    justify-content: space-between;
+}
+.order-select-btn {
+    background: none;
+    border: none;
+    font-size: 13pt;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 .result-card:hover {
   transform: translateY(-5px);
 }
@@ -83,7 +183,7 @@ const likeToggle = (event) => {
     width: 35%;
     height: 300px;
     object-fit: cover;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #e0e0e0;
 }
 .image-container img {
     height: 300px;
@@ -99,7 +199,8 @@ const likeToggle = (event) => {
     height: 200px;
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid rgb(190, 190, 190);
+    border-bottom: 1px solid #e0e0e0;
+    overflow: hidden;
 }
 
 .infor-view {

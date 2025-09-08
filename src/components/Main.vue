@@ -1,7 +1,7 @@
 <script setup>
 import Footer from './Footer.vue';
 import Header from './Header.vue';
-import Search from './Search.vue';
+import Search from './search/Search.vue';
 </script>
 <template>
     <div class="container">

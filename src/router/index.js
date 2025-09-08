@@ -1,9 +1,10 @@
 // src/router/index.js
 import Main from '@/components/Main.vue'
-import SearchView from '@/components/SearchView.vue'
+
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import SearchView from '@/views/SearchView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import MypageView from "@/views/MypageView.vue";
 

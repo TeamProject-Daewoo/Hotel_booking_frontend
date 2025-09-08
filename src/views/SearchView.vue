@@ -15,10 +15,10 @@
 </template>
 
 <script setup>
+import FilterForm from '@/components/search/FilterForm.vue';
+import InputForm from '@/components/search/InputForm.vue';
+import ResultForm from '@/components/search/ResultForm.vue';
 import { ref } from 'vue';
-import FilterForm from './FilterForm.vue';
-import InputForm from './InputForm.vue';
-import ResultForm from './ResultForm.vue';
 
 const response = ref(null);
 const setResponse = (data) => {
@@ -36,12 +36,14 @@ const setResponse = (data) => {
 }
 
 .search-container {
-    width: 100%;   
+    width: 100%;
+    height: 100%;
 }
 
 .view-container {
     display: flex;
     width: 100%;
+    align-items: flex-start;
 }
 .filter-container {
     width: 30%;
