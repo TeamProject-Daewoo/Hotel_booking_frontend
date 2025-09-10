@@ -1,9 +1,9 @@
 <template>
   <div class="date-picker">
     <div class="calendar-header">
-      <button @click="prevMonth" style="border: none;"><i class="fa-solid fa-chevron-left"></i></button>
+      <button @click="prevMonth" :disabled="currentYear <= startYear && currentMonth <= startMonth" style="border: none;"><i class="fa-solid fa-chevron-left"></i></button>
       <h2>{{ currentYear }}년 {{ currentMonth + 1 }}월</h2>
-      <button @click="nextMonth" style="border: none;"><i class="fa-solid fa-chevron-right"></i></button>
+      <button @click="nextMonth" :disabled="currentYear >= maxYear && currentMonth >= maxMonth" style="border: none;"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
     <div class="calendar-grid">
       <div v-for="day in daysOfWeek" :key="day" class="day-of-week">{{ day }}</div>
@@ -11,7 +11,7 @@
       <div
         v-for="day in daysInMonth"
         :key="day"
-        :class="['calendar-day', { 'is-selected': isSelected(day) }]"
+        :class="['calendar-day', { 'is-selected': isSelected(day), 'is-disabled': !isSelectable(day) }]"
         @click="selectDate(day)"
       >
         {{ day }}
@@ -39,7 +39,18 @@ const startDayOfWeek = computed(() => {
   return new Date(currentYear.value, currentMonth.value, 1).getDay();
 });
 
+const startMonth = today.getMonth();
+const startYear = today.getFullYear();
+// 최대 허용 월 (오늘로부터 6개월 후)
+const maxDate = new Date();
+maxDate.setMonth(maxDate.getMonth() + 6);
+const maxMonth = maxDate.getMonth();
+const maxYear = maxDate.getFullYear();
+
 const prevMonth = () => {
+  if(currentYear.value <= startYear && currentMonth.value <= startMonth) {
+    return;
+  }
   if (currentMonth.value === 0) {
     currentMonth.value = 11;
     currentYear.value--;
@@ -49,6 +60,9 @@ const prevMonth = () => {
 };
 
 const nextMonth = () => {
+  if (currentYear.value >= maxYear && currentMonth.value >= maxMonth) {
+    return;
+  }
   if (currentMonth.value === 11) {
     currentMonth.value = 0;
     currentYear.value++;
@@ -57,13 +71,29 @@ const nextMonth = () => {
   }
 };
 
-const selectDate = (day) => {
-  const date = new Date(currentYear.value, currentMonth.value, day);
-  emit('select-date', date);
+//선택 가능한 날짜인지 판단 + 이전 날짜 비활성화
+const isSelectable = (day) => {
+    const selectedDate = new Date(currentYear.value, currentMonth.value, day);
+    const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    return selectedDate >= todayWithoutTime;
 };
 
+const selectedDate = ref(null);
+const selectDate = (day) => {
+  if (isSelectable(day)) {
+    selectedDate.value = new Date(currentYear.value, currentMonth.value, day);
+    emit('select-date', selectedDate.value);
+  }
+};
+
+
 const isSelected = (day) => {
-  return false;
+  if(!selectedDate.value) {
+    return false;
+  }
+  const date = new Date(currentYear.value, currentMonth.value, day);
+  return date.getTime() === selectDate.value.getTime();
 };
 </script>
 
@@ -115,6 +145,15 @@ const isSelected = (day) => {
 
 .calendar-day:hover {
   background-color: #f0f0f0;
+}
+.calendar-day.is-disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .is-selected {
