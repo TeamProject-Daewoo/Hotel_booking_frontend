@@ -39,7 +39,9 @@
                         <i class="fa-regular fa-heart"></i>
                     </button>
                     
-                    <button @click="this.$router.push('/')" class="view-btn">View Place</button>
+                    <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentid } })">
+                        View Place
+                    </button>
                 </div>
             </div>
         </div>
