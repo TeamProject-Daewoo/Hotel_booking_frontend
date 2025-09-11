@@ -34,7 +34,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 // 이전 페이지에서 전달받았다고 가정하는 임시 데이터
-const contentid = ref('HOTEL123'); // 호텔 ID
+const contentid = ref('142785'); // 호텔 ID
 const roomcode = ref('ROOM789'); // 객실 코드
 const hotelName = ref('토스 호텔');
 const roomType = ref('디럭스 룸');

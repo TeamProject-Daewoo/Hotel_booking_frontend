@@ -62,11 +62,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import {ref, watch} from 'vue';
 import { useRouter } from 'vue-router';
-import apiClient from '/src/api/axios.js'; // 중앙에서 관리하는 axios 인스턴스
+import apiClient from '@/api/axios.js'; // @ 별칭을 사용하도록 경로 수정
+import { useAuthStore } from '@/api/auth.js'; // authStore를 가져옵니다
 
 const router = useRouter();
+const authStore = useAuthStore(); // authStore 인스턴스 생성
+
 const isEditing = ref(false);
 const profile = ref(null);
 const originalProfile = ref(null);
@@ -83,6 +86,7 @@ const fetchProfile = async () => {
   } catch (error) {
     console.error("프로필 정보를 불러오는 데 실패했습니다.", error);
     alert("세션이 만료되었거나 로그인이 필요합니다.");
+    authStore.clearToken(); // 에러 발생 시 토큰 정리
     router.push('/login');
   }
 };
@@ -105,14 +109,19 @@ const submitUpdate = async () => {
 
   const payload = {
     name: profile.value.name,
-    userPhone: profile.value.userPhone,
+    phoneNumber: profile.value.phoneNumber, // userPhone -> phoneNumber로 수정
     currentPassword: passwords.value.currentPassword,
     newPassword: passwords.value.newPassword || ''
   };
 
   try {
-    await apiClient.patch('/api/mypage/profile', payload);
-    await fetchProfile(); // 수정 후 최신 정보 다시 불러오기
+    // 백엔드 DTO 필드명에 맞춰 userPhone으로 전송
+    await apiClient.patch('/api/mypage/profile', {
+      ...payload,
+      userPhone: payload.phoneNumber
+    });
+
+    await fetchProfile();
     isEditing.value = false;
     alert('수정이 완료되었습니다.');
     passwords.value = { currentPassword: '', newPassword: '' };
@@ -127,6 +136,7 @@ const withdraw = async () => {
     try {
       await apiClient.delete('/api/mypage/member');
       alert("회원 탈퇴가 완료되었습니다.");
+      authStore.clearToken(); // 토큰 정리
       router.push('/login');
     } catch (error) {
       console.error("회원 탈퇴에 실패했습니다.", error);
@@ -138,6 +148,7 @@ const withdraw = async () => {
 const handleLogout = async () => {
   try {
     await apiClient.post('/api/auth/logout');
+    authStore.clearToken(); // 클라이언트 토큰 삭제
     alert('로그아웃되었습니다.');
     router.push('/login');
   } catch (error) {
@@ -145,7 +156,7 @@ const handleLogout = async () => {
   }
 };
 
-onMounted(() => {
+watch(() => {
   fetchProfile();
 });
 </script>
