@@ -12,7 +12,7 @@
       <h3>예약 상세</h3>
       <p><strong>체크인:</strong> {{ checkInDate }}</p>
       <p><strong>체크아웃:</strong> {{ checkOutDate }}</p>
-      <p><strong>숙박일수:</strong> {{ nights }}일</p>
+      <p><strong>숙박일수:</strong> {{ nights }}박</p>
       <p><strong>인원:</strong> 성인 {{ numAdults }}명, 아동 {{ numChildren }}명</p>
     </div>
 
@@ -28,29 +28,41 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import api from '@/api/axios';
+import { useAuthStore } from '@/api/auth';
 
+const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
-// 이전 페이지에서 전달받았다고 가정하는 임시 데이터
-const contentid = ref('142785'); // 호텔 ID
-const roomcode = ref('ROOM789'); // 객실 코드
-const hotelName = ref('토스 호텔');
-const roomType = ref('디럭스 룸');
-const checkInDate = ref('2025-12-24');
-const checkOutDate = ref('2025-12-26');
-const numAdults = ref(2);
-const numChildren = ref(1);
-const totalPrice = ref(350000);
+// 라우터 쿼리 파라미터로부터 데이터 추출
+const contentid = ref('');
+const roomcode = ref('');
+const hotelName = ref('');
+const roomType = ref('');
+const checkInDate = ref('');
+const checkOutDate = ref('');
+const nights = ref(0);
+const numAdults = ref(0);
+const numChildren = ref(0);
+const totalPrice = ref(0);
 
-// 숙박일수 계산
-const nights = computed(() => {
-  const start = new Date(checkInDate.value);
-  const end = new Date(checkOutDate.value);
-  const diff = end.getTime() - start.getTime();
-  return diff / (1000 * 60 * 60 * 24);
+// 컴포넌트가 마운트될 때 쿼리 파라미터로 상태를 초기화
+onMounted(() => {
+  contentid.value = route.query.contentid || '';
+  roomcode.value = route.query.roomcode || '';
+  hotelName.value = route.query.hotelName || '정보 없음';
+  roomType.value = route.query.roomType || '정보 없음';
+  checkInDate.value = route.query.checkInDate || '';
+  checkOutDate.value = route.query.checkOutDate || '';
+  nights.value = Number(route.query.nights) || 0;
+  numAdults.value = Number(route.query.numAdults) || 0;
+  numChildren.value = Number(route.query.numChildren) || 0;
+  totalPrice.value = Number(route.query.totalPrice) || 0;
 });
+
 
 // 가격 포맷팅
 const formattedTotalPrice = computed(() => {
@@ -58,10 +70,8 @@ const formattedTotalPrice = computed(() => {
 });
 
 const proceedToPayment = async () => {
-  // 1. localStorage에서 인증 토큰 가져오기
-  const token = localStorage.getItem('accessToken');
-
-  if (!token) {
+  // 1. 로그인 상태 확인 (Pinia 스토어 사용)
+  if (!authStore.accessToken) {
     alert('로그인이 필요합니다.');
     router.push('/login');
     return;
@@ -79,21 +89,14 @@ const proceedToPayment = async () => {
   };
 
   try {
-    // 3. 백엔드 예약 생성 API 호출
-    const response = await fetch('/api/reservations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // 헤더에 토큰 추가
-      },
-      body: JSON.stringify(requestData),
-    });
+    // 3. 백엔드 예약 생성 API 호출 (apiClient 사용)
+    const response = await api.post('/api/reservations', requestData);
 
-    if (!response.ok) {
+    if (response.status !== 201) { // 201 Created
       throw new Error('예약 생성에 실패했습니다.');
     }
 
-    const createdReservation = await response.json();
+    const createdReservation = response.data;
     console.log('예약 성공:', createdReservation);
 
     // 4. API 호출 성공 시, 결제 페이지로 이동
@@ -102,7 +105,7 @@ const proceedToPayment = async () => {
 
   } catch (error) {
     console.error('예약 처리 중 오류 발생:', error);
-    alert(error.message);
+    alert(error.response?.data?.message || '예약 처리 중 오류가 발생했습니다.');
   }
 };
 </script>
@@ -111,34 +114,46 @@ const proceedToPayment = async () => {
 .reservation-container {
   max-width: 600px;
   margin: 40px auto;
-  padding: 20px;
+  padding: 30px;
   border: 1px solid #eee;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: #fff;
 }
 h2 {
   text-align: center;
   margin-bottom: 30px;
+  font-size: 1.8em;
+  color: #333;
 }
 .info-section, .price-section {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
+  margin-bottom: 25px;
+  padding-bottom: 25px;
   border-bottom: 1px solid #eee;
+}
+.info-section:last-of-type, .price-section:last-of-type {
+  border-bottom: none;
 }
 .info-section h3, .price-section h3 {
   margin-bottom: 15px;
-  font-size: 1.2em;
+  font-size: 1.3em;
+  color: #1e40af;
 }
 p {
-  margin: 5px 0;
+  margin: 10px 0;
   color: #555;
+  font-size: 1.1em;
+}
+p strong {
+  color: #333;
+  margin-right: 10px;
 }
 .price-section {
   text-align: right;
 }
 .total-price {
-  font-size: 1.5em;
+  font-size: 2em;
   font-weight: bold;
   color: #d9534f;
 }
@@ -149,9 +164,9 @@ p {
   color: white;
   background-color: #007bff;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s ease;
 }
 .payment-button:hover {
   background-color: #0056b3;

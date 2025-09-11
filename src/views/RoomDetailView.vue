@@ -37,7 +37,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
 
 import Breadcrumb     from '@/components/roomdetail/Breadcrumb.vue';
@@ -48,6 +48,7 @@ import LoginBox       from '@/components/roomdetail/LoginBox.vue';
 import SummaryCard    from '@/components/roomdetail/SummaryCard.vue';
 
 const route = useRoute()
+const router = useRouter()
 const id   = route.params.id
 const idx  = Number(route.params.idx)
 
@@ -105,6 +106,21 @@ const total = computed(()=> baseFare.value - discount.value + taxes.value + serv
 
 function onContinue(){
   console.log('continue', { phone:phone.value, payMode:payMode.value })
+  router.push({
+    name: 'reserv', // router/index.js에 정의된 이름
+    query: {
+      contentid: id,
+      roomcode: room.value.roomcode,
+      hotelName: base.value.title,
+      roomType: room.value.roomtitle,
+      checkInDate: checkIn.value,
+      checkOutDate: checkOut.value,
+      nights: nights.value,
+      numAdults: room.value.roombasecount, // 예시로 기본 인원수 전달
+      numChildren: 0, // 예시로 아동 0명 전달
+      totalPrice: total.value
+    }
+  });
 }
 </script>
 
