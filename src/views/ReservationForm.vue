@@ -70,14 +70,12 @@ const formattedTotalPrice = computed(() => {
 });
 
 const proceedToPayment = async () => {
-  // 1. 로그인 상태 확인 (Pinia 스토어 사용)
   if (!authStore.accessToken) {
     alert('로그인이 필요합니다.');
     router.push('/login');
     return;
   }
 
-  // 2. 백엔드로 보낼 데이터 준비
   const requestData = {
     contentid: contentid.value,
     roomcode: roomcode.value,
@@ -89,19 +87,31 @@ const proceedToPayment = async () => {
   };
 
   try {
-    // 3. 백엔드 예약 생성 API 호출 (apiClient 사용)
     const response = await api.post('/api/reservations', requestData);
 
-    if (response.status !== 201) { // 201 Created
+    if (response.status !== 201) {
       throw new Error('예약 생성에 실패했습니다.');
     }
 
     const createdReservation = response.data;
     console.log('예약 성공:', createdReservation);
 
-    // 4. API 호출 성공 시, 결제 페이지로 이동
-    // 라우터에 정의된 toss 결제 페이지 경로가 '/toss' 이므로 경로를 수정합니다.
-    router.push('/toss');
+    // 사용자 정보 가져오기
+    const userResponse = await api.get('/api/user/me');
+    const userInfo = userResponse.data;
+
+    // 결제 페이지로 예약 정보와 사용자 정보를 함께 전달
+    router.push({
+      path: '/toss',
+      query: {
+        reservationId: createdReservation.reservationId,
+        orderName: `${hotelName.value} - ${roomType.value}`,
+        amount: totalPrice.value,
+        customerName: userInfo.name,
+        customerEmail: userInfo.email,
+        customerMobilePhone: userInfo.phoneNumber
+      }
+    });
 
   } catch (error) {
     console.error('예약 처리 중 오류 발생:', error);

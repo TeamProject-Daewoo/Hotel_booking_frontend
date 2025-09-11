@@ -3,24 +3,15 @@ import { onMounted } from 'vue';
 import Footer from './components/Footer.vue';
 import Header from './components/Header.vue';
 import { useAuthStore } from './api/auth';
-import api from './api/axios';
 
 const authStore = useAuthStore();
 
 onMounted(async () => {
-    // isInitialized가 false일 때만 (즉, 앱이 처음 로드될 때 한번만) 실행
-    if (!authStore.isInitialized) { 
-        try {
-            const response = await api.post('/api/auth/refresh');
-            authStore.setToken(response.data.accessToken);
-            console.log('토큰 재발급 성공');
-        } catch (error) {
-            console.log('자동 로그인 실패. 유효한 리프레시 토큰이 없습니다.');
-        } finally {
-            // 👇 어떤 경우든 초기화가 끝났음을 표시
-            authStore.setInitialized();
-        }
-    }
+  // isInitialized가 false일 때만 (즉, 앱이 처음 로드될 때 한번만) 실행
+  if (!authStore.isInitialized) {
+    // auth.js에 이미 구현된 재발급 로직을 호출
+    await authStore.reissueToken();
+  }
 });
 </script>
 
