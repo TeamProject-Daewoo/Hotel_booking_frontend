@@ -23,6 +23,18 @@ const errorInfo = ref(null);
 const isLoading = ref(true);
 
 onMounted(async () => {
+  // authStore의 초기화가 완료될 때까지 기다리는 로직 추가
+  if (!authStore.isInitialized) {
+    await new Promise(resolve => {
+      const unwatch = watch(() => authStore.isInitialized, (isInitialized) => {
+        if (isInitialized) {
+          unwatch();
+          resolve();
+        }
+      });
+    });
+  }
+
   const { paymentKey, orderId: tossOrderId, amount: rawAmount } = route.query;
 
   if (!paymentKey || !tossOrderId || !rawAmount) {
