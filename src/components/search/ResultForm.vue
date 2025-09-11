@@ -38,8 +38,7 @@
                     <button class="like-btn" @click="likeToggle">
                         <i class="fa-regular fa-heart"></i>
                     </button>
-                    
-                    <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentid } })">
+                    <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
                         View Place
                     </button>
                 </div>
