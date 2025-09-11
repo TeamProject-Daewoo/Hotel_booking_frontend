@@ -116,10 +116,7 @@ const submitUpdate = async () => {
 
   try {
     // 백엔드 DTO 필드명에 맞춰 userPhone으로 전송
-    await apiClient.patch('/api/mypage/profile', {
-      ...payload,
-      userPhone: payload.phoneNumber
-    });
+    await apiClient.patch('/api/mypage/profile', payload);
 
     await fetchProfile();
     isEditing.value = false;

@@ -24,7 +24,7 @@
         </router-link>
 
         <!-- Font Awesome 메뉴 아이콘 (마이페이지) -->
-        <router-link to="/my-page">
+        <router-link to="/mypage">
           <i class="fa-solid fa-bars my-page-icon"></i> <!-- 메뉴 아이콘 (마이페이지) -->
         </router-link>
       </div>
