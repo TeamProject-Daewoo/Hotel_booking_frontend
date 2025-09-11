@@ -52,7 +52,7 @@ function toArray(v){ return !v ? [] : (Array.isArray(v) ? v : [v]) }
 onMounted(async () => {
   try {
     const [b, d, i] = await Promise.allSettled([
-      api.get(`/accommodations/${id}`),
+      api.get(`/api/accommodations/${id}`),
       api.get(`/tour/detail/${id}`),
       api.get(`/tour/intro/${id}`)
     ])
