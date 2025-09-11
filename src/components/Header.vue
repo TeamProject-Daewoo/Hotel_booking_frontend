@@ -24,7 +24,7 @@ const handleLogout = async () => {
         await api.post('/api/auth/logout');
         
         // 2. Pinia 스토어의 상태도 깨끗하게 정리
-        authStore.clearToken(); // clearToken 액션이 accessToken과 user를 null로 만듦
+        authStore.logout(); // clearToken 액션이 accessToken과 user를 null로 만듦
         
         alert('로그아웃되었습니다.');
         router.push('/');
@@ -34,7 +34,7 @@ const handleLogout = async () => {
 };
 
 onMounted(() => {
-  // 별도 initFromStorage 불필요 (persistedstate가 자동으로 상태 복원)
+  
 });
 </script>
 

@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    refreshToken: null,
     accessToken: null,
     loggedInUser: null,
     isInitialized: false,
@@ -11,6 +10,10 @@ export const useAuthStore = defineStore('auth', {
     setToken(token) {
       this.accessToken = token;
       this.loggedInUser = this.parseJwt(token)?.sub || null;
+    },
+    logout() {
+      this.accessToken = null;
+      this.loggedInUser = null;
     },
     parseJwt(token) {
       try {
