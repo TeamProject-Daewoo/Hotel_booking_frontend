@@ -1,7 +1,7 @@
 <template>
     <div class="result-main-container" v-if="response">
         <div class="select-place">
-            <button v-for="(count, place) in selectData" 
+            <button v-for="(count, place) in selectData"
                     :key="place"
                     :class="{ 'active': place === searchStore.place }"
                     @click="selectPlace(place)">
@@ -38,8 +38,8 @@
                     <button class="like-btn" @click="likeToggle">
                         <i class="fa-regular fa-heart"></i>
                     </button>
-                    
-                    <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentid } })">
+
+                    <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
                         View Place
                     </button>
                 </div>
@@ -55,6 +55,7 @@
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
 import { defineProps, ref, watch } from 'vue';
+import {createRouter as $router} from "vue-router";
 
 const searchStore = useSearchStore();
 
@@ -133,7 +134,7 @@ const selectPlace = (place) => {
     padding: 15px 10px;
     background-color: transparent;
     border: none;
-    border-bottom: 3px solid transparent; 
+    border-bottom: 3px solid transparent;
     cursor: pointer;
     text-align: center;
     font-size: 1.1em;
