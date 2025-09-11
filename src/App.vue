@@ -43,9 +43,6 @@ onMounted(async () => {
     height: 100px;
     background-color: rgb(255, 255, 130);
 }
-.main-container {
-    background-color: rgb(189, 255, 244);
-}
 .footer-container {
     height: 100px;
     background-color: rgb(219, 255, 165);
