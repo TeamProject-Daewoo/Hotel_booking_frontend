@@ -1,44 +1,68 @@
+
+<script setup>
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/api/auth';  // Pinia 스토어 경로에 맞게 조정하세요
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+function goHome() {
+  router.push('/');
+}
+
+function goRegister() {
+  router.push('/register');
+}
+
+function goAdmin() {
+  window.location.href = 'http://localhost:5174';
+}
+
+function logout() {
+  authStore.logout();  // Pinia 상태 초기화 (persisted state에서 자동 제거됨)
+  router.push('/');
+}
+
+onMounted(() => {
+  // 별도 initFromStorage 불필요 (persistedstate가 자동으로 상태 복원)
+});
+</script>
+
 <template>
   <header>
     <div class="navbar">
-      <div class="logo">
-        <span class="logo-text">Booking</span> <!-- 영어로 "Book"으로 변경 -->
+      <div class="logo" @click="goHome" style="cursor: pointer;">
+        <span class="logo-text">Booking</span>
       </div>
 
-      <nav class="menu">
-        <ul>
-          <li><router-link to="/" class="menu-link">숙소</router-link></li>
-          <li><router-link to="/activities" class="menu-link">즐길거리</router-link></li>
-          <li><router-link to="/travel-guide" class="menu-link">여행 가이드</router-link></li>
-        </ul>
-      </nav>
-
       <div class="user-actions">
-        <router-link to="/register-accommodation"><button class="register">숙소 등록</button></router-link>
-        <router-link to="/login"><button class="login">로그인</button></router-link>
-        <router-link to="/signup"><button class="signup">회원 가입</button></router-link>
+        <template v-if="authStore.loggedInUser">
+          <span style="margin-right: 10px;">안녕하세요, {{ authStore.loggedInUser }}님</span>
+          <button class="logout" @click="logout">로그아웃</button>
+        </template>
 
-        <!-- Font Awesome 장바구니 아이콘 -->
+        <template v-else>
+          <button class="signup" @click.prevent="goRegister">회원 가입</button>
+          <router-link to="/login">
+            <button class="login">로그인</button>
+          </router-link>
+        </template>
+
+        <button class="signup" @click="goAdmin">admin</button>
         <router-link to="/cart">
-          <i class="fa-solid fa-cart-shopping cart-icon"></i> <!-- 장바구니 아이콘 -->
+          <i class="fa-solid fa-cart-shopping cart-icon"></i>
         </router-link>
-
-        <!-- Font Awesome 메뉴 아이콘 (마이페이지) -->
-        <router-link to="/mypage">
-          <i class="fa-solid fa-bars my-page-icon"></i> <!-- 메뉴 아이콘 (마이페이지) -->
+        <router-link to="/my-page">
+          <i class="fa-solid fa-bars my-page-icon"></i>
         </router-link>
       </div>
     </div>
   </header>
 </template>
 
-<script>
-export default {
-  name: 'AppHeader',
-};
-</script>
-
 <style scoped>
+/* 기존 스타일 유지 */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -47,96 +71,67 @@ export default {
   background-color: #fff;
   border-bottom: 1px solid #ccc;
 }
-
-/* 로고 텍스트 스타일 */
 .logo .logo-text {
-  font-size: 32px; /* 글자 크기 */
-  font-weight: bold; /* 글자 두께 */
-  color: #007bff; /* 글자 색상 */
-  letter-spacing: 2px; /* 글자 간격 */
-  text-transform: uppercase; /* 대문자 변환 */
-  font-family: 'Arial', sans-serif; /* 폰트 패밀리 */
+  font-size: 32px;
+  font-weight: bold;
+  color: #007bff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Arial', sans-serif;
 }
-
-.menu ul {
-  display: flex;
-  list-style-type: none;
-  gap: 20px;
-}
-
-.menu li a {
-  text-decoration: none;
-  font-size: 18px; /* 메뉴 글자 크기 */
-  color: #333;
-  font-weight: bold; /* 메뉴 글자 두께 */
-  transition: color 0.3s ease;
-}
-
-.menu li a:hover {
-  color: #007bff; /* 호버 색상 변경 */
-}
-
-/* 버튼 공통 스타일 */
 .user-actions button {
-  padding: 10px 20px; /* 버튼 크기 */
+  padding: 10px 20px;
   margin: 0 5px;
   cursor: pointer;
-  font-size: 16px; /* 글자 크기 */
+  font-size: 16px;
   transition: background-color 0.3s ease;
-  border-radius: 25px !important; /* 타원형 보더 */
+  border-radius: 25px !important;
 }
-
 .user-actions button:hover {
   background-color: #f4f4f4 !important;
 }
-
-/* 숙소 등록과 회원 가입 버튼 */
-.user-actions .register,
-.user-actions .signup {
-  border: 1px solid #007bff !important; /* 파란색 테두리 */
-  color: #007bff !important; /* 파란색 폰트 */
+.user-actions .register, .user-actions .signup {
+  border: 1px solid #007bff !important;
+  color: #007bff !important;
   background-color: transparent !important;
 }
-
-.user-actions .register:hover,
-.user-actions .signup:hover {
+.user-actions .register:hover, .user-actions .signup:hover {
   background-color: #007bff !important;
-  color: white !important; /* 호버 시 텍스트 색상 변경 */
+  color: white !important;
 }
-
-/* 로그인 버튼 */
 .user-actions .login {
-  border: none !important; /* 보더 제거 */
+  border: none !important;
   background-color: transparent !important;
   color: #333 !important;
 }
-
 .user-actions .login:hover {
   background-color: #f4f4f4 !important;
 }
-
-/* Font Awesome 장바구니 아이콘 */
 .user-actions .cart-icon {
   font-size: 24px;
-  color: #ffbc00 !important; /* 장바구니 아이콘 색상 */
+  color: #ffbc00 !important;
   cursor: pointer;
 }
-
 .user-actions .cart-icon:hover {
   opacity: 0.8;
 }
-
-/* Font Awesome 메뉴 아이콘 (마이페이지) */
 .user-actions .my-page-icon {
   font-size: 24px;
-  color: #007bff !important; /* 메뉴 아이콘 색상 */
+  color: #007bff !important;
   cursor: pointer;
 }
-
 .user-actions .my-page-icon:hover {
   opacity: 0.8;
 }
-
+.user-actions .logout {
+  border: 1px solid #dc3545 !important;
+  color: #dc3545 !important;
+  background-color: transparent !important;
+}
+.user-actions .logout:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
 .user-actions button:focus {
   outline: none;
 }
