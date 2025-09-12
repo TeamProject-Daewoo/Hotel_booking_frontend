@@ -26,6 +26,7 @@ const orderName = ref(route.query.orderName);
 const amount = ref(Number(route.query.amount));
 
 onMounted(async () => {
+  console.log("onMounted 실행");
   const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
   const tossPayments = TossPayments(clientKey);
 
@@ -48,6 +49,7 @@ onMounted(async () => {
 
 const requestPayment = async () => {
   try {
+    console.log("requestPayment 실행");
     await widgets.value.requestPayment({
       orderId: `${reservationId.value}_${new Date().getTime()}`,
       orderName: orderName.value,

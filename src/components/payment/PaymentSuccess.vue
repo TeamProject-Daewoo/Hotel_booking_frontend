@@ -12,8 +12,9 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import api from '@/api/axios';
+// import api from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
+import axios from 'axios';
 
 const route = useRoute();
 const router = useRouter();
@@ -47,7 +48,8 @@ onMounted(async () => {
   const amount = Array.isArray(rawAmount) ? rawAmount[0] : rawAmount;
 
   try {
-    const response = await api.post('/api/payment/confirm', {
+    console.log("confirm실행");
+    const response = await axios.post('/api/payment/confirm', {
       paymentKey: paymentKey,
       reservationId: Number(reservationId),
       amount: Number(amount),
