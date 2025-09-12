@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/api/auth'; 
+import api from '@/api/axios'; 
 
 const router = useRouter();
 const authStore = useAuthStore();
