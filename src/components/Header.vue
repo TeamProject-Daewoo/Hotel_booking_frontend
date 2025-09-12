@@ -53,7 +53,7 @@ onMounted(() => {
         <router-link to="/cart">
           <i class="fa-solid fa-cart-shopping cart-icon"></i>
         </router-link>
-        <router-link to="/my-page">
+        <router-link to="/mypage">
           <i class="fa-solid fa-bars my-page-icon"></i>
         </router-link>
       </div>
