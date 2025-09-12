@@ -6,7 +6,6 @@
         구글 맵 보기
       </a>
     </div>
-
     <div class="map-frame">
       <iframe
         v-if="hasCoords"
@@ -18,7 +17,7 @@
       <div v-else class="map-placeholder">좌표 정보가 없습니다.</div>
     </div>
 
-    <!-- ✅ 주소 있을 때만 표시 (좌표 폴백 제거) -->
+    <!-- 주소 있을 때만 표시 -->
     <p v-if="displayAddress" class="addr">
       <span><i class="fa-solid fa-location-dot"></i> {{ displayAddress }}</span>
     </p>
@@ -27,12 +26,11 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import api from '@/api/axios'
 
 const props = defineProps({
   mapx: { type: [Number, String], default: null }, // lon
   mapy: { type: [Number, String], default: null }, // lat
-  address: { type: String, default: '' }           // 바로 넘겨주면 역지오코딩 스킵
+  address: { type: String, default: '' },           // 바로 넘겨주면 역지오코딩 스킵
 })
 
 const hasCoords = computed(() =>
@@ -46,25 +44,25 @@ const googleMapsLink = computed(() =>
   `https://www.google.com/maps?q=${props.mapy},${props.mapx}&hl=ko`
 )
 
-/* 역지오코딩으로 채울 주소 */
+// 역지오코딩을 위한 데이터
 const resolvedAddress = ref('')
 
-/* ✅ 화면에 찍을 주소(있을 때만 노출) */
+// 표시할 주소
 const displayAddress = computed(() => (props.address || resolvedAddress.value || '').trim())
 
 async function fetchAddress () {
-  // address prop이 이미 있으면 역지오코딩 안 함
   if (props.address) return
   if (!hasCoords.value) return
   const lat = Number(props.mapy), lon = Number(props.mapx)
   if (Number.isNaN(lat) || Number.isNaN(lon)) return
   try {
-    const { data } = await api.get('/geo/reverse', { params: { lat, lon } })
-    resolvedAddress.value = data?.address || ''
-  } catch {}
+    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=YOUR_API_KEY`);
+    const data = await response.json();
+    resolvedAddress.value = data.results[0]?.formatted_address || ''
+  } catch (err) {
+    console.error('Error fetching address:', err)
+  }
 }
-
-/* 좌표가 바뀌면 다시 주소 조회 */
 watch([() => props.mapy, () => props.mapx, () => props.address], () => fetchAddress(), { immediate: true })
 </script>
 
