@@ -73,7 +73,7 @@ const handleLogin = async () => {
         authStore.setToken(response.data.accessToken);
 
         alert('로그인에 성공했습니다!');
-        router.push('/mypage'); // 프로필 페이지로 이동
+        router.push('/'); //메인페이지로 이동
 
     } catch (error) {
         // ... 에러 처리

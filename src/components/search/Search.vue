@@ -2,7 +2,7 @@
 </script>
 <template>
     <div class="search-container">
-        <button @click="search"><i class="fa-solid fa-magnifying-glass"></i> 무엇을 찾아드릴까요?</button>
+        <button @click="search"><i class="fa-solid fa-magnifying-glass"></i> 어떤 숙소를 찾고 계세요?</button>
     </div>
 </template>
 <script>

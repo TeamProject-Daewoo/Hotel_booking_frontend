@@ -184,7 +184,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
-  width: 45%;
+  width: 80%;
   display: flex;
   gap: 15px;
 }
