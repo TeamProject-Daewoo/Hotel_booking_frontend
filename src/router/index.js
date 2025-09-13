@@ -14,6 +14,7 @@ import PaymentFail from '../components/payment/PaymentFail.vue';
 import PaymentSuccess from '../components/payment/PaymentSuccess.vue';
 import ReservationComplete from '../components/reservation/ReservationComplete.vue';
 import PaymentProcess from '../components/payment/PaymentProcess.vue';
+import BookingListView from "@/components/mypage/BookingListView.vue";
 
 const routes = [
   {path: "/", name: "main", component: Main},
@@ -27,8 +28,9 @@ const routes = [
   {path: '/payment/:reservationId', name: 'Payment', component: PaymentView},
   {path: '/payment-success', name: 'PaymentSuccess', component: PaymentSuccess},
   {path: '/payment-fail', name: 'PaymentFail',component: PaymentFail},
-  {path: '/reservation-complete/:reservationId', name: ReservationComplete},
-  {path: '/payment-process', name: 'PaymentProcess', component: PaymentProcess}
+  {path: '/reservation-complete/:reservationId', name: 'ReservationComplete', component: ReservationComplete},
+  {path: '/payment-process', name: 'PaymentProcess', component: PaymentProcess},
+  {path: '/mypage/bookinglist', name: 'BookingListView',component: BookingListView},
 ]
 
 const router = createRouter({

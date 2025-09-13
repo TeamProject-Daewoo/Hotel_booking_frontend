@@ -11,7 +11,6 @@
           <div class="hotel-info">
             <img src="https://placehold.co/60x60/e0e7ff/4338ca?text=Hotel" alt="호텔 로고" class="hotel-logo">
             <div class="hotel-details">
-              <span class="status-badge">{{ booking.status }}</span>
               <strong class="hotel-name">{{ booking.hotelName }}</strong>
             </div>
           </div>

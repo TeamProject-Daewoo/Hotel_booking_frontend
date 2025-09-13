@@ -60,7 +60,7 @@ onMounted(async () => {
       message.value = '결제가 성공적으로 완료되었습니다!';
       setTimeout(() => {
         router.push(`/reservation-complete/${reservationId}`);
-      }, 3000);
+      }, 1);
     }
 
   } catch (error) {
