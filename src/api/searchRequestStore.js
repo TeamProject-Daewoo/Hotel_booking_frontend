@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 //백엔드에 넘길 데이터 전역으로 관리
 export const useSearchStore = defineStore('search', () => {
+  
   //InputForm
   const keyword = ref('');
   const d = new Date();
@@ -15,9 +16,31 @@ export const useSearchStore = defineStore('search', () => {
   const minPrice = ref(0);
   const maxPrice = ref(500000);
   const rating = ref(1);
-  const freebies = ref({'조식포함':false, '무료주차':false, 'WIFI':false, '공항셔틀버스':false, '무료취소':false});
-  const amenities = ref({'24시 프론트데스크':false, '에어컨':false, '피트니스':false, '수영장':false});
-
+  const amenities = ref({
+    "주차가능":false,       //parkinglodging
+    "수영장": false,        //subfacility, 
+    "세미나": false,        //subfacility, seminar
+    "스포츠시설": false,    //subfacility, sports
+    "바베큐": false,        //subfacility, barbecue
+    "캠프파이어": false,    //subfacility, campfire
+    "휴게시설": false,      //subfacility
+    "사우나": false,        //subfacility, sauna
+    "피트니스": false,      //subfacility, fitness
+    "계곡": false,          //subfacility
+    "대중탕": false         //publicbath
+  });
+  const freebies = ref({
+    "욕실": false,          // roombathfacility
+    "욕조": false,          // roombath
+    "세면도구제공": false,  // roomtoiletries
+    "홈시어터": false,      // roomhometheater
+    "에어컨": false,        // roomaircondition
+    "Tv": false,            // roomtv
+    "Pc": false,            // roompc
+    "Wifi": false,          // roominternet
+    "냉장고": false,        // roomrefrigerator
+    "취사가능": false,      // roomcook
+  });
   //ResultForm
   const order = ref('Recommended');
   const place = ref('Hotels');
