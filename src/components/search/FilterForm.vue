@@ -35,21 +35,6 @@
         </div>
         <div class="filter-item">
             <div class="filter-section-header">
-                <h3>Freebies</h3>
-                <button class="toggle-button" @click="toggleFilter(2)">
-                    <span v-if="isFilterOpen[2]"><i class="fa-solid fa-chevron-up"></i></span>
-                    <span v-else><i class="fa-solid fa-chevron-down"></i></span>
-                </button>
-            </div>
-            <div v-show="isFilterOpen[2]" class="price-range-container">
-                <div v-for="(value, key) in searchStore.freebies" :key="key">
-                    <input :id=key type="checkbox" :value="key" v-model="searchStore.freebies[key]" style="zoom:1.2;">
-                    <label :for=key>{{ key }}</label>
-                </div>
-            </div>
-        </div>
-        <div class="filter-item">
-            <div class="filter-section-header">
                 <h3>Amenities</h3>
                 <button class="toggle-button" @click="toggleFilter(3)">
                     <span v-if="isFilterOpen[3]"><i class="fa-solid fa-chevron-up"></i></span>
@@ -59,6 +44,21 @@
             <div v-show="isFilterOpen[3]" class="price-range-container">
                 <div v-for="(value, key) in searchStore.amenities" :key="key">
                     <input :id="key" type="checkbox" :value="key" v-model="searchStore.amenities[key]" style="zoom:1.2;">
+                    <label :for=key>{{ key }}</label>
+                </div>
+            </div>
+        </div>
+        <div class="filter-item">
+            <div class="filter-section-header">
+                <h3>Freebies</h3>
+                <button class="toggle-button" @click="toggleFilter(2)">
+                    <span v-if="isFilterOpen[2]"><i class="fa-solid fa-chevron-up"></i></span>
+                    <span v-else><i class="fa-solid fa-chevron-down"></i></span>
+                </button>
+            </div>
+            <div v-show="isFilterOpen[2]" class="price-range-container">
+                <div v-for="(value, key) in searchStore.freebies" :key="key">
+                    <input :id=key type="checkbox" :value="key" v-model="searchStore.freebies[key]" style="zoom:1.2;">
                     <label :for=key>{{ key }}</label>
                 </div>
             </div>
