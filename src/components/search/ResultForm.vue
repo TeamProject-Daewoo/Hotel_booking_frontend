@@ -1,19 +1,22 @@
 <template>
-    <div class="result-main-container" v-if="response">
+    <div class="result-main-container" v-if="searchStore.result">
         <div class="select-place">
-            <button v-for="(count, place) in selectData" 
-                    :key="place"
-                    :class="{ 'active': place === searchStore.place }"
-                    @click="selectPlace(place)">
-                {{ place }}
+            <button v-for="(count, category) in searchStore.result.data.counts" 
+                    :key="category"
+                    :class="{ 'active': category === searchStore.category }"
+                    @click="selectCategory(category)">
+                {{ category }}
                 <span>{{ count }} places</span>
             </button>
         </div>
         <div class="order-container">
-            <p>Showing of {{ totalCount }} places</p>
-            <p>Sort By <button class="order-select-btn">{{ searchStore.order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
+            <p>총 <b>{{ searchStore.result.data.counts[searchStore.category] }}</b>개의 검색 결과</p>
+            <p>정렬 기준 <button class="order-select-btn">{{ searchStore.order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
         </div>
-        <div class="result-card" v-for="data in response" :key="data.id">
+        <div v-if="searchStore.result.data.searchCards.length === 0" class="result-card">
+            <h3>검색결과가 없습니다!</h3>
+        </div>
+        <div class="result-card" v-for="data in searchStore.result.data.searchCards" :key="data.id">
             <div class="image-container">
                 <img :src="data.image">
             </div>
@@ -45,36 +48,27 @@
             </div>
         </div>
     </div>
+    <div class="result-main-container" v-else-if="searchStore.isLoading">
+        <div class="result-card">
+            <h3>검색 결과를 불러오는 중입니다...</h3>
+        </div>
+    </div>
+    <div class="result-main-container" v-else-if="searchStore.error">
+        <div class="result-card">
+            <h3>{{ searchStore.error }}</h3>
+        </div>
+    </div>
     <div class="result-main-container" v-else>
         <div class="result-card">
-            <h3>검색결과가 없습니다!</h3>
+            <h3>검색 버튼을 눌러서 검색하세요!</h3>
         </div>
     </div>
 </template>
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
-import { defineProps, ref, watch } from 'vue';
+import { ref } from 'vue';
 
 const searchStore = useSearchStore();
-
-const props = defineProps({
-    response: {
-        type: Object,
-        default: null
-    }
-});
-const totalCount = ref(0);
-const selectData = ref({
-    'Hotels': 257,
-    'Motels': 51,
-    'Resorts': 72
-});
-
-watch(() => props.response, (newResponse) => {
-    //console.log(newResponse);
-    if (newResponse)
-        totalCount.value = newResponse.length;
-}, { immediate: true });
 
 const likeToggle = (event) => {
   const target = event.currentTarget.querySelector('i');
@@ -87,8 +81,9 @@ const likeToggle = (event) => {
   }
 }
 
-const selectPlace = (place) => {
-    searchStore.place = place;
+const selectCategory = (category) => {
+    searchStore.category = category;
+    searchStore.fetchSearchResult();
 };
 </script>
 

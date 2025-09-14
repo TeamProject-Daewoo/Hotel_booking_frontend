@@ -29,7 +29,7 @@
             </button>
         </div>
         <div class="search-button-container">
-            <button class="search-button" @click="search"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
+            <button class="search-button" @click="searchStore.fetchSearchResult"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
         </div>
         <SearchModal :isOpen="isModalOpen" @close="closeModal">
             <div v-if="modalType === 'checkIn'">
@@ -141,8 +141,8 @@ const openModal = (type) => {
     modalType.value = type;
     isModalOpen.value = true;
     if(type === 'guests') {
-        tempGuestCount.value = guestCount.value;
-        tempRoomCount.value = roomCount.value;
+        tempGuestCount.value = searchStore.guestCount;
+        tempRoomCount.value = searchStore.roomCount;
     }
 };
 

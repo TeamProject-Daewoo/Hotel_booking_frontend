@@ -12,7 +12,7 @@
                 </button>
             </div>
             <div v-show="isFilterOpen[0]" class="price-range-container" style="width: 100%;">
-                <div ref="slider"></div>
+                <div @change="handleSearch" ref="slider"></div>
                 <div class="price-label">
                     <p>${{ searchStore.minPrice }}</p>
                     <p>${{ searchStore.maxPrice }}</p>
@@ -43,7 +43,7 @@
             </div>
             <div v-show="isFilterOpen[3]" class="price-range-container">
                 <div v-for="(value, key) in searchStore.amenities" :key="key">
-                    <input :id="key" type="checkbox" :value="key" v-model="searchStore.amenities[key]" style="zoom:1.2;">
+                    <input :id="key" type="checkbox" :value="key" @change="handleSearch" v-model="searchStore.amenities[key]" style="zoom:1.2;">
                     <label :for=key>{{ key }}</label>
                 </div>
             </div>
@@ -58,7 +58,7 @@
             </div>
             <div v-show="isFilterOpen[2]" class="price-range-container">
                 <div v-for="(value, key) in searchStore.freebies" :key="key">
-                    <input :id=key type="checkbox" :value="key" v-model="searchStore.freebies[key]" style="zoom:1.2;">
+                    <input :id=key type="checkbox" :value="key" @change="handleSearch" v-model="searchStore.freebies[key]" style="zoom:1.2;">
                     <label :for=key>{{ key }}</label>
                 </div>
             </div>
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import noUiSlider from "nouislider";
 import "nouislider/dist/nouislider.css";
 import { useSearchStore } from '@/api/searchRequestStore';
@@ -76,16 +76,29 @@ const searchStore = useSearchStore();
 
 const isFilterOpen = ref([true, true, true, true]);
 const slider = ref(null);
+const minPriceSlider = ref(null);
+
+//백엔드에 api 호출
+const handleSearch = () => {
+    if(searchStore.result != null)
+    searchStore.fetchSearchResult();
+};
 
 onMounted(() => {
-  noUiSlider.create(slider.value, {
-    start: [searchStore.minPrice, searchStore.maxPrice],
-    connect: true,
-    range: {
-      min: 0,
-      max: 500000,
-    },
-  });
+    noUiSlider.create(slider.value, {
+        start: [searchStore.minPrice, searchStore.maxPrice],
+        connect: true,
+        range: {
+            min: 0,
+            max: 500000
+        }
+    });
+    //onchange 등록
+    slider.value.noUiSlider.on('change', (values) => {
+      searchStore.minPrice = parseInt(values[0]);
+      handleSearch();
+    });
+  
 
   // update 이벤트로 값 반영
   slider.value.noUiSlider.on("update", (values) => {

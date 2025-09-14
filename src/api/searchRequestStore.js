@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import axios from '@/api/axios';
 
 //백엔드에 넘길 데이터 전역으로 관리
 export const useSearchStore = defineStore('search', () => {
@@ -43,7 +44,7 @@ export const useSearchStore = defineStore('search', () => {
   });
   //ResultForm
   const order = ref('Recommended');
-  const place = ref('Hotels');
+  const category = ref('All');
 
   //객체 호출 함수
   const getRequestPayload = () => {
@@ -59,8 +60,25 @@ export const useSearchStore = defineStore('search', () => {
       freebies: freebies.value,
       amenities: amenities.value,
       order: order.value,
-      place: place.value
+      category: category.value
     };
+  };
+
+  const result = ref(null);
+  const isLoading = ref(false);
+  const error = ref(null);
+
+  const fetchSearchResult = async () => {
+      isLoading.value = true;
+      error.value = null;
+      try {
+          result.value = await axios.post('http://localhost:8888/api/search', getRequestPayload());
+      } catch (error) {
+          error = '데이터를 불러오는 데 실패했습니다.';
+          console.error(error);
+      } finally {
+          isLoading.value = false;
+      }
   };
 
   //요소 접근
@@ -76,7 +94,11 @@ export const useSearchStore = defineStore('search', () => {
     roomCount,
     guestCount,
     order,
-    place,
+    category,
+    result,
+    isLoading,
+    error,
+    fetchSearchResult,
     getRequestPayload
   };
 });
