@@ -62,7 +62,7 @@ const closeModal = () => {
     right: 10px;
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 40px;
     cursor: pointer;
 }
 

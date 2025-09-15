@@ -43,7 +43,7 @@ export const useSearchStore = defineStore('search', () => {
     "취사가능": false,      // roomcook
   });
   //ResultForm
-  const order = ref('Recommended');
+  const order = ref('인기 순');
   const category = ref('All');
 
   //객체 호출 함수
@@ -73,9 +73,10 @@ export const useSearchStore = defineStore('search', () => {
       error.value = null;
       try {
           result.value = await axios.post('http://localhost:8888/api/search', getRequestPayload());
-      } catch (error) {
-          error = '데이터를 불러오는 데 실패했습니다.';
-          console.error(error);
+      } catch (e) {
+          error.value = '데이터를 불러오는 데 실패했습니다.';
+          console.error(e);
+          
       } finally {
           isLoading.value = false;
       }

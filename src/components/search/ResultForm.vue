@@ -11,8 +11,19 @@
         </div>
         <div class="order-container">
             <p>총 <b>{{ searchStore.result.data.counts[searchStore.category] }}</b>개의 검색 결과</p>
-            <p>정렬 기준 <button class="order-select-btn">{{ searchStore.order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
+            <p>정렬 기준 <button @click="openModal" class="order-select-btn">{{ searchStore.order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
         </div>
+        <SearchModal :isOpen="isModalOpen" @close="closeModal">
+            <h2>정렬 기준</h2>
+            <ul class="sort-options">
+                <li v-for="option in sortOptions"
+                    :key="option"
+                    class="sort-option-item"
+                    :class="{ 'selected': searchStore.order === option }"
+                    @click="selectOption(option)"
+                >{{ option }}<span v-if="searchStore.order === option"><i class="fa-solid fa-check"></i></span></li>
+            </ul>
+        </SearchModal>
         <div v-if="searchStore.result.data.searchCards.length === 0" class="result-card">
             <h3>검색결과가 없습니다!</h3>
         </div>
@@ -67,6 +78,7 @@
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
 import { ref } from 'vue';
+import SearchModal from './SearchModal.vue';
 
 const searchStore = useSearchStore();
 
@@ -80,6 +92,26 @@ const likeToggle = (event) => {
     target.classList.add('fa-solid');
   }
 }
+
+const selectOption = (option) => {
+    searchStore.order = option;
+    searchStore.fetchSearchResult();
+    closeModal();
+}
+
+const sortOptions = [
+    '인기 순',
+    '높은 가격 순',
+    '낮은 가격 순',
+    '평점 높은 순',
+]
+const isModalOpen = ref(false);
+const openModal = () => {
+    isModalOpen.value = true;
+};
+const closeModal = () => {
+    isModalOpen.value = false;
+};
 
 const selectCategory = (category) => {
     searchStore.category = category;
@@ -164,12 +196,48 @@ const selectCategory = (category) => {
     display: flex;
     justify-content: space-between;
 }
+
 .order-select-btn {
     background: none;
     border: none;
     font-size: 13pt;
     font-weight: bold;
     cursor: pointer;
+}
+
+.sort-options {
+  width: 100%;
+  height: 380px;
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sort-options li {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  height: calc(380px / 4px);
+  font-size: 16pt;
+  color: #555;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.sort-options li:hover {
+  background: #e9ffdf;
+  font-weight: bold;
+  transition: background-color 0.2s ease-in-out;
+}
+.sort-option-item.selected {
+  background-color: #e9ffdf;
+  font-weight: bold;
+}
+
+.sort-option-item.selected:hover {
+  background-color: #cbffca;
 }
 
 .result-card:hover {
