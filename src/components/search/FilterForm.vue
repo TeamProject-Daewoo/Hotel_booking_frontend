@@ -14,8 +14,8 @@
             <div v-show="isFilterOpen[0]" class="price-range-container" style="width: 100%;">
                 <div @change="handleSearch" ref="slider"></div>
                 <div class="price-label">
-                    <p>${{ searchStore.minPrice }}</p>
-                    <p>${{ searchStore.maxPrice }}</p>
+                    <p>{{ searchStore.minPrice.toLocaleString() }}원</p>
+                    <p>{{ searchStore.maxPrice.toLocaleString() }}원</p>
                 </div>
             </div>
         </div>

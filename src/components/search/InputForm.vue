@@ -87,23 +87,6 @@ const checkOut = ref('');
 const tempRoomCount = ref(1);
 const tempGuestCount = ref(1);
 
-const emit = defineEmits(['search-trigger']);
-const search = () => {
-    //백엔드 호출
-    console.log(searchStore.getRequestPayload());
-    axios.post('http://localhost:8888/api/search', searchStore.getRequestPayload())
-        .then(res => {
-            emit('search-trigger', res.data);
-        }).catch(error => {
-            console.log(error);
-        }) 
-    //예시 데이터
-    // const response = [
-    //     {'contentid':'143017', 'title':'가보호텔', 'image':'http://tong.visitkorea.or.kr/cms/resource/83/1942883_image2_1.jpg', 'price':'240000', 'address':'경기도 평택시 평택5로76번길 18-10', 'rating':'4.5', 'totalAminities':'20', 'totalReviews':'371'},
-    //     {'contentid':'1865597', 'title':'가람초연재', 'image':'http://tong.visitkorea.or.kr/cms/resource/48/2993048_image2_1.jpg', 'price':'145000', 'address':'경상북도 안동시 풍천면 하회종가길 76-6', 'rating':'4.3', 'totalAminities':'10', 'totalReviews':'140'},
-    //     {'contentid':'1896032', 'title':'가름게스트하우스', 'image':'http://tong.visitkorea.or.kr/cms/resource/88/3516088_image2_1.JPG', 'price':'183000', 'address':'제주특별자치도 서귀포시 법환하로9번길 10', 'rating':'4.4', 'totalAminities':'16', 'totalReviews':'200'}
-    // ];
-}
 // 날짜 포맷 함수
 const formatDate = (date) => {
     const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'];

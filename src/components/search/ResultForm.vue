@@ -42,7 +42,7 @@
                     </div>
                     <div class="price-view">
                         <p>starting from</p>
-                        <p>￦{{ data.price }}<span style="font-size: 12pt;">/night</span></p>
+                        <p>￦{{ data.price.toLocaleString() }}<span style="font-size: 12pt;">/night</span></p>
                         <div style="text-align: right;">
                             <p>excl. tax</p>
                         </div>

@@ -1,7 +1,7 @@
 <template>
     <div class="search-form-container">
         <div class="search-container">
-            <InputForm @search-trigger="setResponse"/>
+            <InputForm/>
         </div>
         <div class="view-container">
             <div class="filter-container">
@@ -11,19 +11,15 @@
                 <ResultForm :response="response"/>
             </div>
         </div>
+        <LoadMapButton/>
     </div>
 </template>
 
 <script setup>
 import FilterForm from '@/components/search/FilterForm.vue';
 import InputForm from '@/components/search/InputForm.vue';
+import LoadMapButton from '@/components/search/LoadMapButton.vue';
 import ResultForm from '@/components/search/ResultForm.vue';
-import { ref } from 'vue';
-
-const response = ref(null);
-const setResponse = (data) => {
-    response.value = data;
-}
 </script>
 
 <style scoped>

@@ -69,6 +69,7 @@ export const useSearchStore = defineStore('search', () => {
   const error = ref(null);
 
   const fetchSearchResult = async () => {
+    console.log(result);
       isLoading.value = true;
       error.value = null;
       try {
