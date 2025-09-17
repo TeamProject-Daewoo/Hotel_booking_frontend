@@ -35,8 +35,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRoute, onBeforeRouteLeave } from 'vue-router';
 import apiClient from '@/api/axios'; // 설정해둔 Axios 인스턴스
 
 // --- 상태 관리 ---
@@ -44,13 +44,13 @@ const route = useRoute();
 const reservation = ref(null); // 서버에서 가져온 예약 정보
 const widgets = ref(null); // 토스 위젯 인스턴스
 const isReady = ref(false); // 위젯 렌더링 완료 여부
+let isPaymentCompleted = false; // 결제 완료 여부 플래그
 
 // --- 토스페이먼츠 클라이언트 키 ---
 const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 
 // --- 라이프사이클 훅 ---
 onMounted(async () => {
-  // 1. 라우터 파라미터에서 예약 ID 가져오기
   const reservationId = route.params.reservationId;
   if (!reservationId) {
     alert("예약 ID가 올바르지 않습니다.");
@@ -58,36 +58,32 @@ onMounted(async () => {
   }
 
   try {
-    // 2. 서버에서 예약 정보 조회 (가상의 API 엔드포인트)
     const response = await apiClient.get(`/api/reservations/${reservationId}`);
     reservation.value = response.data;
-
-    // 3. 토스페이먼츠 위젯 초기화 및 렌더링
     await initializeWidgets();
-
+    window.addEventListener('beforeunload', handleBeforeUnload);
   } catch (error) {
     console.error("예약 정보를 불러오는 데 실패했습니다.", error);
     alert("예약 정보를 불러올 수 없습니다.");
   }
 });
 
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+});
+
 // --- 메서드 ---
 const initializeWidgets = async () => {
-  // TossPayments 객체 생성
   const tossPayments = TossPayments(clientKey);
-
-  // 위젯 인스턴스 생성
   widgets.value = tossPayments.widgets({
     customerKey: `user-${reservation.value.userId}-res-${reservation.value.reservationId}`,
   });
 
-  // 결제 금액 설정
   await widgets.value.setAmount({
     currency: "KRW",
     value: reservation.value.totalPrice,
   });
 
-  // 결제 UI와 약관 UI 렌더링
   await Promise.all([
     widgets.value.renderPaymentMethods({
       selector: "#payment-widget",
@@ -109,6 +105,7 @@ const requestPayment = async () => {
   }
 
   try {
+    isPaymentCompleted = true; // 결제 요청 직전에 플래그 설정
     await widgets.value.requestPayment({
       orderId: String(reservation.value.reservationId),
       orderName: reservation.value.hotelName,
@@ -120,8 +117,42 @@ const requestPayment = async () => {
   } catch (error) {
     console.error("결제 요청에 실패했습니다.", error);
     alert("결제 요청 중 오류가 발생했습니다.");
+    isPaymentCompleted = false; // 실패 시 플래그 초기화
   }
 };
+
+const cancelPendingReservation = () => {
+  if (reservation.value?.reservationId && !isPaymentCompleted) {
+    const url = `/api/reservations/pending/${reservation.value.reservationId}`;
+    const data = new Blob([JSON.stringify({ reservationId: reservation.value.reservationId })], { type: 'application/json' });
+    navigator.sendBeacon(url, data);
+    console.log(`Pending reservation ${reservation.value.reservationId} cancellation request sent.`);
+  }
+};
+
+const handleBeforeUnload = (event) => {
+  if (!isPaymentCompleted) {
+    event.preventDefault();
+    cancelPendingReservation();
+    // 일부 브라우저는 이 메시지를 표시하지 않을 수 있습니다.
+    event.returnValue = '결제를 취소하고 페이지를 떠나시겠습니까?';
+  }
+};
+
+onBeforeRouteLeave((to, from, next) => {
+  if (!isPaymentCompleted && reservation.value) {
+    const answer = window.confirm('결제를 취소하고 페이지를 떠나시겠습니까?');
+    if (answer) {
+      cancelPendingReservation();
+      next();
+    } else {
+      next(false);
+    }
+  } else {
+    next();
+  }
+});
+
 </script>
 
 <style scoped>
