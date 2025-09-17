@@ -1,7 +1,7 @@
 <template>
   <Transition name="modal-fade">
     <div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-container">
+      <div class="modal-container" :style="modalSize">
         <button class="modal-close" @click="closeModal">
           &times;
         </button>
@@ -14,13 +14,27 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, computed } from 'vue';
 
 const props = defineProps({
   isOpen: {
     type: Boolean,
     required: true
+  },
+  maxWidth: {
+    type: String,
+    default: '800px'
+  },
+  height: {
+    type: String,
+    default: '600px'
   }
+});
+const modalSize = computed(() => {
+  return {
+    maxWidth: props.maxWidth,
+    height: props.height
+  };
 });
 
 const emit = defineEmits(['close']);
@@ -46,8 +60,9 @@ const closeModal = () => {
 
 .modal-container {
     background: white;
-    padding: 20px;
-    width: 90%;
+    padding: 20px 20px;
+    margin: 0;
+    width: 100%;
     border-radius: 8px;
     max-width: 600px;
     height: 450px;
@@ -62,7 +77,7 @@ const closeModal = () => {
     right: 10px;
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 40px;
     cursor: pointer;
 }
 

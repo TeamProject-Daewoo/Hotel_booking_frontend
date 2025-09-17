@@ -13,7 +13,7 @@ const imageUrls = ref([
 
 const textContent = ref([
   {
-    welcome: "HOTELHUB에 오신 것을 환영합니다",
+    welcome: "Hotel Hub에 오신 것을 환영합니다",
     title: "가장 소중한 고객",
     subtitle: "일상에서 벗어나 특별한 휴식을 경험하세요. 최고의 서비스로 보답하겠습니다."
   },
