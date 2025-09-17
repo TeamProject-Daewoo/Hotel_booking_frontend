@@ -72,44 +72,8 @@
     <div class="result-main-container" v-else>
         <div class="result-card">
             <h3>검색 버튼을 눌러서 검색하세요!</h3>
-        </div>
-    <div class="result-card" v-for="data in response" :key="data.id">
-      <div class="image-container">
-        <img :src="data.image">
-      </div>
-      <div class="infor-container">
-        <div class="text-container">
-          <div class="infor-view">
-            <h2>{{ data.title }}</h2>
-            <p><i class="fa-solid fa-location-dot"></i> {{ data.address }}</p>
-            <span style="margin-right: 30px;"><i class="fa-solid fa-star"></i> {{ data.rating }}</span>
-            <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}+</b> Animities</span>
-            <p><b>Very Good</b> {{ data.totalReviews }} reviews</p>
-          </div>
-          <div class="price-view">
-            <p>starting from</p>
-            <p>￦{{ data.price }}<span style="font-size: 12pt;">/night</span></p>
-            <div style="text-align: right;">
-              <p>excl. tax</p>
-            </div>
-          </div>
-        </div>
-        <div class="btn-container">
-          <button class="like-btn" @click="likeToggle">
-            <i class="fa-regular fa-heart"></i>
-          </button>
-          <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
-            View Place
-          </button>
-        </div>
-      </div>
+       </div>
     </div>
-  </div>
-  <div class="result-main-container" v-else>
-    <div class="empty-result-container">
-      <h3>검색결과가 없습니다.</h3>
-    </div>
-  </div>
 </template>
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
