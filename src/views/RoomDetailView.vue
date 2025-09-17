@@ -147,7 +147,7 @@ function onContinue(){
     name: 'reserv', // 또는 'payment'
     query: {
       contentid: id,
-      roomcode: room.value.roomcode,
+      roomcode: room.value.id,
       hotelName: base.value.title,
       roomType: room.value.roomtitle,
       checkInDate: checkIn.value,

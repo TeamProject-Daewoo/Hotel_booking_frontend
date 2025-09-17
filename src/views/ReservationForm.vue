@@ -73,7 +73,7 @@ const formattedTotalPrice = computed(() => {
 const proceedToPayment = async () => {
   const reservationData = {
     contentid: contentid.value,
-    roomcode: roomcode.value, // 추가
+    roomcode: roomcode.value,
     checkInDate: checkInDate.value,
     checkOutDate: checkOutDate.value,
     numAdults: numAdults.value,

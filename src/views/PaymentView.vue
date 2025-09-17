@@ -35,21 +35,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useRoute, onBeforeRouteLeave } from 'vue-router';
-import apiClient from '@/api/axios'; // 설정해둔 Axios 인스턴스
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import apiClient from '@/api/axios';
 
-// --- 상태 관리 ---
 const route = useRoute();
-const reservation = ref(null); // 서버에서 가져온 예약 정보
-const widgets = ref(null); // 토스 위젯 인스턴스
-const isReady = ref(false); // 위젯 렌더링 완료 여부
-let isPaymentCompleted = false; // 결제 완료 여부 플래그
+const reservation = ref(null);
+const widgets = ref(null);
+const isReady = ref(false);
 
-// --- 토스페이먼츠 클라이언트 키 ---
 const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 
-// --- 라이프사이클 훅 ---
 onMounted(async () => {
   const reservationId = route.params.reservationId;
   if (!reservationId) {
@@ -61,23 +57,19 @@ onMounted(async () => {
     const response = await apiClient.get(`/api/reservations/${reservationId}`);
     reservation.value = response.data;
     await initializeWidgets();
-    window.addEventListener('beforeunload', handleBeforeUnload);
   } catch (error) {
     console.error("예약 정보를 불러오는 데 실패했습니다.", error);
     alert("예약 정보를 불러올 수 없습니다.");
   }
 });
 
-onUnmounted(() => {
-  window.removeEventListener('beforeunload', handleBeforeUnload);
-});
-
-// --- 메서드 ---
 const initializeWidgets = async () => {
+  if (!reservation.value) return;
+
   const tossPayments = TossPayments(clientKey);
-  widgets.value = tossPayments.widgets({
-    customerKey: `user-${reservation.value.userId}-res-${reservation.value.reservationId}`,
-  });
+  const customerKey = `user-${reservation.value.userId || 'non-member'}-${reservation.value.reservationId}`;
+
+  widgets.value = tossPayments.widgets({ customerKey });
 
   await widgets.value.setAmount({
     currency: "KRW",
@@ -105,54 +97,19 @@ const requestPayment = async () => {
   }
 
   try {
-    isPaymentCompleted = true; // 결제 요청 직전에 플래그 설정
     await widgets.value.requestPayment({
-      orderId: String(reservation.value.reservationId),
+      orderId: `${reservation.value.reservationId}_${new Date().getTime()}`, // 고유성 보장을 위해 타임스탬프 추가
       orderName: reservation.value.hotelName,
       successUrl: `${window.location.origin}/payment-success`,
       failUrl: `${window.location.origin}/payment-fail`,
       customerName: reservation.value.customerName,
-      customerEmail: reservation.value.customerEmail,
+      customerEmail: reservation.value.userId, // 회원 이메일 또는 null
     });
   } catch (error) {
     console.error("결제 요청에 실패했습니다.", error);
     alert("결제 요청 중 오류가 발생했습니다.");
-    isPaymentCompleted = false; // 실패 시 플래그 초기화
   }
 };
-
-const cancelPendingReservation = () => {
-  if (reservation.value?.reservationId && !isPaymentCompleted) {
-    const url = `/api/reservations/pending/${reservation.value.reservationId}`;
-    const data = new Blob([JSON.stringify({ reservationId: reservation.value.reservationId })], { type: 'application/json' });
-    navigator.sendBeacon(url, data);
-    console.log(`Pending reservation ${reservation.value.reservationId} cancellation request sent.`);
-  }
-};
-
-const handleBeforeUnload = (event) => {
-  if (!isPaymentCompleted) {
-    event.preventDefault();
-    cancelPendingReservation();
-    // 일부 브라우저는 이 메시지를 표시하지 않을 수 있습니다.
-    event.returnValue = '결제를 취소하고 페이지를 떠나시겠습니까?';
-  }
-};
-
-onBeforeRouteLeave((to, from, next) => {
-  if (!isPaymentCompleted && reservation.value) {
-    const answer = window.confirm('결제를 취소하고 페이지를 떠나시겠습니까?');
-    if (answer) {
-      cancelPendingReservation();
-      next();
-    } else {
-      next(false);
-    }
-  } else {
-    next();
-  }
-});
-
 </script>
 
 <style scoped>
