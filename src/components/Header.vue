@@ -49,7 +49,7 @@ const handleLogout = async () => {
 
       <div class="user-actions">
         <template v-if="authStore.loggedInUser">
-          <span @click="goMypage" class="user-greeting">안녕하세요, {{ authStore.loggedInUser }}님</span>
+          <span @click="goMypage" class="user-greeting">안녕하세요, {{ authStore.userName }}님</span>
           <button class="logout" @click="handleLogout">로그아웃</button>
         </template>
 
