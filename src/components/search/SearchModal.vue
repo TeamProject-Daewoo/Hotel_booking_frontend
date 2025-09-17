@@ -23,11 +23,11 @@ const props = defineProps({
   },
   maxWidth: {
     type: String,
-    default: '600px'
+    default: '800px'
   },
   height: {
     type: String,
-    default: '450px'
+    default: '600px'
   }
 });
 const modalSize = computed(() => {
@@ -60,7 +60,8 @@ const closeModal = () => {
 
 .modal-container {
     background: white;
-    padding: 20px;
+    padding: 20px 20px;
+    margin: 0;
     width: 100%;
     border-radius: 8px;
     max-width: 600px;

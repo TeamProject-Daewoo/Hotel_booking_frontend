@@ -7,17 +7,10 @@
                 <span><input id="destination" type="text" v-model="searchStore.keyword" placeholder="호텔명 또는 지역 입력"></span>
             </div>
         </div>
-        <div class="field-container" id="checkInForm">
-            <label for="checkIn">Check In</label>
-            <button class="search-input input-gap" id="checkIn" @click="openModal('checkIn')">
-                <span>{{ checkInDateView }}</span>
-                <span><i class="fa-solid fa-calendar-days"></i></span>
-            </button>
-        </div>
-        <div class="field-container" id="checkOutForm">
-            <label for="checkOut">Check Out</label>
-            <button class="search-input input-gap" id="checkOut" @click="openModal('checkOut')">
-                <span>{{ checkOutDateView }}</span>
+        <div class="field-container" id="dateForm">
+            <label for="checkIn">Date</label>
+            <button class="search-input input-gap" id="checkIn" @click="openModal('datePicker')">
+                <span>{{ checkInDateView }} ~ {{ checkOutDateView }} · {{ getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate) }}박</span>
                 <span><i class="fa-solid fa-calendar-days"></i></span>
             </button>
         </div>
@@ -32,13 +25,13 @@
             <button class="search-button" @click="searchStore.fetchSearchResult"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
         </div>
         <SearchModal :isOpen="isModalOpen" @close="closeModal">
-            <div v-if="modalType === 'checkIn'">
-                <h2>체크인 날짜 선택</h2>
-                <DatePicker @select-date="handleDateSelect" />
-            </div>
-            <div v-if="modalType === 'checkOut'">
-                <h2>체크아웃 날짜 선택</h2>
-                <DatePicker @select-date="handleDateSelect" />
+            <div v-if="modalType === 'datePicker'">
+                <h2>날짜 선택</h2>
+                <DatePicker 
+                    :initialCheckIn="searchStore.checkInDate"
+                    :initialCheckOut="searchStore.checkOutDate"
+                    @range-selected="setDate"
+                />
             </div>
             <div v-if="modalType === 'guests'" class="guests-form-container">
                 <h2>인원 및 객실 개수</h2>
@@ -81,9 +74,6 @@ const searchStore = useSearchStore();
 const isModalOpen = ref(false);
 const modalType = ref('');
 
-const checkIn = ref('');
-const checkOut = ref('');
-
 const tempRoomCount = ref(1);
 const tempGuestCount = ref(1);
 
@@ -96,29 +86,8 @@ const formatDate = (date) => {
     return `${dayName} ${month}/${day}`;
 };
 
-const checkInDateView = ref(formatDate(new Date()));
-const checkOutDateView = ref(formatDate(new Date()));
-// 날짜 선택 핸들러
-const handleDateSelect = (date) => {
-    if (modalType.value === 'checkIn') {
-        // 체크아웃 날짜가 체크인 날짜보다 이전이면 초기화
-        if (searchStore.checkOutDate && searchStore.checkOutDate < date) {
-            searchStore.checkOutDate = null;
-            checkOutDateView.value = null;
-        }
-        searchStore.checkInDate = date;
-        checkInDateView.value = formatDate(date)
-    } else if (modalType.value === 'checkOut') {
-        // 체크인 날짜보다 이전 날짜를 선택할 수 없게 함
-        if (searchStore.checkInDate && searchStore.checkInDate > date) {
-            alert('체크아웃 날짜는 체크인 날짜보다 이전일 수 없습니다.');
-            return;
-        }
-        searchStore.checkOutDate = date;
-        checkOutDateView.value = formatDate(date);
-    }
-    closeModal();
-};
+const checkInDateView = ref(formatDate(searchStore.checkInDate));
+const checkOutDateView = ref(formatDate(searchStore.checkOutDate));
 
 const openModal = (type) => {
     modalType.value = type;
@@ -137,15 +106,22 @@ const save = () => {
     searchStore.roomCount = tempRoomCount.value;
     closeModal();
 };
-
-const selectDate = (value) => {
-    if (modalType.value === 'checkIn') {
-        checkIn.value = value;
-    } else if (modalType.value === 'checkOut') {
-        checkOut.value = value;
-    }
+const setDate = (payload) => {
+    searchStore.checkInDate = payload.start;
+    searchStore.checkOutDate = payload.end;
+    checkInDateView.value = formatDate(payload.start);
+    checkOutDateView.value = formatDate(payload.end);
     closeModal();
-};
+}
+function getDaysDifference(date1, date2) {
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+  const utc1 = Date.UTC(date1.getFullYear(), date1.getMonth(), date1.getDate());
+  const utc2 = Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate());
+
+  return Math.floor((utc2 - utc1) / MS_PER_DAY);
+}
+
 </script>
 <style scoped>
 .search-main-container {
@@ -203,8 +179,8 @@ const selectDate = (value) => {
     border: none;
     outline: none;
 }
-#checkOutForm, #checkInForm {
-    width: 20%;
+#dateForm {
+    width: 30%;
 }
 .input-gap {
     align-items: center;
@@ -316,8 +292,9 @@ const selectDate = (value) => {
 
 .guest-submit-btn {
     width: 100%;
-    height: 50px;
+    height: 70px;
     bottom: 0px;
+    left: 0px;
     position: absolute;
     border-radius: 8px;
     border-top-left-radius: 0px;

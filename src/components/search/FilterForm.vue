@@ -5,7 +5,7 @@
         </div>
         <div class="filter-item">
             <div class="filter-section-header">
-                <h3>Price</h3>
+                <h3>가격 범위</h3>
                 <button class="toggle-button" @click="toggleFilter(0)">
                     <span v-if="isFilterOpen[0]"><i class="fa-solid fa-chevron-up"></i></span>
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
@@ -21,7 +21,7 @@
         </div>
         <div class="filter-item">
             <div class="filter-section-header">
-                <h3>Rating</h3>
+                <h3>평점</h3>
                 <button class="toggle-button" @click="toggleFilter(1)">
                     <span v-if="isFilterOpen[1]"><i class="fa-solid fa-chevron-up"></i></span>
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
@@ -35,7 +35,7 @@
         </div>
         <div class="filter-item">
             <div class="filter-section-header">
-                <h3>Amenities</h3>
+                <h3>편의시설</h3>
                 <button class="toggle-button" @click="toggleFilter(3)">
                     <span v-if="isFilterOpen[3]"><i class="fa-solid fa-chevron-up"></i></span>
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
@@ -50,7 +50,7 @@
         </div>
         <div class="filter-item">
             <div class="filter-section-header">
-                <h3>Freebies</h3>
+                <h3>객실 내 편의시설</h3>
                 <button class="toggle-button" @click="toggleFilter(2)">
                     <span v-if="isFilterOpen[2]"><i class="fa-solid fa-chevron-up"></i></span>
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>

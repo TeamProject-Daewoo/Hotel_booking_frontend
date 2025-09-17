@@ -37,12 +37,12 @@
                         <h2>{{ data.title }}</h2>
                         <p><i class="fa-solid fa-location-dot"></i> {{ data.address }}</p>
                         <span style="margin-right: 30px;"><i class="fa-solid fa-star"></i> {{ data.rating }}</span>
-                        <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}+</b> Animities</span>
+                        <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}</b>+ 편의시설</span>
                         <p><b>Very Good</b> {{ data.totalReviews }} reviews</p>
                     </div>
                     <div class="price-view">
                         <p>starting from</p>
-                        <p>￦{{ data.price.toLocaleString() }}<span style="font-size: 12pt;">/night</span></p>
+                        <p>{{ (data.price*dateDiff).toLocaleString() }}원<span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
                         <div style="text-align: right;">
                             <p>excl. tax</p>
                         </div>
@@ -77,10 +77,11 @@
 </template>
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import SearchModal from './SearchModal.vue';
 
 const searchStore = useSearchStore();
+const dateDiff = ref(null);
 
 const likeToggle = (event) => {
   const target = event.currentTarget.querySelector('i');
@@ -117,6 +118,18 @@ const selectCategory = (category) => {
     searchStore.category = category;
     searchStore.fetchSearchResult();
 };
+
+function getDaysDifference(date1, date2) {
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+  const utc1 = Date.UTC(date1.getFullYear(), date1.getMonth(), date1.getDate());
+  const utc2 = Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate());
+
+  return Math.floor((utc2 - utc1) / MS_PER_DAY);
+}
+watch(() => searchStore.result, () => {
+    dateDiff.value = getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate);
+});
 </script>
 
 <style scoped>
@@ -130,6 +143,8 @@ const selectCategory = (category) => {
   height: 300px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
+  justify-content: center;
+  align-items: center;
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   background-color: #fff;
