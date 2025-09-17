@@ -1,20 +1,49 @@
 <template>
   <section class="overview">
     <h2>숙소 개요</h2>
-    <ul class="facts">
-      <li><b>객실 수 : </b> {{ roomUnits ?? '-' }}</li>
-      <li><b>객실 타입 : </b> {{ building.roomtype || '-' }}</li>
-      <li><b>규모 : </b> {{ scaleText }}</li>
-      <li><b>주차 : </b> {{ building.parkinglodging || '-' }}</li>
-      <li><b>문의 : </b> {{ contact }}</li>
+    <ul class="facts facts-grid" role="list" aria-label="숙소 정보">
+      <li class="fact-card">
+        <b>객실 수</b>
+        <span>{{ roomUnits ?? '-' }}</span>
+      </li>
+      <li class="fact-card">
+        <b>객실 타입</b>
+        <span>{{ building.roomtype || '-' }}</span>
+      </li>
+      <li class="fact-card">
+        <b>규모</b>
+        <span>{{ scaleText }}</span>
+      </li>
+      <li class="fact-card">
+        <b>주차</b>
+        <span>{{ building.parkinglodging || '-' }}</span>
+      </li>
+      <li class="fact-card">
+        <b>문의</b>
+        <span>{{ contact }}</span>
+      </li>
     </ul>
 
-    <div class="chips" v-if="subfacilities.length">
-      <span v-for="(s,idx) in subfacilities" :key="idx" class="chip">{{ s }}</span>
+    <!-- 부대시설: 값이 있을 때 카드로 표시 -->
+    <div v-if="building.subfacility" class="fact-row">
+      <b>부대시설</b>
+      <div class="fact-cards">
+        <div v-for="(facility, index) in building.subfacility?.split(',')" :key="index" class="fact-card">
+          <i class="fa-solid fa-cogs"></i>  <!-- 예시 아이콘 -->
+          <span>{{ facility.trim() }}</span>
+        </div>
+      </div>
     </div>
 
-    <div class="chips gray" v-if="foodplaces.length">
-      <span v-for="(s,idx) in foodplaces" :key="idx" class="chip">{{ s }}</span>
+    <!-- 식사 장소: 값이 있을 때 카드로 표시 -->
+    <div v-if="building.foodplace" class="fact-row">
+      <b>식사 장소</b>
+      <div class="fact-cards">
+        <div v-for="(place, index) in building.foodplace?.split(',')" :key="index" class="fact-card">
+          <i class="fa-solid fa-utensils"></i> <!-- 예시 아이콘 -->
+          <span>{{ place.trim() }}</span>
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -28,11 +57,13 @@ const props = defineProps({
   building: { type: Object, required: true }
 })
 
+
 // 숫자 파싱 유틸(문자/공백 섞여도 안전)
 const toNum = v => {
   const n = Number(String(v ?? '').replace(/[^\d.]/g, ''))
   return Number.isFinite(n) ? n : null
 }
+
 
 // 객실 수: roomcount 합계(없으면 rooms.length)
 const roomUnits = computed(() => {
@@ -42,6 +73,7 @@ const roomUnits = computed(() => {
   if (counts.length) return counts.reduce((a, b) => a + b, 0)
   return props.rooms.length || null
 })
+
 
 // 면적(㎡) 범위: roomsize2 우선, 없으면 roomsize1
 const areaRange = computed(() => {
@@ -64,6 +96,7 @@ const maxTotal = computed(() => {
   return arr.length ? arr.reduce((a, b) => a + b, 0) : null
 })
 
+
 // 규모 텍스트 조합(면적 · 기준/최대 인원). 없으면 기존 값/대시.
 const scaleText = computed(() => {
   const parts = []
@@ -74,27 +107,92 @@ const scaleText = computed(() => {
   return parts.length ? parts.join(' · ') : (props.building.scalelodging || '-')
 })
 
-// 기타 표시값
 const contact = computed(() =>
   props.building.infocenterlodging || props.base.tel || '-'
-)
-
-// 칩 데이터
-const subfacilities = computed(() =>
-  String(props.building.subfacility || '')
-    .split(/[,，]/).map(s => s.trim()).filter(Boolean)
-)
-const foodplaces = computed(() =>
-  String(props.building.foodplace || '')
-    .split(/[,，]/).map(s => s.trim()).filter(Boolean)
 )
 </script>
 
 <style scoped>
-.overview h2{margin:16px 0 8px;font-size:20px}
-.facts{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;color:#444}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.chip{background:#eaf8f2;border-radius:999px;padding:6px 12px;font-size:13px}
-.chips.gray .chip{background:#f5f5f5}
-@media(max-width:900px){ .facts{grid-template-columns:1fr} }
+.overview h2 {
+  margin: 16px 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.facts-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.fact-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  color: #444;
+}
+
+.fact-card b {
+  color: #2b7264;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.fact-card span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fact-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.fact-row {
+  color: #2b7264;
+  margin-top: 16px;
+  margin-bottom: 10px;
+}
+
+.fact-cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fact-cards .fact-card {
+  flex: 1 0 100px;
+  margin-bottom: 10px;
+}
+
+.fact-cards i {
+  font-size: 18px;
+  color: #2b7264;
+  margin-right: 8px;
+}
+
+@media (max-width: 900px) {
+  .facts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .facts-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

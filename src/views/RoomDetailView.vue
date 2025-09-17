@@ -11,8 +11,14 @@
           v-model:checkOut="checkOut"
           :building="building"
         />
-        <PaymentOptions v-model="payMode" />
-        <LoginBox v-model="phone" @continue="onContinue" />
+        <PaymentOptions 
+          v-model="payMode" 
+        />
+        <Userinfo 
+          v-model:name="guestName"
+          v-model:phone="phone"
+          @continue="onContinue" 
+        />
       </div>
 
       <aside class="right-col">
@@ -44,7 +50,7 @@ import Breadcrumb     from '@/components/roomdetail/Breadcrumb.vue';
 import RoomHero       from '@/components/roomdetail/RoomHero.vue';
 import DatePicker     from '@/components/roomdetail/DatePicker.vue';
 import PaymentOptions from '@/components/roomdetail/PaymentOptions.vue';
-import LoginBox       from '@/components/roomdetail/LoginBox.vue';
+import Userinfo       from '@/components/roomdetail/Userinfo.vue';
 import SummaryCard    from '@/components/roomdetail/SummaryCard.vue';
 
 const route = useRoute()
@@ -72,13 +78,13 @@ const nights   = computed(()=>{
 
 onMounted(async () => {
   try {
-    const [b, d, i] = await Promise.allSettled([
+    const [b, dRes, i] = await Promise.allSettled([
       api.get(`/accommodations/${id}`),
       api.get(`/tour/detail/${id}`),
       api.get(`/tour/intro/${id}`)
     ])
     if (b.status==='fulfilled') base.value = normalizeBase(b.value.data || {})
-    if (d.status==='fulfilled') rooms.value = d.value.data?.response?.body?.items?.item || []
+    if (dRes.status==='fulfilled') rooms.value = dRes.value.data?.response?.body?.items?.item || []
     if (i.status==='fulfilled') building.value = i.value.data || {}
     room.value = rooms.value[idx] || {}
   } finally { ready.value = true }
@@ -92,22 +98,34 @@ function lowestPrice(r){
   const arr=[r.roomoffseasonminfee1,r.roomoffseasonminfee2,r.roompeakseasonminfee1,r.roompeakseasonminfee2].map(asNum).filter(n=>n>0)
   return arr.length ? Math.min(...arr) : 0
 }
+/* 결제/예약자 입력 */
+const payMode   = ref('full')   // 'full' | 'partial'
+const guestName = ref('')       // ✅ 추가: 예약자 이름
+const phone     = ref('')       // LoginBox v-model:phone과 연결
 
-/* 결제 */
-const payMode = ref('full')
-const phone   = ref('')
-
-const nightly = computed(()=> lowestPrice(room.value))
-const baseFare = computed(()=> nightly.value * (nights.value || 1))
-const discount = computed(()=> 0)
-const taxes    = computed(()=> 0)
+/* 요금 계산 */
+const nightly    = computed(()=> lowestPrice(room.value))
+const baseFare   = computed(()=> nightly.value * (nights.value || 1))
+const discount   = computed(()=> 0)
+const taxes      = computed(()=> 0)
 const serviceFee = computed(()=> 0)
-const total = computed(()=> baseFare.value - discount.value + taxes.value + serviceFee.value)
+const total      = computed(()=> baseFare.value - discount.value + taxes.value + serviceFee.value)
 
+/* 다음 페이지로 이동 */
 function onContinue(){
-  console.log('continue', { phone:phone.value, payMode:payMode.value })
+  // 필요 시 간단한 가드(선택): 이름/전화 확인
+  // if (!guestName.value.trim() || phone.value.replace(/\D/g,'').length < 10) return
+
+  const phoneDigits = phone.value.replace(/\D/g,'') // 숫자만 전달 추천
+
+  console.log('continue', {
+    guestName: guestName.value,
+    phone: phoneDigits,
+    payMode: payMode.value
+  })
+
   router.push({
-    name: 'reserv', // router/index.js에 정의된 이름
+    name: 'reserv', // 또는 'payment' 등 원하는 라우트 이름
     query: {
       contentid: id,
       roomcode: room.value.roomcode,
@@ -115,10 +133,15 @@ function onContinue(){
       roomType: room.value.roomtitle,
       checkInDate: checkIn.value,
       checkOutDate: checkOut.value,
-      nights: nights.value,
-      numAdults: room.value.roombasecount, // 예시로 기본 인원수 전달
-      numChildren: 0, // 예시로 아동 0명 전달
-      totalPrice: total.value
+      nights: String(nights.value),
+      numAdults: String(room.value.roombasecount ?? 2),
+      numChildren: '0',
+      totalPrice: String(total.value ?? 0),
+
+      // ✅ 예약자/결제 정보 추가
+      guestName: guestName.value,
+      phone: phoneDigits,
+      payMode: payMode.value
     }
   });
 }

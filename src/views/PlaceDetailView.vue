@@ -9,8 +9,19 @@
     />
     <Gallery :images="gallery" />
     <Overview :rooms="rooms" :base="base" :building="building" />
-    <Rooms :rooms="rooms" @bookRoom="goRoom" />
+    <Rooms
+      :rooms="rooms"
+      :fallback-images="[base.firstimage, base.firstimage2]"
+       @bookRoom="goRoom"
+    />
     <Map :mapx="base.mapx" :mapy="base.mapy" :address="base.addr1" ></Map>
+    <Reviews       
+      :reviews="reviewsFromApi"     
+      :pageSize="5"
+      @write-review="openReviewModal"
+      @report="handleReport"
+      @submit-review="handleReviewSubmit"
+    />
   </div>
 
   <div v-else class="loading">불러오는 중...</div>
@@ -26,6 +37,7 @@ import Gallery  from '@/components/placedetail/Gallery.vue';
 import Overview from '@/components/placedetail/Overview.vue';
 import Rooms    from '@/components/placedetail/Rooms.vue';
 import Map      from '@/components/placedetail/Map.vue';
+import Reviews  from '@/components/placedetail/Reviews.vue';
 
 /** ---------- 라우터 & 상태 ---------- */
 const route = useRoute()
@@ -36,6 +48,8 @@ const base = ref({})
 const building = ref({})
 const rooms = ref([])
 const ready = ref(false)
+const reviews = ref([])
+
 
 /** ---------- 유틸 ---------- */
 function stripAngle(u){ return String(u||'').replace(/^<|>$/g,'') }

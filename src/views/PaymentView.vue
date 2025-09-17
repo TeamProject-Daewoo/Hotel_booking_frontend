@@ -1,25 +1,36 @@
 <template>
-  <div class="payment-container">
-    <div v-if="reservation" class="info-box">
-      <h2>결제 정보 확인</h2>
-      <p><strong>예약 숙소:</strong> {{ reservation.hotelName || '숙소 정보 로딩 중...' }}</p>
-      <p><strong>예약자:</strong> {{ reservation.customerName || '고객 정보 로딩 중...' }}</p>
-      <p class="price"><strong>결제 금액:</strong> {{ reservation.totalPrice?.toLocaleString() || 0 }}원</p>
-    </div>
-    <div v-else class="loading-box">
-      <p>예약 정보를 불러오는 중입니다...</p>
-    </div>
+  <div class="payment-page-background">
+    <div class="payment-container">
+      <div class="card info-box" v-if="reservation">
+        <h2 class="card-title">결제 정보 확인</h2>
+        <div class="info-grid">
+          <p><strong>예약 숙소</strong></p>
+          <p>{{ reservation.hotelName || '숙소 정보 로딩 중...' }}</p>
+          <p><strong>예약자</strong></p>
+          <p>{{ reservation.customerName || '고객 정보 로딩 중...' }}</p>
+          <p><strong>결제 금액</strong></p>
+          <p class="price">{{ reservation.totalPrice?.toLocaleString() || 0 }}원</p>
+        </div>
+      </div>
+      <div v-else class="card loading-box">
+        <p>예약 정보를 불러오는 중입니다...</p>
+      </div>
 
-    <div id="payment-widget" style="width: 100%"></div>
-    <div id="agreement" style="width: 100%"></div>
+      <div class="card">
+        <div id="payment-widget"></div>
+      </div>
+      <div class="card">
+        <div id="agreement"></div>
+      </div>
 
-    <button
-        class="payment-button"
-        @click="requestPayment"
-        :disabled="!isReady"
-    >
-      결제하기
-    </button>
+      <button
+          class="payment-button"
+          @click="requestPayment"
+          :disabled="!isReady"
+      >
+        {{ isReady ? `${reservation?.totalPrice?.toLocaleString() || 0}원 결제하기` : '준비 중...' }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -66,12 +77,11 @@ const initializeWidgets = async () => {
   const tossPayments = TossPayments(clientKey);
 
   // 위젯 인스턴스 생성
-  // customerKey는 예약 ID나 사용자 ID 같이 고유한 값으로 설정합니다.
   widgets.value = tossPayments.widgets({
     customerKey: `user-${reservation.value.userId}-res-${reservation.value.reservationId}`,
   });
 
-  // 결제 금액 설정 (DB에서 가져온 totalPrice 사용)
+  // 결제 금액 설정
   await widgets.value.setAmount({
     currency: "KRW",
     value: reservation.value.totalPrice,
@@ -89,7 +99,6 @@ const initializeWidgets = async () => {
     }),
   ]);
 
-  // 모든 준비가 끝나면 결제 버튼 활성화
   isReady.value = true;
 };
 
@@ -100,12 +109,11 @@ const requestPayment = async () => {
   }
 
   try {
-    // 결제 요청
     await widgets.value.requestPayment({
-      orderId: String(reservation.value.reservationId), // reservation_id를 orderId로 사용
-      orderName: reservation.value.hotelName, // 실제 주문 이름
-      successUrl: `${window.location.origin}/payment-success`, // 성공 시 리다이렉트될 URL
-      failUrl: `${window.location.origin}/payment-fail`,   // 실패 시 리다이렉트될 URL
+      orderId: String(reservation.value.reservationId),
+      orderName: reservation.value.hotelName,
+      successUrl: `${window.location.origin}/payment-success`,
+      failUrl: `${window.location.origin}/payment-fail`,
       customerName: reservation.value.customerName,
       customerEmail: reservation.value.customerEmail,
     });
@@ -117,46 +125,86 @@ const requestPayment = async () => {
 </script>
 
 <style scoped>
+.payment-page-background {
+  background-color: #f8f9fa;
+  padding: 40px 16px;
+  font-family: "Noto Sans KR", system-ui, Arial;
+}
+
 .payment-container {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 700px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
-.info-box {
-  padding: 15px;
-  border: 1px solid #eee;
-  border-radius: 4px;
+
+.card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+  padding: 24px;
 }
+
+.card-title {
+  font-weight: 700;
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  font-size: 15px;
+}
+.info-grid p {
+  margin: 0;
+  color: #495057;
+}
+.info-grid p:nth-child(odd) {
+  font-weight: 500;
+  color: #212529;
+}
+
 .price {
-  font-size: 1.2em;
-  font-weight: bold;
-  color: #333;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2ECC9A;
 }
+
 .loading-box {
   text-align: center;
   padding: 40px;
+  color: #868e96;
 }
+
 .payment-button {
-  padding: 15px;
-  border-radius: 8px;
-  background-color: #007bff;
-  color: white;
-  border: none;
+  width: 100%;
+  padding: 16px;
+  border-radius: 10px;
+  font-weight: 700;
   font-size: 16px;
-  font-weight: bold;
+  text-align: center;
+  border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all .2s;
+  background: #2ECC9A;
+  color: #fff;
 }
+
 .payment-button:disabled {
-  background-color: #ccc;
+  background: #ced4da;
   cursor: not-allowed;
 }
+
 .payment-button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background: #27A582;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.1);
 }
 </style>

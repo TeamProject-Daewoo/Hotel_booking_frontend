@@ -1,20 +1,34 @@
 <template>
-  <div class="complete-container">
-    <div v-if="reservation">
-      <h1>🎉 예약이 성공적으로 완료되었습니다!</h1>
-      <div class="details-box">
-        <h3>예약 정보</h3>
-        <p><strong>예약 번호:</strong> {{ reservation.reservationId }}</p>
-        <p><strong>숙소 이름:</strong> {{ reservation.hotelName }}</p>
-        <p><strong>체크인:</strong> {{ reservation.checkInDate }}</p>
-        <p><strong>체크아웃:</strong> {{ reservation.checkOutDate }}</p>
-        <p><strong>총 결제 금액:</strong> {{ reservation.totalPrice?.toLocaleString() }}원</p>
-        <p><strong>예약 상태:</strong> <span class="status-paid">{{ reservation.status }}</span></p>
+  <div class="complete-page-background">
+    <div class="complete-container">
+      <div v-if="reservation">
+        <div class="confirmation-header">
+          <i class="fa-solid fa-circle-check confirmation-icon"></i>
+          <h1 class="main-title">예약이 확정되었습니다!</h1>
+          <p class="sub-title">예약해주셔서 감사합니다. 즐거운 여행이 되시길 바랍니다.</p>
+        </div>
+
+        <div class="card details-box">
+          <h3 class="card-title">예약 정보</h3>
+          <div class="info-grid">
+            <p><strong>예약 번호</strong></p><p>{{ reservation.reservationId }}</p>
+            <p><strong>숙소 이름</strong></p><p>{{ reservation.hotelName }}</p>
+            <p><strong>예약자 이름</strong></p><p>{{ reservation.customerName || '정보 없음' }}</p>
+            <p><strong>체크인</strong></p><p>{{ reservation.checkInDate }}</p>
+            <p><strong>체크아웃</strong></p><p>{{ reservation.checkOutDate }}</p>
+            <p><strong>총 결제 금액</strong></p><p class="price">{{ reservation.totalPrice?.toLocaleString() }}원</p>
+          </div>
+        </div>
+
+        <div class="button-container">
+          <router-link to="/mypage/bookinglist" class="button-secondary">예약 내역 확인</router-link>
+          <router-link to="/" class="button-primary">홈으로 돌아가기</router-link>
+        </div>
+
       </div>
-      <router-link to="/" class="home-link">홈으로 돌아가기</router-link>
-    </div>
-    <div v-else>
-      <p>예약 완료 정보를 불러오는 중입니다...</p>
+      <div v-else class="card loading-box">
+        <p>예약 완료 정보를 불러오는 중입니다...</p>
+      </div>
     </div>
   </div>
 </template>
@@ -29,8 +43,9 @@ const reservation = ref(null);
 
 onMounted(async () => {
   const reservationId = route.params.reservationId;
+  if (!reservationId) return;
+
   try {
-    // 서버에서 최종 확정된 예약 정보를 다시 조회
     const response = await apiClient.get(`/api/reservations/${reservationId}`);
     reservation.value = response.data;
   } catch (error) {
@@ -41,34 +56,127 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.complete-page-background {
+  background-color: #f8f9fa;
+  padding: 40px 16px;
+  font-family: "Noto Sans KR", system-ui, Arial;
+  min-height: 80vh;
+}
+
 .complete-container {
   max-width: 700px;
-  margin: 40px auto;
-  padding: 30px;
+  margin: 0 auto;
   text-align: center;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-.details-box {
-  text-align: left;
-  margin: 30px 0;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+
+.confirmation-header {
+  margin-bottom: 32px;
 }
-.details-box p {
-  margin: 10px 0;
+
+.confirmation-icon {
+  font-size: 48px;
+  color: #2ECC9A;
+  margin-bottom: 16px;
+}
+
+.main-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.sub-title {
   font-size: 16px;
+  color: #868e96;
+  margin-bottom: 32px;
 }
+
+.card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+  padding: 24px;
+  text-align: left;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  font-size: 15px;
+}
+
+.info-grid p {
+  margin: 0;
+  color: #495057;
+}
+
+.info-grid p:nth-child(odd) {
+  font-weight: 500;
+  color: #212529;
+}
+
+.price {
+  font-weight: 700;
+  color: #212529;
+}
+
 .status-paid {
-  color: #28a745;
+  color: #2ECC9A;
   font-weight: bold;
 }
-.home-link {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
+
+.button-container {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.button-primary, .button-secondary {
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  text-align: center;
   text-decoration: none;
-  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.button-primary {
+  background: #2ECC9A;
+  color: #fff;
+}
+.button-primary:hover {
+  background: #27A582;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.1);
+}
+
+.button-secondary {
+  background-color: #e9ecef;
+  color: #495057;
+}
+.button-secondary:hover {
+  background-color: #dee2e6;
+  transform: translateY(-2px);
+}
+
+.loading-box {
+  text-align: center;
+  padding: 40px;
+  color: #868e96;
 }
 </style>

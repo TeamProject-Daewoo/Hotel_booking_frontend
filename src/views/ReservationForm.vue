@@ -1,25 +1,25 @@
 <template>
-  <div class="reservation-container">
-    <h2>예약 정보 확인</h2>
-    <div class="info-section">
-      <h3>숙소 정보</h3>
-      <p><strong>호텔 이름:</strong> {{ hotelName }}</p>
-      <p><strong>객실 타입:</strong> {{ roomType }}</p>
+  <div class="reservation-page-background">
+    <div class="reservation-container">
+
+      <ReservationTitle />
+
+      <AccommodationInfo :hotel-name="hotelName" :room-type="roomType" />
+
+      <BookingDetails
+          :check-in-date="checkInDate"
+          :check-out-date="checkOutDate"
+          :nights="nights"
+          :num-adults="numAdults"
+          :num-children="numChildren"
+      />
+
+      <FinalPrice :formatted-total-price="formattedTotalPrice" />
+
+      <button @click="proceedToPayment" class="payment-button">
+        결제하기
+      </button>
     </div>
-    <div class="info-section">
-      <h3>예약 상세</h3>
-      <p><strong>체크인:</strong> {{ checkInDate }}</p>
-      <p><strong>체크아웃:</strong> {{ checkOutDate }}</p>
-      <p><strong>숙박일수:</strong> {{ nights }}박</p>
-      <p><strong>인원:</strong> 성인 {{ numAdults }}명, 아동 {{ numChildren }}명</p>
-    </div>
-    <div class="price-section">
-      <h3>최종 결제 금액</h3>
-      <p class="total-price">{{ formattedTotalPrice }}원</p>
-    </div>
-    <button @click="proceedToPayment" class="payment-button">
-      결제하기
-    </button>
   </div>
 </template>
 
@@ -28,11 +28,16 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
 
+// 새로 만든 자식 컴포넌트들을 import 합니다.
+import ReservationTitle from '@/components/reservation/ReservationTitle.vue';
+import AccommodationInfo from '@/components/reservation/AccommodationInfo.vue';
+import BookingDetails from '@/components/reservation/BookingDetails.vue';
+import FinalPrice from '@/components/reservation/FinalPrice.vue';
+
 const route = useRoute();
 const router = useRouter();
 
-const contentid = ref('');
-const roomcode = ref('');
+// 데이터 로직과 결제 함수는 그대로 부모 컴포넌트에 둡니다.
 const hotelName = ref('');
 const roomType = ref('');
 const checkInDate = ref('');
@@ -43,8 +48,6 @@ const numChildren = ref(0);
 const totalPrice = ref(0);
 
 onMounted(() => {
-  contentid.value = route.query.contentid;
-  roomcode.value = route.query.roomcode;
   hotelName.value = route.query.hotelName;
   roomType.value = route.query.roomType;
   checkInDate.value = route.query.checkInDate;
@@ -61,8 +64,8 @@ const formattedTotalPrice = computed(() => {
 
 const proceedToPayment = async () => {
   const reservationData = {
-    contentid: contentid.value,
-    roomcode: roomcode.value,
+    contentid: route.query.contentid,
+    roomcode: route.query.roomcode,
     checkInDate: checkInDate.value,
     checkOutDate: checkOutDate.value,
     numAdults: numAdults.value,
@@ -92,37 +95,37 @@ const proceedToPayment = async () => {
 </script>
 
 <style scoped>
+.reservation-page-background {
+  background-color: #f8f9fa;
+  padding: 40px 16px;
+  font-family: "Noto Sans KR", system-ui, Arial;
+}
+
 .reservation-container {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  background-color: #fff;
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* 각 카드(컴포넌트) 사이의 간격 */
 }
-h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  font-size: 1.8em;
-  color: #333;
-}
-.info-section, .price-section {
-  margin-bottom: 25px;
-  padding-bottom: 25px;
-  border-bottom: 1px solid #eee;
-}
-.price-section { text-align: right; }
-.total-price { font-size: 2em; font-weight: bold; color: #d9534f; }
+
 .payment-button {
   width: 100%;
-  padding: 15px;
-  font-size: 1.2em;
-  color: white;
-  background-color: #007bff;
+  padding: 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  text-align: center;
   border: none;
-  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all .2s;
+  background: #2ECC9A;
+  color: #fff;
 }
-.payment-button:hover { background-color: #0056b3; }
+
+.payment-button:hover:not(:disabled) {
+  background: #27A582;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.1);
+}
 </style>
