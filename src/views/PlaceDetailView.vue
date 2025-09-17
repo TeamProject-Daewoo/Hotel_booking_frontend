@@ -1,5 +1,5 @@
 <template>
-  <div class="detail-page" v-if="ready">
+  <div class="detail-page">
     <Hero
       :rooms="rooms"
       :base="base"
@@ -12,32 +12,35 @@
     <Rooms
       :rooms="rooms"
       :fallback-images="[base.firstimage, base.firstimage2]"
-       @bookRoom="goRoom"
+      @bookRoom="onBookRoom"
     />
-    <Map :mapx="base.mapx" :mapy="base.mapy" :address="base.addr1" ></Map>
-    <Reviews       
-      :reviews="reviewsFromApi"     
+    <Map
+      :mapx="base.mapx"
+      :mapy="base.mapy"
+      :address="base.addr1"
+      :title="base.title"
+      :price="minPriceText"
+    />
+    <Reviews
+      :reviews="reviewsFromApi"
       :pageSize="5"
       @write-review="openReviewModal"
       @report="handleReport"
-      @submit-review="handleReviewSubmit"
     />
   </div>
-
-  <div v-else class="loading">불러오는 중...</div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import api from '@/api/axios';
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
-import Hero     from '@/components/placedetail/Hero.vue';
-import Gallery  from '@/components/placedetail/Gallery.vue';
-import Overview from '@/components/placedetail/Overview.vue';
-import Rooms    from '@/components/placedetail/Rooms.vue';
-import Map      from '@/components/placedetail/Map.vue';
-import Reviews  from '@/components/placedetail/Reviews.vue';
+import Hero     from '@/components/placedetail/Hero.vue'
+import Gallery  from '@/components/placedetail/Gallery.vue'
+import Overview from '@/components/placedetail/Overview.vue'
+import Rooms    from '@/components/placedetail/Rooms.vue'
+import Map      from '@/components/placedetail/Map.vue'
+import Reviews  from '@/components/placedetail/Reviews.vue'
 
 /** ---------- 라우터 & 상태 ---------- */
 const route = useRoute()
@@ -47,9 +50,11 @@ const id = route.params.id
 const base = ref({})
 const building = ref({})
 const rooms = ref([])
-const ready = ref(false)
-const reviews = ref([])
 
+// (이미 사용 중인 이벤트 핸들러들을 외부에서 쓰고 있다면 아래 정의 필요)
+function onBookRoom(idx){ router.push({ name: 'room-detail', params: { id: String(id), idx: String(idx ?? 0) } }) }
+function openReviewModal(){ /* 구현부 */ }
+function handleReport(){ /* 구현부 */ }
 
 /** ---------- 유틸 ---------- */
 function stripAngle(u){ return String(u||'').replace(/^<|>$/g,'') }
@@ -67,16 +72,16 @@ onMounted(async () => {
   try {
     const [b, d, i] = await Promise.allSettled([
       api.get(`/accommodations/${id}`),
-      api.get(`/tour/detail/${id}`),
-      api.get(`/tour/intro/${id}`)
+      api.get(`/tour/detail/db/content/${id}`),
+      api.get(`/tour/intro/db/${id}`)
     ])
     if (b.status === 'fulfilled') base.value = normalizeBase(b.value.data)
-    if (d.status === 'fulfilled') rooms.value = toArray(d.value.data?.response?.body?.items?.item)
+    if (d.status === 'fulfilled') {
+      rooms.value = Array.isArray(d.value.data) ? d.value.data : []
+    }
     if (i.status === 'fulfilled') building.value = i.value.data || {}
   } catch (e) {
     console.error('PlaceDetailView fetch error:', e)
-  } finally {
-    ready.value = true
   }
 })
 
@@ -88,6 +93,22 @@ function goFirstRoom(){
 function goRoom(idx){
   router.push({ name: 'room-detail', params: { id: String(id), idx: String(idx) } })
 }
+
+/** ---------- 최저가 계산 ---------- */
+const krw = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 })
+const minPriceText = computed(() => {
+  const nums = []
+  for (const r of rooms.value) {
+    ;['roomoffseasonminfee1','roomoffseasonminfee2','roompeakseasonminfee1','roompeakseasonminfee2']
+      .forEach(k => {
+        const v = Number(r?.[k])
+        if (!Number.isNaN(v) && v > 0) nums.push(v)
+      })
+  }
+  if (nums.length === 0) return ''
+  const min = Math.min(...nums)
+  return krw.format(min) + ' ~'
+})
 
 /** ---------- 갤러리 ---------- */
 const gallery = computed(() => {

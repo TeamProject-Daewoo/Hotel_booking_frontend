@@ -7,7 +7,7 @@
 
         <form @submit.prevent="handleLogin">
           <div class="input-group">
-            <label for="user_name">아이디</label>
+            <label for="user_name">이메일</label>
             <input type="text" id="user_name" v-model="user_name" required />
           </div>
 
