@@ -15,10 +15,6 @@
             <span>숙소명</span>
             <span>{{ booking.hotelName }}</span>
           </div>
-<!--          <div class="info-row">-->
-<!--            <span>예약자명</span>-->
-<!--            <span>{{ booking.customerName || '정보 없음' }}</span>-->
-<!--          </div>-->
           <div class="info-row">
             <span>체크인</span>
             <span>{{ booking.checkInDate }}</span>
@@ -35,7 +31,9 @@
         <div class="receipt-total">
           <div class="info-row total">
             <span>총 결제 금액</span>
-            <span class="total-price">{{ booking.totalPrice?.toLocaleString() }}원</span>
+            <span class="total-price" :class="{ 'is-cancelled': booking.status !== 'PAID' }">
+              {{ booking.totalPrice?.toLocaleString() }}원
+            </span>
           </div>
         </div>
       </div>
@@ -132,5 +130,10 @@ defineEmits(['close']);
 
 .total-price {
   color: #2ECC9A !important;
+}
+
+.total-price.is-cancelled {
+  color: #dc3545 !important;
+  text-decoration: line-through;
 }
 </style>

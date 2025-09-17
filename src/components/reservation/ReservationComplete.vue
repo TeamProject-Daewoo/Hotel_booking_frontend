@@ -21,7 +21,7 @@
         </div>
 
         <div class="button-container">
-          <router-link to="/mypage/bookinglist" class="button-secondary">예약 내역 확인</router-link>
+          <button @click="goToBookingDetails" class="button-secondary">예약 내역 확인</button>
           <router-link to="/" class="button-primary">홈으로 돌아가기</router-link>
         </div>
 
@@ -35,11 +35,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/api/axios';
+import { useAuthStore } from '@/api/auth';
 
 const route = useRoute();
+const router = useRouter();
 const reservation = ref(null);
+const authStore = useAuthStore();
 
 onMounted(async () => {
   const reservationId = route.params.reservationId;
@@ -53,6 +56,14 @@ onMounted(async () => {
     alert("예약 정보를 불러오는 데 실패했습니다.");
   }
 });
+
+const goToBookingDetails = () => {
+  if (authStore.loggedInUser) {
+    router.push('/mypage/bookinglist');
+  } else {
+    router.push('/lookup-booking');
+  }
+};
 </script>
 
 <style scoped>
