@@ -30,15 +30,24 @@ const currentMonth = ref(today.getMonth());
 const currentYear = ref(today.getFullYear());
 
 // 두 개의 날짜 상태 관리
-const checkInDate = ref(null);
-const checkOutDate = ref(null);
+const props = defineProps({
+  initialCheckIn: {
+    type: Date,
+    default: null
+  },
+  initialCheckOut: {
+    type: Date,
+    default: null
+  }
+});
+const checkInDate = ref(props.initialCheckIn);
+const checkOutDate = ref(props.initialCheckOut);
 
 const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
 const daysInMonth = computed(() => new Date(currentYear.value, currentMonth.value + 1, 0).getDate());
 const startDayOfWeek = computed(() => new Date(currentYear.value, currentMonth.value, 1).getDay());
 
-// --- 월 이동 로직 (기존과 거의 동일) ---
 const startMonth = today.getMonth();
 const startYear = today.getFullYear();
 const maxDate = new Date();
@@ -58,9 +67,6 @@ const nextMonth = () => {
   if (currentMonth.value === 0) currentYear.value++;
 };
 
-// --- 날짜 선택 및 상태 관리 로직 (핵심 변경) ---
-
-// 선택 가능한 날짜인지 판단 (오늘 이전 날짜 비활성화)
 const isSelectable = (day) => {
   const date = new Date(currentYear.value, currentMonth.value, day);
   const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -79,13 +85,12 @@ const selectDate = (day) => {
     checkOutDate.value = null;
   } 
   // 2. 체크인 날짜보다 이전 날짜를 클릭한 경우 -> 새로 체크인 날짜 선택
-  else if (clickedDate < checkInDate.value) {
+  else if (clickedDate <= checkInDate.value) {
     checkInDate.value = clickedDate;
   }
   // 3. 체크인 날짜만 있는 상태에서 이후 날짜를 클릭한 경우 -> 체크아웃 날짜로 선택
   else {
     checkOutDate.value = clickedDate;
-    // 범위 선택 완료! 부모 컴포넌트로 이벤트 발생
     emit('range-selected', { start: checkInDate.value, end: checkOutDate.value });
   }
 };
@@ -121,7 +126,7 @@ const getDateClasses = (day) => {
 <style scoped>
 .date-picker {
   width: 100%;
-  height: 450px;
+  height: 520px;
   display: flex;
   flex-direction: column;
   border: 1px solid #ddd;
@@ -185,7 +190,7 @@ const getDateClasses = (day) => {
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
   width: 100%;
-  height: 50px;
+  height: 60px;
   border-radius: 4px; /* 기본적으로 약간의 둥근 모서리 */
 }
 

@@ -10,7 +10,7 @@
         <div class="field-container" id="dateForm">
             <label for="checkIn">Date</label>
             <button class="search-input input-gap" id="checkIn" @click="openModal('datePicker')">
-                <span>{{ checkInDateView }} ~ {{ checkOutDateView }}({{  }})</span>
+                <span>{{ checkInDateView }} ~ {{ checkOutDateView }} · {{ getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate) }}박</span>
                 <span><i class="fa-solid fa-calendar-days"></i></span>
             </button>
         </div>
@@ -27,7 +27,11 @@
         <SearchModal :isOpen="isModalOpen" @close="closeModal">
             <div v-if="modalType === 'datePicker'">
                 <h2>날짜 선택</h2>
-                <DatePicker />
+                <DatePicker 
+                    :initialCheckIn="searchStore.checkInDate"
+                    :initialCheckOut="searchStore.checkOutDate"
+                    @range-selected="setDate"
+                />
             </div>
             <div v-if="modalType === 'guests'" class="guests-form-container">
                 <h2>인원 및 객실 개수</h2>
@@ -70,9 +74,6 @@ const searchStore = useSearchStore();
 const isModalOpen = ref(false);
 const modalType = ref('');
 
-const checkIn = ref('');
-const checkOut = ref('');
-
 const tempRoomCount = ref(1);
 const tempGuestCount = ref(1);
 
@@ -85,9 +86,8 @@ const formatDate = (date) => {
     return `${dayName} ${month}/${day}`;
 };
 
-const today = new Date();
-const checkInDateView = ref(formatDate(today));
-const checkOutDateView = ref(formatDate(new Date(today.setDate(today.getDate()+1))));
+const checkInDateView = ref(formatDate(searchStore.checkInDate));
+const checkOutDateView = ref(formatDate(searchStore.checkOutDate));
 
 const openModal = (type) => {
     modalType.value = type;
@@ -106,15 +106,22 @@ const save = () => {
     searchStore.roomCount = tempRoomCount.value;
     closeModal();
 };
-
-const selectDate = (value) => {
-    if (modalType.value === 'checkIn') {
-        checkIn.value = value;
-    } else if (modalType.value === 'checkOut') {
-        checkOut.value = value;
-    }
+const setDate = (payload) => {
+    searchStore.checkInDate = payload.start;
+    searchStore.checkOutDate = payload.end;
+    checkInDateView.value = formatDate(payload.start);
+    checkOutDateView.value = formatDate(payload.end);
     closeModal();
-};
+}
+function getDaysDifference(date1, date2) {
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+  const utc1 = Date.UTC(date1.getFullYear(), date1.getMonth(), date1.getDate());
+  const utc2 = Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate());
+
+  return Math.floor((utc2 - utc1) / MS_PER_DAY);
+}
+
 </script>
 <style scoped>
 .search-main-container {
@@ -285,8 +292,9 @@ const selectDate = (value) => {
 
 .guest-submit-btn {
     width: 100%;
-    height: 50px;
+    height: 70px;
     bottom: 0px;
+    left: 0px;
     position: absolute;
     border-radius: 8px;
     border-top-left-radius: 0px;

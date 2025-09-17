@@ -9,13 +9,13 @@ export const useSearchStore = defineStore('search', () => {
   const keyword = ref('');
   const d = new Date();
   const checkInDate = ref(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-  const checkOutDate = ref(new Date());
+  const checkOutDate = ref(new Date(d.setDate(d.getDate()+1)));
   const roomCount = ref(1);
-  const guestCount = ref(1);
+  const guestCount = ref(2);
 
   // FilterForm
   const minPrice = ref(0);
-  const maxPrice = ref(500000);
+  const maxPrice = ref(400000);
   const rating = ref(1);
   const amenities = ref({
     "주차가능":false,       //parkinglodging
@@ -69,7 +69,7 @@ export const useSearchStore = defineStore('search', () => {
   const error = ref(null);
 
   const fetchSearchResult = async () => {
-    console.log(result);
+    // console.log(result);
       isLoading.value = true;
       error.value = null;
       try {
