@@ -13,12 +13,8 @@
 
       <div v-if="profile" class="form-vertical">
         <div class="form-group">
-          <label class="form-label">아이디</label>
-          <input type="text" :value="profile.username" disabled class="form-input">
-        </div>
-        <div class="form-group">
           <label class="form-label">이메일</label>
-          <input type="email" :value="profile.email" disabled class="form-input">
+          <input type="text" :value="profile.username" disabled class="form-input">
         </div>
         <div class="form-group">
           <label class="form-label">이름</label>

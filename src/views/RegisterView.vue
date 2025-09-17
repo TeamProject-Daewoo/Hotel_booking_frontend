@@ -7,23 +7,9 @@
 
         <form @submit.prevent="handleRegister">
             <div class="input-group">
-              <label for="firstName">사용자 이름</label>
-              <input type="text" id="name" v-model="formData.name" required />
-            </div>
-            <div class="input-group">
-              <label for="lastName">아이디</label>
+              <label for="lastName">이메일</label>
               <input type="text" id="user_name" v-model="formData.user_name" required />
             </div>
-
-          <div class="input-group">
-            <label for="email">이메일</label>
-            <input type="email" id="email" v-model="formData.email" required />
-          </div>
-          
-          <div class="input-group">
-            <label for="phone">휴대폰 번호</label>
-            <input type="tel" id="phone" v-model="formData.phone" required />
-          </div>
 
           <div class="input-group">
             <label for="password">비밀번호</label>
@@ -33,6 +19,16 @@
           <div class="input-group">
             <label for="confirmPassword">비밀번호 확인</label>
             <input type="password" id="confirmPassword" v-model="formData.confirmPassword" required />
+          </div>
+
+          <div class="input-group">
+              <label for="firstName">사용자 이름</label>
+              <input type="text" id="name" v-model="formData.name" required />
+            </div>
+
+            <div class="input-group">
+            <label for="phone">휴대폰 번호</label>
+            <input type="tel" id="phone" v-model="formData.phone" required />
           </div>
 
           <div class="options">
@@ -92,7 +88,6 @@ const handleRegister = async () => {
   try {
     const response = await api.post('/api/auth/sign-up', {
         username: formData.user_name,
-        email: formData.email,
         password: formData.password,
         name: formData.name,
         phoneNumber: formData.phone,
