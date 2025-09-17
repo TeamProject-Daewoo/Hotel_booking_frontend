@@ -63,7 +63,7 @@
     </div>
 </template>
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import SearchModal from './SearchModal.vue';
 import DatePicker from './DatePicker.vue';
 import { useSearchStore } from '@/api/searchRequestStore';
@@ -122,6 +122,30 @@ function getDaysDifference(date1, date2) {
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
 
+//추천 검색어
+const suggestions = ref([]);
+const callSuggestionAPI = async (keyword) => {
+  if (!keyword || keyword.trim() === '') {
+    suggestions.value = [];
+    return;
+  }
+  try {
+    const response = await fetch(`/api/recommend?keyword=${keyword}`);
+    const data = await response.json();
+    suggestions.value = data;
+  } catch (error) {
+    console.error("추천 검색어 API 호출 실패:", error);
+    suggestions.value = [];
+  }
+};
+
+const debouncedFetch = _.debounce((newKeyword) => {
+    callSuggestionAPI(newKeyword);
+}, 300);
+
+watch(() => searchStore.keyword, (newKeyword) => {
+    debouncedFetch(newKeyword);
+});
 </script>
 <style scoped>
 .search-main-container {
