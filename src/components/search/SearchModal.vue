@@ -23,11 +23,11 @@ const props = defineProps({
   },
   maxWidth: {
     type: String,
-    default: '600px'
+    default: '800px'
   },
   height: {
     type: String,
-    default: '450px'
+    default: '600px'
   }
 });
 const modalSize = computed(() => {

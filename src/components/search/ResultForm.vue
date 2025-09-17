@@ -37,7 +37,7 @@
                         <h2>{{ data.title }}</h2>
                         <p><i class="fa-solid fa-location-dot"></i> {{ data.address }}</p>
                         <span style="margin-right: 30px;"><i class="fa-solid fa-star"></i> {{ data.rating }}</span>
-                        <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}+</b> Animities</span>
+                        <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}</b>+ 편의시설</span>
                         <p><b>Very Good</b> {{ data.totalReviews }} reviews</p>
                     </div>
                     <div class="price-view">
