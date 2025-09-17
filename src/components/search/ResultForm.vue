@@ -1,18 +1,78 @@
 <template>
-  <div class="result-main-container" v-if="response && response.length > 0">
-    <div class="select-place">
-      <button v-for="(count, place) in selectData"
-              :key="place"
-              :class="{ 'active': place === searchStore.place }"
-              @click="selectPlace(place)">
-        {{ place }}
-        <span>{{ count }} places</span>
-      </button>
+    <div class="result-main-container" v-if="searchStore.result">
+        <div class="select-place">
+            <button v-for="(count, category) in searchStore.result.data.counts" 
+                    :key="category"
+                    :class="{ 'active': category === searchStore.category }"
+                    @click="selectCategory(category)">
+                {{ category }}
+                <span>{{ count }} places</span>
+            </button>
+        </div>
+        <div class="order-container">
+            <p>총 <b>{{ searchStore.result.data.counts[searchStore.category] }}</b>개의 검색 결과</p>
+            <p>정렬 기준 <button @click="openModal" class="order-select-btn">{{ searchStore.order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
+        </div>
+        <SearchModal :isOpen="isModalOpen" @close="closeModal">
+            <h2>정렬 기준</h2>
+            <ul class="sort-options">
+                <li v-for="option in sortOptions"
+                    :key="option"
+                    class="sort-option-item"
+                    :class="{ 'selected': searchStore.order === option }"
+                    @click="selectOption(option)"
+                >{{ option }}<span v-if="searchStore.order === option"><i class="fa-solid fa-check"></i></span></li>
+            </ul>
+        </SearchModal>
+        <div v-if="searchStore.result.data.searchCards.length === 0" class="result-card">
+            <h3>검색결과가 없습니다!</h3>
+        </div>
+        <div class="result-card" v-for="data in searchStore.result.data.searchCards" :key="data.id">
+            <div class="image-container">
+                <img :src="data.image">
+            </div>
+            <div class="infor-container">
+                <div class="text-container">
+                    <div class="infor-view">
+                        <h2>{{ data.title }}</h2>
+                        <p><i class="fa-solid fa-location-dot"></i> {{ data.address }}</p>
+                        <span style="margin-right: 30px;"><i class="fa-solid fa-star"></i> {{ data.rating }}</span>
+                        <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}+</b> Animities</span>
+                        <p><b>Very Good</b> {{ data.totalReviews }} reviews</p>
+                    </div>
+                    <div class="price-view">
+                        <p>starting from</p>
+                        <p>￦{{ data.price.toLocaleString() }}<span style="font-size: 12pt;">/night</span></p>
+                        <div style="text-align: right;">
+                            <p>excl. tax</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-container">
+                    <button class="like-btn" @click="likeToggle">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+                    <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
+                        View Place
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="order-container">
-      <p>Showing of {{ totalCount }} places</p>
-      <p>Sort By <button class="order-select-btn">{{ searchStore.order }}</button> <i class="fa-solid fa-chevron-down"></i></p>
+    <div class="result-main-container" v-else-if="searchStore.isLoading">
+        <div class="result-card">
+            <h3>검색 결과를 불러오는 중입니다...</h3>
+        </div>
     </div>
+    <div class="result-main-container" v-else-if="searchStore.error">
+        <div class="result-card">
+            <h3>{{ searchStore.error }}</h3>
+        </div>
+    </div>
+    <div class="result-main-container" v-else>
+        <div class="result-card">
+            <h3>검색 버튼을 눌러서 검색하세요!</h3>
+        </div>
     <div class="result-card" v-for="data in response" :key="data.id">
       <div class="image-container">
         <img :src="data.image">
@@ -53,27 +113,10 @@
 </template>
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
-import { defineProps, ref, watch } from 'vue';
+import { ref } from 'vue';
+import SearchModal from './SearchModal.vue';
 
 const searchStore = useSearchStore();
-
-const props = defineProps({
-  response: {
-    type: Object,
-    default: null
-  }
-});
-const totalCount = ref(0);
-const selectData = ref({
-  'Hotels': 257,
-  'Motels': 51,
-  'Resorts': 72
-});
-
-watch(() => props.response, (newResponse) => {
-  if (newResponse)
-    totalCount.value = newResponse.length;
-}, { immediate: true });
 
 const likeToggle = (event) => {
   const target = event.currentTarget.querySelector('i');
@@ -86,8 +129,29 @@ const likeToggle = (event) => {
   }
 }
 
-const selectPlace = (place) => {
-  searchStore.place = place;
+const selectOption = (option) => {
+    searchStore.order = option;
+    searchStore.fetchSearchResult();
+    closeModal();
+}
+
+const sortOptions = [
+    '인기 순',
+    '높은 가격 순',
+    '낮은 가격 순',
+    '평점 높은 순',
+]
+const isModalOpen = ref(false);
+const openModal = () => {
+    isModalOpen.value = true;
+};
+const closeModal = () => {
+    isModalOpen.value = false;
+};
+
+const selectCategory = (category) => {
+    searchStore.category = category;
+    searchStore.fetchSearchResult();
 };
 </script>
 
@@ -163,12 +227,48 @@ const selectPlace = (place) => {
   display: flex;
   justify-content: space-between;
 }
+
 .order-select-btn {
   background: none;
   border: none;
   font-size: 13pt;
   font-weight: bold;
   cursor: pointer;
+}
+
+.sort-options {
+  width: 100%;
+  height: 380px;
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sort-options li {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  height: calc(380px / 4px);
+  font-size: 16pt;
+  color: #555;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.sort-options li:hover {
+  background: #e9ffdf;
+  font-weight: bold;
+  transition: background-color 0.2s ease-in-out;
+}
+.sort-option-item.selected {
+  background-color: #e9ffdf;
+  font-weight: bold;
+}
+
+.sort-option-item.selected:hover {
+  background-color: #cbffca;
 }
 
 .result-card:hover {
