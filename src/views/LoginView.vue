@@ -31,7 +31,7 @@
         </form>
 
         <div class="switch-auth">
-          <router-link to="/registerview">회원가입</router-link>
+          <router-link to="/register-choice">회원가입</router-link>
         </div>
       </div>
     </div>

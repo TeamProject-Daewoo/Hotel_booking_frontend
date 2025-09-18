@@ -16,6 +16,7 @@ import ReservationComplete from '../components/reservation/ReservationComplete.v
 import PaymentProcess from '../components/payment/PaymentProcess.vue';
 import BookingListView from "@/components/mypage/BookingListView.vue";
 import NonMemberBookingView from '@/views/NonMemberBookingView.vue';
+import registerChoice from '@/views/RegisterChoiceView.vue';
 
 const routes = [
   {path: "/", name: "main", component: Main},
@@ -33,6 +34,7 @@ const routes = [
   {path: '/payment-process', name: 'PaymentProcess', component: PaymentProcess},
   {path: '/mypage/bookinglist', name: 'BookingListView',component: BookingListView},
   {path: '/lookup-booking', name: 'NonMemberBookingView', component: NonMemberBookingView},
+  {path: '/register-choice', name: 'registerChoice', component: registerChoice},
 ]
 
 const router = createRouter({
