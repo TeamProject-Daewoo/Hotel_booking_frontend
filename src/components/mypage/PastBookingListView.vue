@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div v-if="booking.status === 'PAID'" class="card-footer">
+        <div v-if="booking.status === 'PAID' && !booking.hasReview" class="card-footer">
           <button @click="goToReview(booking)" class="review-button">리뷰 작성하기</button>
         </div>
 
@@ -100,6 +100,7 @@ const formatDate = (dateString) => {
 </script>
 
 <style scoped>
+/* 스타일은 이전과 동일하게 유지됩니다. */
 .past-bookings { margin-top: 3rem; }
 .view-container { background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
 .view-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; }
@@ -121,8 +122,6 @@ const formatDate = (dateString) => {
 .info-item { display: flex; flex-direction: column; }
 .info-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem; }
 .info-value { font-size: 1rem; font-weight: 500; color: #111827; }
-
-/* 추가된 스타일 */
 .card-footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid #e5e7eb;

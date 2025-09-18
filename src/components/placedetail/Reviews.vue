@@ -1,7 +1,13 @@
 <template>
   <section class="reviews-section">
     <div class="reviews-head">
-      <h2>리뷰 <span class="review-count">{{ reviews.length }}</span></h2>
+      <h2>리뷰</h2>
+    </div>
+
+    <div v-if="reviews.length > 0" class="rating-summary">
+      <span class="summary-star">★</span>
+      <span class="summary-score">{{ averageRatingText }} / 5</span>
+      <span class="summary-count">({{ reviews.length }}명 참여)</span>
     </div>
 
     <div v-if="reviews.length > 0">
@@ -11,6 +17,7 @@
             <img class="avatar" src="https://placehold.co/60x60/e2e8f0/64748b?text=U" alt="User Avatar" />
             <div class="author-info">
               <span class="author-name">{{ review.userName }}</span>
+              <span v-if="review.visitCount > 1" class="visit-count">{{ review.visitCount }}번째 방문</span>
             </div>
           </div>
 
@@ -23,7 +30,7 @@
             </div>
 
             <div v-if="review.imageUrl" class="review-photo-wrapper">
-              <img :src="'http://localhost:8888' + review.imageUrl" class="review-photo" />
+              <img :src="getImageUrl(review.imageUrl)" class="review-photo" />
             </div>
 
             <p class="review-text" :class="{ collapsed: !isExpanded(review.reviewId) && isLong(review.reviewText) }">
@@ -44,13 +51,26 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
   reviews: { type: Array, default: () => [] },
 });
 
+const getImageUrl = (imagePath) => {
+  const backendUrl = import.meta.env.VITE_API_URL;
+  return `${backendUrl}${imagePath}`;
+};
+
 const expandedReviews = ref({});
+
+const averageRating = computed(() => {
+  if (!props.reviews || props.reviews.length === 0) return 0;
+  const total = props.reviews.reduce((acc, review) => acc + review.rating, 0);
+  return total / props.reviews.length;
+});
+
+const averageRatingText = computed(() => averageRating.value.toFixed(1));
 
 const isLong = (text) => {
   if (!text) return false;
@@ -92,24 +112,31 @@ const formatRelativeDate = (dateString) => {
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .reviews-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 1rem;
 }
 .reviews h2 {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
+}
+.rating-summary {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 1rem 0;
 }
-.review-count {
-  font-size: 1.2rem;
-  color: #3b82f6;
+.summary-star {
+  font-size: 1.5rem;
+  color: #2ecc9a;
+}
+.summary-score {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.summary-count {
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 .review-list {
   list-style: none;
@@ -125,10 +152,10 @@ const formatRelativeDate = (dateString) => {
   border-bottom: none;
 }
 .author-profile {
-  flex: 0 0 25%; /* 왼쪽 영역 25% 차지 */
+  flex: 0 0 25%;
   padding-right: 2rem;
   display: flex;
-  align-items: flex-start; /* 상단 정렬 */
+  align-items: flex-start;
   gap: 0.75rem;
 }
 .avatar {
@@ -137,14 +164,23 @@ const formatRelativeDate = (dateString) => {
   border-radius: 50%;
   object-fit: cover;
 }
-.author-name {
+.author-info {
+  display: flex;
+  flex-direction: column;
   margin-top: 0.25rem;
+}
+.author-name {
   font-size: 0.9rem;
   font-weight: 600;
   color: #1f2937;
 }
+.visit-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
 .review-content {
-  flex: 1 1 75%; /* 오른쪽 영역 75% 차지 */
+  flex: 1 1 75%;
 }
 .review-meta {
   display: flex;
@@ -163,8 +199,8 @@ const formatRelativeDate = (dateString) => {
   margin-top: 1rem;
 }
 .review-photo {
-  max-width: 250px;
-  max-height: 250px;
+  max-width: 400px;
+  max-height: 400px;
   border-radius: 8px;
   object-fit: cover;
 }
