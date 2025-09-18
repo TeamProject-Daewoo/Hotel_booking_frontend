@@ -47,6 +47,6 @@ onMounted(async () => {
   transition: height 0.5s ease-in-out;
 }
 .footer-container {
-  height: 300px;
+  min-height: 300px;
 }
 </style>
