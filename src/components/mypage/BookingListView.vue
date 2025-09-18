@@ -14,7 +14,10 @@
               <strong class="hotel-name">{{ booking.hotelName }}</strong>
             </div>
           </div>
-          <button class="details-button" @click="openModal(booking)">예약 상세</button>
+          <div class="header-actions">
+            <span v-if="booking.status !== 'PAID'" class="cancel-status">결제취소</span>
+            <button class="details-button" @click="openModal(booking)">예약 상세</button>
+          </div>
         </div>
 
         <div class="card-body">
@@ -81,9 +84,7 @@ const closeModal = () => {
 
 const fetchBookings = async () => {
   try {
-    const response = await api.get('/api/mypage/bookings', {
-      params: { status: 'PAID' }
-    });
+    const response = await api.get('/api/mypage/bookings'); // status 파라미터 제거
     bookings.value = response.data.sort((a, b) => b.reservationId - a.reservationId);
   } catch (error) {
     console.error("예약 내역을 불러오는 데 실패했습니다:", error);
@@ -105,7 +106,6 @@ onMounted(fetchBookings);
 </script>
 
 <style scoped>
-/* 기존 스타일은 그대로 유지됩니다. */
 .view-container {
   background-color: white;
   padding: 2rem;
@@ -124,6 +124,8 @@ onMounted(fetchBookings);
 .hotel-logo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
 .hotel-details { display: flex; flex-direction: column; }
 .hotel-name { font-size: 1.125rem; font-weight: 600; color: #1f2937; }
+.header-actions { display: flex; align-items: center; gap: 1rem; }
+.cancel-status { color: #dc3545; font-weight: 600; font-size: 0.9rem; }
 .details-button { background-color: #4f46e5; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
 .details-button:hover { background-color: #4338ca; }
 .card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1.5rem; background-color: #f9fafb; }

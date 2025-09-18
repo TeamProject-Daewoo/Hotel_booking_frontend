@@ -24,8 +24,8 @@ function goMypage() {
   router.push('/mypage');
 }
 
-function goAdmin() {
-  window.location.href = 'http://localhost:5174';
+function goToLookup() {
+  router.push('/lookup-booking');
 }
 
 const handleLogout = async () => {
@@ -54,13 +54,12 @@ const handleLogout = async () => {
         </template>
 
         <template v-else>
+          <button class="lookup-button" @click="goToLookup">비회원 예약조회</button>
           <button class="signup" @click.prevent="goRegister">회원 가입</button>
           <router-link to="/login">
             <button class="login">로그인</button>
           </router-link>
         </template>
-
-        <button class="admin-button" @click="goAdmin">admin</button>
       </div>
     </div>
   </header>
@@ -152,10 +151,22 @@ header {
   color: white !important;
 }
 
+.user-actions .lookup-button {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+.user-actions .lookup-button:hover {
+  background-color: #28a745 !important;
+  color: white !important;
+}
+
+
 .transparent-header .user-greeting,
 .transparent-header .user-actions .login,
 .transparent-header .user-actions .signup,
-.transparent-header .user-actions .logout {
+.transparent-header .user-actions .logout,
+.transparent-header .user-actions .lookup-button {
   color: white;
   border-color: white;
 }
@@ -168,26 +179,10 @@ header {
 }
 
 .transparent-header .user-actions .signup:hover,
-.transparent-header .user-actions .logout:hover {
+.transparent-header .user-actions .logout:hover,
+.transparent-header .user-actions .lookup-button:hover {
   background-color: white !important;
   color: black !important;
 }
 
-.admin-button {
-  opacity: 0.05;
-  color: #555;
-  border: none !important;
-  background: transparent !important;
-  padding: 5px !important;
-}
-
-.admin-button:hover {
-  opacity: 1;
-  background-color: #f0f0f0 !important;
-  color: #111 !important;
-}
-
-.transparent-header .admin-button {
-  color: white;
-}
 </style>
