@@ -42,7 +42,7 @@
                     </div>
                     <div class="price-view">
                         <p>starting from</p>
-                        <p>{{ (parseInt(data.price)*dateDiff).toLocaleString() }}원<span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
+                        <p>{{ ((parseInt(data.price)*dateDiff)/10000).toLocaleString() }}만원<span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
                         <div style="text-align: right;">
                             <p>excl. tax</p>
                         </div>
