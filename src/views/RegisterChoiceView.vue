@@ -30,7 +30,7 @@ import { onMounted } from 'vue';
 const initializeKakaoSdk = () => {
   if (window.Kakao && !window.Kakao.isInitialized()) {
     // 
-    window.Kakao.init(''); // 👈 카카오 개발자 사이트의 JavaScript 키
+    window.Kakao.init('cfc0f362627882be0a7ca486a9de3fa0'); // 👈 카카오 개발자 사이트의 JavaScript 키
     console.log('카카오 SDK가 초기화되었습니다.');
   } 
 };
@@ -105,9 +105,6 @@ h1 {
 }
 .icon-email {
   margin-right: 10px;
-}
-.naver-button-container {
-  line-height: 0; /* 네이버 버튼 이미지 주변의 불필요한 공백 제거 */
 }
 .login-link {
   margin-top: 30px;
