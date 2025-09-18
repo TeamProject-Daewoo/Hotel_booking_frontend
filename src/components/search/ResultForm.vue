@@ -42,7 +42,7 @@
                     </div>
                     <div class="price-view">
                         <p>starting from</p>
-                        <p>{{ (data.price*dateDiff).toLocaleString() }}원<span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
+                        <p>{{ (parseInt(data.price)*dateDiff).toLocaleString() }}원<span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
                         <div style="text-align: right;">
                             <p>excl. tax</p>
                         </div>
@@ -77,11 +77,13 @@
 </template>
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import SearchModal from './SearchModal.vue';
 
 const searchStore = useSearchStore();
-const dateDiff = ref(null);
+const dateDiff = computed(() => {
+  return getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate);
+})
 
 const likeToggle = (event) => {
   const target = event.currentTarget.querySelector('i');
@@ -127,9 +129,6 @@ function getDaysDifference(date1, date2) {
 
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
-watch(() => searchStore.result, () => {
-    dateDiff.value = getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate);
-});
 </script>
 
 <style scoped>

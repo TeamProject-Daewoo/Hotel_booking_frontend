@@ -4,9 +4,10 @@
             <label for="destination">Enter Destination</label>
             <div class="destination-input-form">
                 <span><i class="fa-solid fa-hotel"></i>&nbsp;</span>
-                <span><input id="destination" type="text" v-model="searchStore.keyword" placeholder="호텔명 또는 지역 입력"></span>
+                <span><KeyWordForm/></span>
             </div>
         </div>
+
         <div class="field-container" id="dateForm">
             <label for="checkIn">Date</label>
             <button class="search-input input-gap" id="checkIn" @click="openModal('datePicker')">
@@ -63,11 +64,13 @@
     </div>
 </template>
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, watch } from 'vue';
 import SearchModal from './SearchModal.vue';
 import DatePicker from './DatePicker.vue';
 import { useSearchStore } from '@/api/searchRequestStore';
 import axios from '@/api/axios';
+import _ from 'lodash';
+import KeyWordForm from './KeyWordForm.vue';
 
 const searchStore = useSearchStore();
 
@@ -143,6 +146,7 @@ function getDaysDifference(date1, date2) {
     padding: 0;
     height: 50px;
     margin-right: 20px;
+    
 }
 .field-container label {
     position: absolute;
@@ -161,23 +165,24 @@ function getDaysDifference(date1, date2) {
 }
 .destination-input-form {
     display: flex;
+    align-items: center;
     width: 100%;
     height: 100%;
-    /* visibility: hidden; */
     padding: 5px 10px;
     font-size: 15pt;
     background-color: white;
     box-sizing: border-box;
     border-radius: 10px;
 }
-.destination-input-form span:nth-child(2) {
-    flex-grow: 1;
+.destination-input-form > span:last-child {
+    flex: 1;
 }
-.destination-input-form input {
-    width: 100%;
-    height: 100%;
-    border: none;
-    outline: none;
+.destination-input-form span:last-child ::v-deep input {
+  width: 100%;     
+  border: none; 
+  outline: none;
+  font-size: 16px;
+  background-color: transparent;
 }
 #dateForm {
     width: 30%;
@@ -191,8 +196,8 @@ function getDaysDifference(date1, date2) {
     width: 25%;
 }
 .search-input {
-    width: 100%;
     height: 100%;
+    width: 100%;
     /* visibility: hidden; */
     border: none;
     padding: 5px 10px;
@@ -202,6 +207,8 @@ function getDaysDifference(date1, date2) {
     border-radius: 10px;
     text-align: left;
     cursor: pointer;
+    display: flex;
+    justify-content: space-between;
 }
 .search-button-container {
     right: -10px;
