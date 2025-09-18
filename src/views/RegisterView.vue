@@ -2,28 +2,19 @@
   <div class="auth-wrapper reverse">
     <div class="form-container">
       <div class="form-content">
-        <h1>Sign up</h1>
-        <p class="subtitle">회원가입</p>
+        <h1>회원가입</h1>
 
         <form @submit.prevent="handleRegister">
-          <div class="input-group">
-            <label for="name">사용자 이름</label>
-            <input type="text" id="name" v-model="formData.name" placeholder="이름을 입력하세요" required />
-          </div>
-
-          <div class="input-group">
-            <label for="user_name">아이디</label>
-            <input type="text" id="user_name" v-model="formData.username" placeholder="사용할 아이디를 입력하세요" required />
-          </div>
 
           <div class="input-group">
             <label for="email">이메일</label>
             <div class="input-with-button">
-              <input type="email" id="email" v-model="formData.email" placeholder="이메일 주소를 입력하세요" :disabled="isEmailVerified" required />
-              <button type="button" @click="sendVerificationCode" :disabled="isEmailVerified || !formData.email" class="inline-button">
+              <input type="email" id="email" v-model="formData.username" placeholder="이메일 주소를 입력하세요" :disabled="isEmailVerified" required />
+              <button type="button" @click="sendVerificationCode" :disabled="isEmailVerified || !formData.username" class="inline-button">
                 {{ isEmailVerified ? '인증완료' : '인증번호 발송' }}
               </button>
             </div>
+            <p v-if="isEmailVerified" class="success-text">인증되었습니다!</p>
           </div>
 
           <div v-if="isCodeSent && !isEmailVerified" class="input-group">
@@ -37,12 +28,7 @@
   </p>
 </div>
 
-          <div class="input-group">
-            <label for="phone">휴대폰 번호</label>
-            <input type="tel" id="phone" v-model="formData.phoneNumber" placeholder="'-' 없이 숫자만 입력하세요" required />
-          </div>
-
-          <div class="input-group">
+<div class="input-group">
             <label for="password">비밀번호</label>
             <input type="password" id="password" v-model="formData.password" placeholder="비밀번호를 입력하세요" required />
           </div>
@@ -53,6 +39,16 @@
             <p v-if="formData.confirmPassword" :class="passwordsMatch ? 'success-text' : 'error-text'">
               {{ passwordsMatch ? '비밀번호가 일치합니다.' : '비밀번호가 일치하지 않습니다.' }}
             </p>
+          </div>
+
+<div class="input-group">
+            <label for="name">사용자 이름</label>
+            <input type="text" id="name" v-model="formData.name" placeholder="이름을 입력하세요" required />
+          </div>
+
+          <div class="input-group">
+            <label for="phone">휴대폰 번호</label>
+            <input type="tel" id="phone" v-model="formData.phoneNumber" placeholder="'-' 없이 숫자만 입력하세요" required />
           </div>
 
           <div class="options">
@@ -85,7 +81,6 @@ const router = useRouter();
 const formData = reactive({
   name: '',
   username: '', // DTO와 일관성을 위해 user_name -> username으로 변경
-  email: '',
   phoneNumber: '', // DTO와 일관성을 위해 phone -> phoneNumber로 변경
   password: '',
   confirmPassword: '',
@@ -99,14 +94,25 @@ const isEmailVerified = ref(false);
 const verificationMessage = ref('');
 const verificationMessageType = ref('info'); // 'info', 'success', 'error'
 
-// ... passwordsMatch, isFormValid computed 속성은 그대로 ...
+// 👇 이 두 개의 computed 속성을 추가해주세요.
+// 실시간 비밀번호 일치 여부 확인
+const passwordsMatch = computed(() => {
+  // 비밀번호가 입력되었고, 두 비밀번호가 일치하는지 확인
+  return formData.password && formData.password === formData.confirmPassword;
+});
+
+// 최종 폼 유효성 검사 (계정 생성 버튼 활성화 조건)
+const isFormValid = computed(() => {
+  // 이메일 인증이 완료되었고, 비밀번호가 일치하며, 약관에 동의했는지 확인
+  return passwordsMatch.value && isEmailVerified.value && formData.agree;
+});
 
 // 이메일 인증번호 발송 함수
 const sendVerificationCode = async () => {
   verificationMessageType.value = 'info'; // 메시지 타입 초기화
   verificationMessage.value = '인증번호를 발송 중입니다...';
   try {
-    await api.post('/api/auth/send-verification', { email: formData.email });
+    await api.post('/api/auth/send-verification', { email: formData.username });
     isCodeSent.value = true;
     verificationMessage.value = '인증번호가 발송되었습니다. 이메일을 확인해주세요.';
   } catch (error) {
@@ -118,12 +124,9 @@ const sendVerificationCode = async () => {
 // 인증번호 확인 함수
 const verifyCode = async () => {
   try {
-    await api.post('/api/auth/verify-code', { email: formData.email, code: verificationCode.value });
+    await api.post('/api/auth/verify-code', { email: formData.username, code: verificationCode.value });
     isEmailVerified.value = true;
-    
-    // 👇 성공 메시지 및 타입 변경
-    verificationMessage.value = '인증되었습니다!';
-    verificationMessageType.value = 'success';
+  
 
   } catch (error) {
     console.error('인증번호 확인 실패:', error);
@@ -144,7 +147,6 @@ const handleRegister = async () => {
     // DTO에 정의된 필드명과 일치시켜서 전송
     await api.post('/api/auth/sign-up', {
         username: formData.username,
-        email: formData.email,
         password: formData.password,
         name: formData.name,
         phoneNumber: formData.phoneNumber,
