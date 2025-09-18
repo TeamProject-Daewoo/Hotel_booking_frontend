@@ -14,7 +14,7 @@
       </div>
 
       <div class="login-link">
-        <p>이미 계정이 있으신가요? <router-link to="/loginview">로그인</router-link></p>
+        <p>이미 계정이 있으신가요? <router-link to="/login">로그인</router-link></p>
       </div>
     </div>
   </div>

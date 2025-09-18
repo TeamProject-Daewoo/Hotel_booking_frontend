@@ -17,6 +17,7 @@ import PaymentProcess from '../components/payment/PaymentProcess.vue';
 import BookingListView from "@/components/mypage/BookingListView.vue";
 import NonMemberBookingView from '@/views/NonMemberBookingView.vue';
 import registerChoice from '@/views/RegisterChoiceView.vue';
+import ReviewForm from '@/views/ReviewForm.vue';
 
 const routes = [
   {path: "/", name: "main", component: Main},
@@ -35,6 +36,7 @@ const routes = [
   {path: '/mypage/bookinglist', name: 'BookingListView',component: BookingListView},
   {path: '/lookup-booking', name: 'NonMemberBookingView', component: NonMemberBookingView},
   {path: '/register-choice', name: 'registerChoice', component: registerChoice},
+  {path: '/write-review/:reservationId', name: 'WriteReview', component: ReviewForm},
 ]
 
 const router = createRouter({

@@ -1,202 +1,198 @@
 <template>
-  <section class="reviews" v-if="(reviews?.length ?? 0) > 0 || reviewCountNum > 0">
-    <!-- 헤더 -->
+  <section class="reviews-section">
     <div class="reviews-head">
-      <h2>리뷰</h2>
-      <button class="write-btn" @click="$emit('write-review')">리뷰 쓰기</button>
+      <h2>리뷰 <span class="review-count">{{ reviews.length }}</span></h2>
     </div>
 
-    <!-- 요약 -->
-    <div class="summary">
-      <div class="score-wrap">
-        <div class="big-score">{{ ratingText }}</div>
-        <div>
-          <div class="score-label">{{ ratingLabelText }}</div>
-          <div class="score-count">{{ countText }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 리스트 -->
-    <ul class="review-list" v-if="pageItems.length">
-      <li v-for="rv in pageItems" :key="rv.id ?? rv.createdAt ?? rv.author + (rv.comment || '').slice(0,10)">
-        <img class="avatar" :src="rv.avatar || fallbackAvatar(rv.author)" alt="" />
-        <div class="content">
-          <div class="head">
-            <span class="score-small">{{ formatScore(rv.score) }} <b>{{ titleFromScore(rv.score) }}</b></span>
-            <span class="sep">|</span>
-            <span class="author">{{ rv.author || '익명' }}</span>
+    <div v-if="reviews.length > 0">
+      <ul class="review-list">
+        <li v-for="review in reviews" :key="review.reviewId" class="review-card">
+          <div class="author-profile">
+            <img class="avatar" src="https://placehold.co/60x60/e2e8f0/64748b?text=U" alt="User Avatar" />
+            <div class="author-info">
+              <span class="author-name">{{ review.userName }}</span>
+            </div>
           </div>
-          <p class="body" v-if="rv.comment">{{ rv.comment }}</p>
-        </div>
-        <button class="flag-btn" aria-label="신고" @click="$emit('report', rv)">
-          <i class="fa-solid fa-flag"></i>
-        </button>
-      </li>
-    </ul>
 
-    <!-- 페이지네이션 -->
-    <div class="pager" v-if="totalPages > 1">
-      <button class="nav" :disabled="page===1" @click="page--">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-      <span class="ptext">{{ page }} of {{ totalPages }}</span>
-      <button class="nav" :disabled="page===totalPages" @click="page++">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
-  </section>
+          <div class="review-content">
+            <div class="review-meta">
+              <div class="star-rating">
+                <span v-for="n in 5" :key="n" class="star" :class="{ 'filled': n <= review.rating }">★</span>
+              </div>
+              <span class="review-date">{{ formatRelativeDate(review.reviewDate) }}</span>
+            </div>
 
-  <!-- 아무 리뷰도 없을 때 -->
-  <section class="reviews empty" v-else>
-    <div class="reviews-head">
-      <h2>리뷰</h2>
-      <button class="write-btn" @click="$emit('write-review')">리뷰 쓰기</button>
+            <div v-if="review.imageUrl" class="review-photo-wrapper">
+              <img :src="'http://localhost:8888' + review.imageUrl" class="review-photo" />
+            </div>
+
+            <p class="review-text" :class="{ collapsed: !isExpanded(review.reviewId) && isLong(review.reviewText) }">
+              {{ review.reviewText }}
+            </p>
+            <button v-if="isLong(review.reviewText)" @click="toggleExpand(review.reviewId)" class="more-button">
+              {{ isExpanded(review.reviewId) ? '접기' : '더보기' }}
+            </button>
+          </div>
+        </li>
+      </ul>
     </div>
-    <div class="summary">
-      <div class="score-wrap">
-        <div class="big-score">0.0</div>
-        <div>
-          <div class="score-label"></div>
-          <div class="score-count">0 verified reviews</div>
-        </div>
-      </div>
+
+    <div v-else class="empty-state">
+      <p>아직 등록된 리뷰가 없습니다.</p>
     </div>
-    <p class="no-data">아직 등록된 리뷰가 없습니다.</p>
   </section>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue';
 
 const props = defineProps({
-  rating: { type: [Number, String], default: null },
-  reviewCount: { type: [Number, String], default: null },
   reviews: { type: Array, default: () => [] },
-  pageSize: { type: Number, default: 5 }
-})
+});
 
-defineEmits(['write-review', 'report', 'submit-review'])
+const expandedReviews = ref({});
 
-const newReview = ref({ score: 5, comment: '' })
-const toNum = v => Number(String(v ?? '').replace(/[^\d.]/g, ''))
-const ratingNum = computed(() => toNum(props.rating) ?? 0)
-const ratingText = computed(() => ratingNum.value.toFixed(1))
-const reviewCountNum = computed(() => toNum(props.reviewCount) ?? 0)
-const ratingLabelText = computed(() => ratingNum.value >= 4.6 ? 'Excellent' : ratingNum.value >= 4.0 ? 'Very good' : ratingNum.value >= 3.0 ? 'Good' : 'Fair')
-const countText = computed(() => `${reviewCountNum.value} verified reviews`)
+const isLong = (text) => {
+  if (!text) return false;
+  return text.split('\n').length > 4 || text.length > 150;
+};
 
-const page = ref(1)
-const totalPages = computed(() => Math.max(1, Math.ceil((props.reviews?.length ?? 0) / props.pageSize)))
-const pageItems = computed(() => {
-  const start = (page.value - 1) * props.pageSize
-  return (props.reviews || []).slice(start, start + props.pageSize)
-})
+const isExpanded = (reviewId) => {
+  return !!expandedReviews.value[reviewId];
+};
 
-const submitReview = () => {
-  if (newReview.value.comment.trim() === '') {
-    alert('리뷰를 작성해주세요.')
-    return
-  }
-  const reviewData = {
-    score: newReview.value.score,
-    comment: newReview.value.comment,
-    author: '사용자 이름',
-    createdAt: new Date().toISOString()
-  }
-  emit('submit-review', reviewData)
-  newReview.value.comment = ''
-  newReview.value.score = 5
-}
+const toggleExpand = (reviewId) => {
+  expandedReviews.value[reviewId] = !expandedReviews.value[reviewId];
+};
+
+const formatRelativeDate = (dateString) => {
+  const now = new Date();
+  const reviewDate = new Date(dateString);
+  const diff = now - reviewDate;
+  const diffMinutes = Math.floor(diff / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffMonths = Math.floor(diffDays / 30);
+
+  if (diffMonths > 0) return `${diffMonths}개월 전`;
+  if (diffDays > 0) return `${diffDays}일 전`;
+  if (diffHours > 0) return `${diffHours}시간 전`;
+  if (diffMinutes > 0) return `${diffMinutes}분 전`;
+  return '방금 전';
+};
 </script>
 
 <style scoped>
-.reviews { font-family: "Noto Sans KR", sans-serif; margin-top: 40px; }
-.reviews-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.reviews h2 { margin: 0; font-size: 20px; }
-.write-btn {
-  padding: 10px 14px;
-  border: 1px solid #cfe7df;
-  background: #e9fbf5;
+.reviews-section {
+  font-family: "Noto Sans KR", sans-serif;
+  margin-top: 40px;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.reviews-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+.reviews h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.review-count {
+  font-size: 1.2rem;
+  color: #3b82f6;
+}
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.review-card {
+  display: flex;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.review-card:last-child {
+  border-bottom: none;
+}
+.author-profile {
+  flex: 0 0 25%; /* 왼쪽 영역 25% 차지 */
+  padding-right: 2rem;
+  display: flex;
+  align-items: flex-start; /* 상단 정렬 */
+  gap: 0.75rem;
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.author-name {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+.review-content {
+  flex: 1 1 75%; /* 오른쪽 영역 75% 차지 */
+}
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.star-rating { display: flex; }
+.star-rating .star { font-size: 1.1rem; color: #d1d5db; }
+.star-rating .star.filled { color: #f59e0b; }
+.review-date {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+.review-photo-wrapper {
+  margin-top: 1rem;
+}
+.review-photo {
+  max-width: 250px;
+  max-height: 250px;
   border-radius: 8px;
+  object-fit: cover;
+}
+.review-text {
+  font-size: 0.95rem;
+  color: #374151;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  margin: 1rem 0 0.5rem;
+}
+.review-text.collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.more-button {
+  background: none;
+  border: none;
+  color: #6b7280;
   font-weight: 600;
   cursor: pointer;
-  transition: background .15s ease, transform .15s ease;
+  padding: 0.25rem 0;
 }
-.write-btn:hover { background: #d7efe7; transform: translateY(-1px); }
-
-.write-review-section {
-  margin-top: 20px;
-  padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+.empty-state {
+  text-align: center;
+  padding: 3rem 0;
+  color: #6b7280;
 }
-
-.write-review-section h3 {
-  margin-bottom: 10px;
-  font-size: 18px;
-  color: #333;
-}
-
-.write-review-section .rating {
-  margin-bottom: 10px;
-}
-
-.write-review-section select {
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.write-review-section textarea {
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  resize: none;
-}
-
-.write-review-section button {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background-color: #2b7264;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.write-review-section button:hover {
-  background-color: #1f5e4b;
-}
-
-/* 기존 스타일들 */
-.summary { border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 12px 0; margin-bottom: 6px; }
-.score-wrap { display: flex; align-items: center; gap: 16px; }
-.big-score { font-size: 36px; font-weight: 800; color: #2b7264; min-width: 64px; }
-.score-label { font-weight: 700; margin-bottom: 2px; }
-.score-count { color: #6b7280; font-size: 14px; }
-
-/* 리스트 스타일 */
-.review-list { list-style: none; margin: 0; padding: 0; }
-.review-list li { display: grid; grid-template-columns: 44px 1fr 28px; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
-.avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eef4f1; }
-.content .head { font-size: 14px; color: #333; display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-.score-small { color: #2b7264; }
-.sep { color: #bbb; }
-.author { color: #444; }
-.body { margin: 0; color: #222; line-height: 1.6; }
-.flag-btn { width: 28px; height: 28px; border: 0; background: transparent; color: #6b7280; cursor: pointer; border-radius: 6px; }
-.flag-btn:hover { background: #f3f5f4; color: #2b7264; }
-
-/* 페이지네이션 스타일 */
-.pager { display: flex; justify-content: center; align-items: center; gap: 16px; margin: 16px 0 6px; }
-.nav { width: 36px; height: 36px; border: 1px solid #dfe7e3; border-radius: 8px; background: #fff; cursor: pointer; }
-.nav:disabled { opacity: .45; cursor: not-allowed; }
-.ptext { color: #6b7280; }
-
-.empty .no-data { color: #6b7280; margin: 12px 0 0; }
 </style>
