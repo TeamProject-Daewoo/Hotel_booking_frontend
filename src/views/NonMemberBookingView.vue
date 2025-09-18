@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue'; // watch 추가
 import api from '@/api/axios';
 
 const reservationId = ref('');
@@ -70,6 +70,22 @@ const isLoading = ref(false);
 const bookings = ref([]);
 const error = ref(null);
 
+// 전화번호 자동 포맷 함수 추가
+const formatPhone = (value) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`;
+};
+
+// phone ref를 감시하여 값이 변경될 때마다 포맷팅 적용
+watch(phone, (newValue, oldValue) => {
+  const formatted = formatPhone(newValue);
+  if (newValue !== formatted) {
+    phone.value = formatted;
+  }
+});
+
 const findBooking = async () => {
   isLoading.value = true;
   error.value = null;
@@ -78,7 +94,13 @@ const findBooking = async () => {
   const params = {};
 
   if (reservationId.value.trim()) {
-    params.reservationId = reservationId.value.trim();
+    const idAsNumber = Number(reservationId.value.trim());
+    if (isNaN(idAsNumber)) {
+      error.value = '예약번호는 숫자만 입력해주세요.';
+      isLoading.value = false;
+      return;
+    }
+    params.reservationId = idAsNumber;
   } else if (name.value.trim() && phone.value.trim()) {
     params.reservName = name.value.trim();
     params.reservPhone = phone.value.trim().replace(/\D/g, '');
