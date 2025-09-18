@@ -46,6 +46,10 @@ const nights = ref(0);
 const numAdults = ref(0);
 const numChildren = ref(0);
 const totalPrice = ref(0);
+const guestName = ref('');
+const phone = ref('');
+const roomcode = ref(''); // 추가
+const contentid = ref(''); // 추가
 
 onMounted(() => {
   hotelName.value = route.query.hotelName;
@@ -56,6 +60,10 @@ onMounted(() => {
   numAdults.value = Number(route.query.numAdults);
   numChildren.value = Number(route.query.numChildren);
   totalPrice.value = Number(route.query.totalPrice);
+  guestName.value = route.query.guestName;
+  phone.value = route.query.phone;
+  roomcode.value = route.query.roomcode; // 추가
+  contentid.value = route.query.contentid; // 추가
 });
 
 const formattedTotalPrice = computed(() => {
@@ -64,13 +72,15 @@ const formattedTotalPrice = computed(() => {
 
 const proceedToPayment = async () => {
   const reservationData = {
-    contentid: route.query.contentid,
-    roomcode: route.query.roomcode,
+    contentid: contentid.value,
+    roomcode: roomcode.value,
     checkInDate: checkInDate.value,
     checkOutDate: checkOutDate.value,
     numAdults: numAdults.value,
     numChildren: numChildren.value,
     totalPrice: totalPrice.value,
+    guestName: guestName.value,
+    phone: phone.value,
   };
 
   try {

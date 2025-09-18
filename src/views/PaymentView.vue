@@ -37,20 +37,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import apiClient from '@/api/axios'; // 설정해둔 Axios 인스턴스
+import apiClient from '@/api/axios';
 
-// --- 상태 관리 ---
 const route = useRoute();
-const reservation = ref(null); // 서버에서 가져온 예약 정보
-const widgets = ref(null); // 토스 위젯 인스턴스
-const isReady = ref(false); // 위젯 렌더링 완료 여부
+const reservation = ref(null);
+const widgets = ref(null);
+const isReady = ref(false);
 
-// --- 토스페이먼츠 클라이언트 키 ---
 const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 
-// --- 라이프사이클 훅 ---
 onMounted(async () => {
-  // 1. 라우터 파라미터에서 예약 ID 가져오기
   const reservationId = route.params.reservationId;
   if (!reservationId) {
     alert("예약 ID가 올바르지 않습니다.");
@@ -58,36 +54,28 @@ onMounted(async () => {
   }
 
   try {
-    // 2. 서버에서 예약 정보 조회 (가상의 API 엔드포인트)
     const response = await apiClient.get(`/api/reservations/${reservationId}`);
     reservation.value = response.data;
-
-    // 3. 토스페이먼츠 위젯 초기화 및 렌더링
     await initializeWidgets();
-
   } catch (error) {
     console.error("예약 정보를 불러오는 데 실패했습니다.", error);
     alert("예약 정보를 불러올 수 없습니다.");
   }
 });
 
-// --- 메서드 ---
 const initializeWidgets = async () => {
-  // TossPayments 객체 생성
+  if (!reservation.value) return;
+
   const tossPayments = TossPayments(clientKey);
+  const customerKey = `user-${reservation.value.userId || 'non-member'}-${reservation.value.reservationId}`;
 
-  // 위젯 인스턴스 생성
-  widgets.value = tossPayments.widgets({
-    customerKey: `user-${reservation.value.userId}-res-${reservation.value.reservationId}`,
-  });
+  widgets.value = tossPayments.widgets({ customerKey });
 
-  // 결제 금액 설정
   await widgets.value.setAmount({
     currency: "KRW",
     value: reservation.value.totalPrice,
   });
 
-  // 결제 UI와 약관 UI 렌더링
   await Promise.all([
     widgets.value.renderPaymentMethods({
       selector: "#payment-widget",
@@ -110,12 +98,12 @@ const requestPayment = async () => {
 
   try {
     await widgets.value.requestPayment({
-      orderId: String(reservation.value.reservationId),
+      orderId: `${reservation.value.reservationId}_${new Date().getTime()}`, // 고유성 보장을 위해 타임스탬프 추가
       orderName: reservation.value.hotelName,
       successUrl: `${window.location.origin}/payment-success`,
       failUrl: `${window.location.origin}/payment-fail`,
       customerName: reservation.value.customerName,
-      customerEmail: reservation.value.customerEmail,
+      customerEmail: reservation.value.userId, // 회원 이메일 또는 null
     });
   } catch (error) {
     console.error("결제 요청에 실패했습니다.", error);
