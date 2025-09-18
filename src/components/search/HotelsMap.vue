@@ -112,8 +112,6 @@ function fetchAddressForMarker(card) {
     if (status === window.kakao.maps.services.Status.OK) {
       const address = result[0].road_address?.address_name || result[0].address?.address_name;
       resolvedAddresses.value[card.id] = address;
-    } else {
-      alert(`주소 변환 실패: ${card.mapX}, ${card.mapY}`);
     }
   });
 }

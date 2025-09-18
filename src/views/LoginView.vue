@@ -8,75 +8,91 @@
         <form @submit.prevent="handleLogin">
           <div class="input-group">
             <label for="user_name">이메일</label>
-            <input type="text" id="user_name" v-model="user_name" required />
+            <input type="text" id="user_name" v-model="user_name" @keydown="preventSpaces" required />
           </div>
 
           <div class="input-group">
             <label for="password">비밀번호</label>
             <div class="password-wrapper">
-              <input :type="passwordFieldType" id="password" v-model="password" required />
-              <span class="toggle-password" @click="togglePasswordVisibility">
-                👁️
-              </span>
+              <input :type="passwordFieldType" id="password" v-model="password" @keydown="preventSpaces" required />
+              <span class="toggle-password" @click="togglePasswordVisibility">👁️</span>
             </div>
           </div>
 
           <div class="options">
-            <div class="remember-me">
-              <input type="checkbox" id="remember" v-model="rememberMe" />
-              <label for="remember">비밀번호 기억하기</label>
-            </div>
-            <a href="#" class="forgot-password">비밀번호를 잊으셨나요?</a>
-          </div>
+    <div class="remember-me">
+      <input type="checkbox" id="remember" v-model="rememberMe" />
+      <label for="remember">비밀번호 기억하기</label>
+    </div>
+    <a href="#" class="forgot-password">비밀번호를 잊으셨나요?</a>
+  </div>
 
-          <button type="submit" class="auth-button">로그인</button>
+  <button type="submit" class="auth-button">로그인</button>
         </form>
 
         <div class="switch-auth">
-          <router-link to="/register">회원가입</router-link>
+          <router-link to="/register-choice">회원가입</router-link>
         </div>
       </div>
     </div>
-
     <div class="image-container">
-       <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Hotel promotional image" />
-      <div class="dots">
-        <span class="dot active"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-      </div>
-    </div>
+  <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Hotel promotional image" />
+ <div class="dots">
+   <span class="dot active"></span>
+   <span class="dot"></span>
+   <span class="dot"></span>
+ </div>
+</div>
   </div>
 </template>
 
+
+
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router'; // useRouter 임포트
-import api from '@/api/axios'; // 우리가 만든 axios 인스턴스 임포트
+import { useRouter } from 'vue-router';
+import api from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
 
 const user_name = ref('');
 const password = ref('');
 const rememberMe = ref(false);
 const passwordFieldType = ref('password');
-const router = useRouter(); // router 인스턴스 생성
+const router = useRouter();
 const authStore = useAuthStore();
 
+// 👇 [추가] 이메일 형식 검증을 위한 정규식 함수
+const isValidEmail = (email) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+};
+
+// 👇 [추가] 스페이스바 입력을 막는 함수
+const preventSpaces = (event) => {
+  if (event.key === ' ') {
+    event.preventDefault();
+  }
+};
+
 const handleLogin = async () => {
+    // 👇 [추가] 로그인 버튼 클릭 시 이메일 형식 검증
+    if (!isValidEmail(user_name.value)) {
+        alert('올바른 이메일 형식을 입력해주세요.');
+        return;
+    }
+
     try {
         const response = await api.post('/api/auth/login', {
             username: user_name.value,
             password: password.value,
         });
         
-        // Body로 받은 Access Token을 Pinia 스토어에 저장
         authStore.setToken(response.data.accessToken);
-
-        alert('로그인에 성공했습니다!');
-        router.push('/'); //메인페이지로 이동
+        router.push('/');
 
     } catch (error) {
-        // ... 에러 처리
+        console.error("로그인 실패:", error);
+        alert(error.response?.data || "아이디 또는 비밀번호가 올바르지 않습니다.");
     }
 };
 

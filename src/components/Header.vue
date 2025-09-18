@@ -17,7 +17,7 @@ function goHome() {
 }
 
 function goRegister() {
-  router.push('/register');
+  router.push('/register-choice');
 }
 
 function goMypage() {

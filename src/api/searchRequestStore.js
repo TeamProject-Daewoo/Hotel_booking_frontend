@@ -7,6 +7,7 @@ export const useSearchStore = defineStore('search', () => {
   
   //InputForm
   const keyword = ref('');
+  const suggestions = ref([]);
   const d = new Date();
   const checkInDate = ref(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
   const checkOutDate = ref(new Date(d.setDate(d.getDate()+1)));
@@ -70,6 +71,10 @@ export const useSearchStore = defineStore('search', () => {
 
   const fetchSearchResult = async () => {
     // console.log(result);
+      if(keyword.value == '') {
+        alert('호텔명이나 지역을 입력해주세요');
+        return;
+      }
       isLoading.value = true;
       error.value = null;
       try {
@@ -91,6 +96,7 @@ export const useSearchStore = defineStore('search', () => {
     freebies,
     amenities,
     keyword,
+    suggestions,
     checkInDate,
     checkOutDate,
     roomCount,
