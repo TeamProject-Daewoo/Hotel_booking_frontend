@@ -20,6 +20,12 @@ import registerChoice from '@/views/RegisterChoiceView.vue';
 import KakaoCallback from '../views/KakaoCallback.vue';
 import LogoutCallback from '../components/kakao/LogoutCallback.vue';
 import LoginChoiceView from '../views/LoginChoiceView.vue';
+import ReviewForm from '@/views/ReviewForm.vue';
+
+// 🔽 Inquiry 관련 라우트 import 추가
+import InquiryList from '@/components/inquiries/InquiryList.vue';
+import InquiryForm from '@/components/inquiries/InquiryForm.vue';
+import InquiryDetail from '@/components/inquiries/InquiryDetail.vue';
 
 const routes = [
   {path: "/", name: "main", component: Main},
@@ -41,6 +47,15 @@ const routes = [
   {path: '/kakao-callback', name: 'KakaoCallback', component: KakaoCallback},
   {path: '/logout-callback', name: 'LogoutCallback', component: LogoutCallback},
   {path: '/login-choice', name: 'LoginChoiceView', component: LoginChoiceView},
+  {path: '/write-review/:reservationId', name: 'WriteReview', component: ReviewForm},
+
+    // 🔽 문의 관련 라우트 추가
+  { path: "/inquiries", name: "InquiryList", component: InquiryList },
+  { path: "/inquiries/new", name: "InquiryForm", component: InquiryForm },
+  { path: "/inquiries/:id", name: "InquiryDetail", component: InquiryDetail },
+
+  { path: "/notices", name: "NoticeList", component: () => import('@/components/Notice/notice.vue') },
+  { path: '/notices/:id', name: 'NoticeDetail', component: () => import('@/components/Notice/NoticeDetail.vue'), props: true }
 ]
 
 const router = createRouter({

@@ -1,3 +1,4 @@
+import { useWishlistStore } from '@/store/wishlistStore';
 import { defineStore } from 'pinia';
 
 export const useAuthStore = defineStore('auth', {
@@ -8,6 +9,10 @@ export const useAuthStore = defineStore('auth', {
     loginType: null,
     isInitialized: false,
   }),
+  getters: {
+    //로그인 여부 확인
+    isLoggedIn: (state) => !!state.accessToken,
+  },
   actions: {
     setToken(token) {
       this.accessToken = token;
@@ -24,6 +29,10 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = null;
       this.loggedInUser = null;
       this.userName = null;
+
+      //찜목록 초기화
+      const wishlistStore = useWishlistStore();
+      wishlistStore.$reset();
     },
     parseJwt(token) {
       if (!token) {

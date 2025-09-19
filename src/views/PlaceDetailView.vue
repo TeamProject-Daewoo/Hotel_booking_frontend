@@ -22,10 +22,10 @@
       :price="minPriceText"
     />
     <Reviews
-      :reviews="reviewsFromApi"
-      :pageSize="5"
-      @write-review="openReviewModal"
-      @report="handleReport"
+        :reviews="reviews"
+        :pageSize="5"
+        @write-review="openReviewModal"
+        @report="handleReport"
     />
   </div>
 </template>
@@ -50,6 +50,7 @@ const id = route.params.id
 const base = ref({})
 const building = ref({})
 const rooms = ref([])
+const reviews = ref([])
 
 // (이미 사용 중인 이벤트 핸들러들을 외부에서 쓰고 있다면 아래 정의 필요)
 function onBookRoom(idx){ router.push({ name: 'room-detail', params: { id: String(id), idx: String(idx ?? 0) } }) }
@@ -70,16 +71,18 @@ function toArray(v){ return !v ? [] : (Array.isArray(v) ? v : [v]) }
 /** ---------- 데이터 로딩 ---------- */
 onMounted(async () => {
   try {
-    const [b, d, i] = await Promise.allSettled([
+    const [b, d, i, r] = await Promise.allSettled([
       api.get(`/accommodations/${id}`),
       api.get(`/tour/detail/db/content/${id}`),
-      api.get(`/tour/intro/db/${id}`)
+      api.get(`/tour/intro/db/${id}`),
+      api.get(`/api/reviews/hotel/${id}`)
     ])
     if (b.status === 'fulfilled') base.value = normalizeBase(b.value.data)
     if (d.status === 'fulfilled') {
       rooms.value = Array.isArray(d.value.data) ? d.value.data : []
     }
     if (i.status === 'fulfilled') building.value = i.value.data || {}
+    if (r.status === 'fulfilled') reviews.value = r.value.data
   } catch (e) {
     console.error('PlaceDetailView fetch error:', e)
   }

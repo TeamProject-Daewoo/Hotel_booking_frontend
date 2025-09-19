@@ -58,13 +58,13 @@
 </template>
 
 <script setup>
-import {ref, watch} from 'vue';
+import { ref, watch } from 'vue'; // onMounted 대신 watch 사용
 import { useRouter } from 'vue-router';
-import apiClient from '@/api/axios.js'; // @ 별칭을 사용하도록 경로 수정
-import { useAuthStore } from '@/api/auth.js'; // authStore를 가져옵니다
+import apiClient from '@/api/axios.js';
+import { useAuthStore } from '@/api/auth.js';
 
 const router = useRouter();
-const authStore = useAuthStore(); // authStore 인스턴스 생성
+const authStore = useAuthStore();
 
 const isEditing = ref(false);
 const profile = ref(null);
@@ -82,10 +82,18 @@ const fetchProfile = async () => {
   } catch (error) {
     console.error("프로필 정보를 불러오는 데 실패했습니다.", error);
     alert("세션이 만료되었거나 로그인이 필요합니다.");
-    authStore.clearToken(); // 에러 발생 시 토큰 정리
+    authStore.logout();
     router.push('/login');
   }
 };
+
+// authStore의 isInitialized 상태를 감시
+watch(() => authStore.isInitialized, (isInitialized) => {
+  // isInitialized가 true가 되면 (토큰 재발급 시도가 끝나면) 프로필 정보를 가져옴
+  if (isInitialized && authStore.loggedInUser) {
+    fetchProfile();
+  }
+}, { immediate: true }); // 컴포넌트가 마운트될 때 즉시 한 번 실행
 
 const startEditing = () => {
   isEditing.value = true;
@@ -105,15 +113,13 @@ const submitUpdate = async () => {
 
   const payload = {
     name: profile.value.name,
-    phoneNumber: profile.value.phoneNumber, // userPhone -> phoneNumber로 수정
+    phoneNumber: profile.value.phoneNumber,
     currentPassword: passwords.value.currentPassword,
     newPassword: passwords.value.newPassword || ''
   };
 
   try {
-    // 백엔드 DTO 필드명에 맞춰 userPhone으로 전송
     await apiClient.patch('/api/mypage/profile', payload);
-
     await fetchProfile();
     isEditing.value = false;
     alert('수정이 완료되었습니다.');
@@ -129,7 +135,7 @@ const withdraw = async () => {
     try {
       await apiClient.delete('/api/mypage/member');
       alert("회원 탈퇴가 완료되었습니다.");
-      authStore.clearToken(); // 토큰 정리
+      authStore.logout();
       router.push('/login');
     } catch (error) {
       console.error("회원 탈퇴에 실패했습니다.", error);
@@ -141,20 +147,17 @@ const withdraw = async () => {
 const handleLogout = async () => {
   try {
     await apiClient.post('/api/auth/logout');
-    authStore.clearToken(); // 클라이언트 토큰 삭제
+    authStore.logout();
     alert('로그아웃되었습니다.');
-    router.push('/login');
+    router.push('/');
   } catch (error) {
     console.error('로그아웃 실패:', error);
   }
 };
-
-watch(() => {
-  fetchProfile();
-});
 </script>
 
 <style scoped>
+/* 스타일은 변경하지 않습니다. */
 .profile-container { background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
 .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .view-title { font-size: 1.5rem; font-weight: 700; color: #111827; }

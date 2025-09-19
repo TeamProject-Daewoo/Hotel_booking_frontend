@@ -1,87 +1,150 @@
 <template>
   <div class="view-container">
-    <div class="header-section">
-      <h1 class="view-title">내가 작성한 리뷰</h1>
-      <div class="filter-options">
-        <select class="filter-select">
-          <option>6개월</option>
-          <option>1년</option>
-          <option>전체</option>
-        </select>
+    <h1 class="view-title">다가오는 예약</h1>
+    <div v-if="isLoading" class="loading-state">
+      <p>예약 내역을 불러오는 중입니다...</p>
+    </div>
+
+    <div v-else-if="upcomingBookings.length > 0" class="booking-list">
+      <div v-for="booking in upcomingBookings" :key="booking.reservationId" class="booking-card">
+        <div class="card-header">
+          <div class="hotel-info">
+            <img src="https://placehold.co/60x60/e0e7ff/4338ca?text=Hotel" alt="호텔 로고" class="hotel-logo">
+            <div class="hotel-details">
+              <strong class="hotel-name">{{ booking.hotelName }}</strong>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="details-button" @click="openModal(booking)">예약 상세</button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="info-group">
+            <div class="info-item">
+              <span class="info-label">체크인</span>
+              <span class="info-value">{{ formatDate(booking.checkInDate) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">체크아웃</span>
+              <span class="info-value">{{ formatDate(booking.checkOutDate) }}</span>
+            </div>
+          </div>
+          <div class="info-group">
+            <div class="info-item">
+              <span class="info-label">성인</span>
+              <span class="info-value">{{ booking.numAdults }}명</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">아동</span>
+              <span class="info-value">{{ booking.numChildren }}명</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="review-count-bar">
-      <span>리뷰 <strong>{{ reviews.length }}</strong></span>
-    </div>
-
-    <div v-if="reviews.length > 0" class="review-list">
-      <div v-for="review in reviews" :key="review.id" class="review-card">
-        <div class="hotel-info">
-          <img :src="review.imageUrl" alt="호텔 이미지" class="hotel-thumbnail">
-          <div class="hotel-details">
-            <span class="hotel-provider">[여기어때] {{ review.hotelName }}</span>
-            <p class="hotel-description">{{ review.roomType }}</p>
-          </div>
-          <button class="delete-button-icon">&times;</button>
-        </div>
-        <div class="rating-section">
-          <div class="star-rating">
-            <span v-for="n in 5" :key="n" class="star" :class="{ 'filled': n <= review.rating }">★</span>
-          </div>
-          <span class="rating-value">{{ review.rating }}</span>
-          <button class="edit-button">수정</button>
-        </div>
-        <p class="review-text">
-          <span class="helpful-badge">도움돼요</span>
-          {{ review.reviewText }}
-        </p>
-      </div>
-    </div>
     <div v-else class="empty-state">
-      <h2 class="empty-title">작성한 리뷰가 없습니다.</h2>
+      <h2>예정된 여행이 없습니다.</h2>
+      <p>여행을 예약하고 내역을 확인해보세요.</p>
     </div>
+
+    <BookingReceiptModal
+        v-if="isModalOpen"
+        :booking="selectedBooking"
+        @close="closeModal"
+    />
+
+    <PastBookingListView :bookings="pastBookings" />
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue'; // onMounted 대신 watch 사용
+import api from '@/api/axios';
+import { useAuthStore } from '@/api/auth'; // authStore 추가
+import BookingReceiptModal from './BookingReceiptModal.vue';
+import PastBookingListView from './PastBookingListView.vue';
 
-const reviews = ref([]);
+const authStore = useAuthStore(); // authStore 인스턴스 생성
+const allBookings = ref([]);
+const isLoading = ref(true);
 
-const fetchReviews = () => {
-  reviews.value = [
-    { id: 1, hotelName: '서울 신라호텔', roomType: '디럭스 더블룸 / 1박', imageUrl: 'https://placehold.co/100x100/e2e8f0/64748b?text=Hotel', rating: 5, reviewText: '부모님 모시고 다녀왔는데 너무 좋아하셨어요! 역시 신라호텔입니다. 룸 컨디션, 서비스, 조식 뭐하나 빠지는게 없네요.' },
-    { id: 2, hotelName: '부산 파라다이스 호텔', roomType: '오션뷰 트윈룸 / 2박', imageUrl: 'https://placehold.co/100x100/e2e8f0/64748b?text=Hotel', rating: 4, reviewText: '해운대 바로 앞이라 위치가 정말 좋습니다. 수영장도 잘 되어있어서 아이들이 정말 좋아했어요. 재방문 의사 있습니다.' },
-  ];
+const isModalOpen = ref(false);
+const selectedBooking = ref(null);
+
+const upcomingBookings = computed(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return allBookings.value.filter(b => b.status === 'PAID' && new Date(b.checkOutDate) >= today);
+});
+
+const pastBookings = computed(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return allBookings.value.filter(b => b.status !== 'PAID' || new Date(b.checkOutDate) < today);
+});
+
+const openModal = (booking) => {
+  selectedBooking.value = booking;
+  isModalOpen.value = true;
 };
 
-onMounted(fetchReviews);
+const closeModal = () => {
+  isModalOpen.value = false;
+  selectedBooking.value = null;
+};
+
+const fetchBookings = async () => {
+  try {
+    const response = await api.get('/api/mypage/bookings');
+    allBookings.value = response.data.sort((a, b) => new Date(b.checkInDate) - new Date(a.checkInDate));
+  } catch (error) {
+    console.error("예약 내역을 불러오는 데 실패했습니다:", error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// isInitialized 상태를 감시하여 API 호출
+watch(() => authStore.isInitialized, (isInitialized) => {
+  if (isInitialized && authStore.loggedInUser) {
+    fetchBookings();
+  }
+}, { immediate: true });
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+  return `${month}월 ${day}일 (${dayOfWeek})`;
+};
 </script>
 
 <style scoped>
+/* 스타일은 변경하지 않습니다. */
 .view-container { background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-.header-section { display: flex; justify-content: space-between; align-items: center; }
-.view-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
-.filter-select { border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem; font-size: 0.875rem; }
-.review-count-bar { padding: 1rem 0; margin-top: 1.5rem; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; color: #4b5563; }
-.review-list { display: flex; flex-direction: column; }
-.review-card { padding: 1.5rem 0; border-bottom: 1px solid #f3f4f6; }
-.review-card:last-child { border-bottom: none; }
+.view-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; }
+.loading-state, .empty-state { text-align: center; padding: 4rem 0; color: #6b7280; }
+.empty-state h2 { font-size: 1.25rem; font-weight: 600; }
+.empty-state p { margin-top: 0.5rem; }
+.booking-list { display: flex; flex-direction: column; gap: 2rem; }
+.booking-card { border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05); transition: box-shadow 0.2s; width: 100%; }
+.booking-card:hover { box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.08); }
+.card-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; }
 .hotel-info { display: flex; align-items: center; gap: 1rem; }
-.hotel-thumbnail { width: 60px; height: 60px; border-radius: 0.25rem; }
-.hotel-details { flex-grow: 1; }
-.hotel-provider { font-size: 0.8rem; color: #6b7280; }
-.hotel-description { font-size: 0.9rem; font-weight: 500; color: #1f2937; margin-top: 0.25rem; }
-.delete-button-icon { background: none; border: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer; }
-.rating-section { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; }
-.star-rating { display: flex; }
-.star-rating .star { font-size: 1.25rem; color: #d1d5db; }
-.star-rating .star.filled { color: #facc15; }
-.rating-value { font-weight: 700; font-size: 1rem; }
-.edit-button { border: 1px solid #d1d5db; background-color: white; border-radius: 0.25rem; padding: 0.25rem 0.75rem; font-size: 0.8rem; cursor: pointer; margin-left: auto; }
-.review-text { margin-top: 1rem; font-size: 0.9rem; color: #374151; line-height: 1.6; }
-.helpful-badge { background-color: #eff6ff; color: #3b82f6; font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.5rem; border-radius: 0.25rem; margin-right: 0.5rem; }
-.empty-state { text-align: center; padding: 3rem 0; }
-.empty-title { font-size: 1.25rem; font-weight: 700; }
+.hotel-logo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.hotel-details { display: flex; flex-direction: column; }
+.hotel-name { font-size: 1.125rem; font-weight: 600; color: #1f2937; }
+.header-actions { display: flex; align-items: center; gap: 1rem; }
+.details-button { background-color: #4f46e5; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+.details-button:hover { background-color: #4338ca; }
+.card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1.5rem; background-color: #f9fafb; }
+.info-group { display: flex; flex-direction: column; gap: 1rem; }
+.info-item { display: flex; flex-direction: column; }
+.info-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem; }
+.info-value { font-size: 1rem; font-weight: 500; color: #111827; }
 </style>

@@ -5,6 +5,7 @@ import Footer from './components/Footer.vue';
 import Header from './components/Header.vue';
 import { useAuthStore } from './api/auth';
 import api from './api/axios';
+import { useWishlistStore } from './store/wishlistStore';
 
 const authStore = useAuthStore();
 const route = useRoute(); // 현재 라우트 정보를 가져옵니다.
@@ -29,6 +30,17 @@ onMounted(async () => {
     if (!authStore.isInitialized) {
         const response = await api.post('/api/auth/refresh');
       authStore.setToken(response.data.accessToken);
+      
+      //찜목록 db동기화
+      const wishlistStore = useWishlistStore();
+      await wishlistStore.fetchWishlist();
+
+      console.log("토큰 재발급 성공");
+    } catch (error) {
+      console.log("자동 로그인 실패, 유효한 리프레시 토큰이 없습니다.");
+    } finally {
+      authStore.setInitialized();
+
     }
 });
 </script>
