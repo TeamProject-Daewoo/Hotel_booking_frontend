@@ -147,6 +147,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { reactive, ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -168,6 +169,7 @@ const isCodeSent = ref(false);
 const isEmailVerified = ref(false);
 const verificationMessage = ref("");
 const verificationMessageType = ref("info"); // 'info', 'success', 'error'
+const registrationError = ref(null);
 
 const handleCodeInput = (event) => {
   // 입력값에서 숫자 이외의 문자를 모두 제거합니다.
@@ -290,20 +292,23 @@ const handleRegister = async () => {
   }
 
   try {
-    // DTO에 정의된 필드명과 일치시켜서 전송
-    await api.post("/api/auth/sign-up", {
-      username: formData.username,
-      password: formData.password,
-      name: formData.name,
-      phoneNumber: formData.phoneNumber,
-      role: formData.role,
-    });
+    await api.post('/api/auth/sign-up', { /* ... */ });
+    alert('회원가입이 완료되었습니다.');
+    router.push('/loginview');
 
-    alert("회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.");
-    router.push("/login");
   } catch (error) {
-    console.error("회원가입 실패:", error);
-    alert(error.response?.data || "회원가입 중 오류가 발생했습니다.");
+    // 👇 409 Conflict 에러(사용자 중복)를 받았을 때
+    if (error.response && error.response.status === 409) {
+      // 에러 정보를 state에 담아 새로운 페이지로 이동
+      router.push({ 
+        name: 'registrationFailed', 
+        state: { errorInfo: error.response.data } 
+      });
+    } else {
+      // 그 외 다른 에러는 기존처럼 처리
+      console.error('회원가입 실패:', error);
+      alert(error.response?.data || '회원가입 중 오류가 발생했습니다.');
+    }
   }
 };
 </script>
