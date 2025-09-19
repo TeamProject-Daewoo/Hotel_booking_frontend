@@ -117,7 +117,7 @@ const handleFileChange = async (event) => {
     }
 
     const response = await axios.post(
-      "http://localhost:8888/api/upload",
+      `${import.meta.env.VITE_API_URL}/api/upload`,
       formData,
       {
         headers: {
@@ -163,7 +163,7 @@ const submitInquiry = async () => {
 
   try {
     await axios.post(
-      "http://localhost:8888/api/inquiries/with-files",
+      `${import.meta.env.VITE_API_URL}/api/inquiries/with-files`,
       {
         inquiry: {
           category: form.category,

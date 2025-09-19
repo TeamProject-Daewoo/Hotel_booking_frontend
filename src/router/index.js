@@ -21,6 +21,7 @@ import KakaoCallback from '../views/KakaoCallback.vue';
 import LogoutCallback from '../components/kakao/LogoutCallback.vue';
 import LoginChoiceView from '../views/LoginChoiceView.vue';
 import ReviewForm from '@/views/ReviewForm.vue';
+import registrationFailed from '../views/RegistrationFailedView.vue';
 
 // 🔽 Inquiry 관련 라우트 import 추가
 import InquiryList from '@/components/inquiries/InquiryList.vue';
@@ -48,6 +49,7 @@ const routes = [
   {path: '/logout-callback', name: 'LogoutCallback', component: LogoutCallback},
   {path: '/login-choice', name: 'LoginChoiceView', component: LoginChoiceView},
   {path: '/write-review/:reservationId', name: 'WriteReview', component: ReviewForm},
+  {path: '/registration-failed', name: 'registrationFailed', component: registrationFailed},
 
     // 🔽 문의 관련 라우트 추가
   { path: "/inquiries", name: "InquiryList", component: InquiryList },

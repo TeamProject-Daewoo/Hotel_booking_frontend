@@ -48,7 +48,7 @@
     }
     
     window.Kakao.Auth.authorize({
-      redirectUri: 'http://localhost:5173/kakao-callback',
+      redirectUri: `${import.meta.env.VITE_API_URL_FRONT}/kakao-callback`,
     });
   };
   </script>
