@@ -14,13 +14,20 @@ const headerStyle = computed(() => ({
   height: route.path === '/' ? '0px' : '80px'
 }));
 
-
 onMounted(async () => {
+  const currentPath = window.location.pathname;
+
+  if (currentPath.includes('/logout-callback') || currentPath.includes('/naver-callback')) {
+    console.log('소셜 로그인 콜백 경로이므로 자동 로그인을 건너뜁니다.');
+    authStore.setInitialized();
+    return;
+  }
+
   if (!authStore.isInitialized) {
     try {
       const response = await api.post('/api/auth/refresh');
       authStore.setToken(response.data.accessToken);
-      //찜목록 db동기화
+
       const wishlistStore = useWishlistStore();
       await wishlistStore.fetchWishlist();
 
