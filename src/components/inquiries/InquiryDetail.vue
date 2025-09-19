@@ -48,7 +48,7 @@ const fetchInquiry = async () => {
   }
   try {
     const res = await axios.get(
-      `http://localhost:8888/api/inquiries/${route.params.id}`,
+      `${import.meta.env.VITE_API_URL}/api/inquiries/${route.params.id}`,
       {
         headers: {
           Authorization: `Bearer ${authStore.accessToken}`,

@@ -49,7 +49,7 @@ const handleKakaoLogin = () => {
   }
   
   window.Kakao.Auth.authorize({
-    redirectUri: 'http://localhost:5173/kakao-callback', // 👈 다음 단계에서 만들 콜백 경로
+    redirectUri: `${import.meta.env.VITE_API_URL_FRONT}/kakao-callback`, // 👈 다음 단계에서 만들 콜백 경로
   });
 };
 </script>

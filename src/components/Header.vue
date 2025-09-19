@@ -39,7 +39,7 @@ const handleLogout = async () => {
 
         // 카카오 로그인의 경우: 카카오 로그아웃 URL로 리디렉션
         const KAKAO_RESTAPI_KEY = import.meta.env.VITE_KAKAO_RESTAPI_KEY;; // 👈 본인의 REST API 키
-        const KAKAO_LOGOUT_REDIRECT_URI = 'http://localhost:5173/logout-callback'; // 👈 다음 단계에서 만들 콜백 경로
+        const KAKAO_LOGOUT_REDIRECT_URI = `${import.meta.env.VITE_API_URL_FRONT}/logout-callback`; // 👈 다음 단계에서 만들 콜백 경로
 
         window.location.href = `https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_RESTAPI_KEY}&logout_redirect_uri=${KAKAO_LOGOUT_REDIRECT_URI}`;
     

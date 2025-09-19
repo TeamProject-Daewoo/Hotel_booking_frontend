@@ -16,7 +16,7 @@ export const useWishlistStore = defineStore('wishlist', {
   actions: {
     async delete(hotelId) {
         try {
-            await axios.delete(`http://localhost:8888/api/mypage/deletewish`, {data: {"hotelId":hotelId}});
+            await axios.delete(`${import.meta.env.VITE_API_URL}/api/mypage/deletewish`, {data: {"hotelId":hotelId}});
             this.wishlistItems = this.wishlistItems.filter(item => String(item.contentId) !== String(hotelId));
             this.wishlistIds.delete(hotelId);
         } catch (error) {
@@ -25,7 +25,7 @@ export const useWishlistStore = defineStore('wishlist', {
     },
     async fetchWishlist() {
         try {
-            const response = await axios.get(`http://localhost:8888/api/mypage/wishs`);
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/mypage/wishs`);
             this.wishlistItems = response.data;
             this.wishlistIds = new Set(response.data.map(item => item.contentId));
         } catch (error) {
@@ -38,7 +38,7 @@ export const useWishlistStore = defineStore('wishlist', {
         if (this.isLiked(hotelId)) {
           this.delete(hotelId);
         } else {
-          await axios.post(`http://localhost:8888/api/mypage/savewish`, {"hotelId":hotelId});
+          await axios.post(`${import.meta.env.VITE_API_URL}/api/mypage/savewish`, {"hotelId":hotelId});
           this.wishlistIds.add(hotelId); 
         }
       } catch (error) {
