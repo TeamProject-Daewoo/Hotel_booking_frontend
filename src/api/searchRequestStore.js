@@ -68,6 +68,7 @@ export const useSearchStore = defineStore('search', () => {
   const result = ref(null);
   const isLoading = ref(false);
   const error = ref(null);
+  const search_post_url = `${import.meta.env.VITE_API_URL}/api/search`;
 
   const fetchSearchResult = async () => {
     // console.log(result);
@@ -78,7 +79,7 @@ export const useSearchStore = defineStore('search', () => {
       isLoading.value = true;
       error.value = null;
       try {
-          result.value = await axios.post('http://localhost:8888/api/search', getRequestPayload());
+          result.value = await axios.post(search_post_url, getRequestPayload());
       } catch (e) {
           error.value = '데이터를 불러오는 데 실패했습니다.';
           console.error(e);

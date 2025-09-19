@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { useAuthStore } from '@/api/auth';
 
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
 const api = axios.create({
-    baseURL: 'http://localhost:8888', // Spring Boot 서버의 주소
+    baseURL: VITE_API_URL, // Spring Boot 서버의 주소
     headers: {
         'Content-Type': 'application/json',
     },

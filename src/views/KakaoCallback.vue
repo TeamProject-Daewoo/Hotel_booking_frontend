@@ -43,9 +43,17 @@ const handleKakaoBackendLogin = async (code) => {
     router.push('/'); // 로그인 성공 후 메인 페이지로 이동
 
   } catch (error) {
-    console.error('카카오 백엔드 로그인 실패:', error);
-    alert('로그인 처리 중 오류가 발생했습니다.');
-    router.push('/register-choice');
+    if (error.response && error.response.status === 409) {
+      router.push({ 
+        name: 'registrationFailed', 
+        state: { errorInfo: error.response.data } 
+      });
+    } else {
+      // 그 외 다른 에러
+      console.error('카카오 로그인 실패:', error);
+      alert('로그인 처리 중 오류가 발생했습니다.');
+      router.push('/loginview');
+    }
   }
 };
 </script>

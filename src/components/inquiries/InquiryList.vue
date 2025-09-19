@@ -43,7 +43,7 @@ const errorMessage = ref("");
 
 // Axios 인스턴스
 const api = axios.create({
-  baseURL: "http://localhost:8888/api",
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
 });
 
 // 토큰 없으면 로그인 페이지로 이동

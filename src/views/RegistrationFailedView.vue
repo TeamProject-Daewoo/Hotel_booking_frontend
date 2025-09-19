@@ -62,7 +62,7 @@
   .kakao-text { color: #191919; background-color: #FEE500; }
   .email-text { color: white; background-color: #555; }
   .button-group { display: flex; flex-direction: column; gap: 10px; }
-  .action-button { display: block; width: 100%; padding: 12px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; border: 1px solid; }
+  .action-button { display: block; padding: 12px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; border: 1px solid; }
   .primary { background-color: #007bff; color: white; border-color: #007bff; }
   .primary:hover { background-color: #0056b3; }
   .secondary { background-color: white; color: #6c757d; border-color: #6c757d; }

@@ -37,7 +37,7 @@ const formatDate = (dateStr) => {
 onMounted(async () => {
   const id = route.params.id;
   try {
-    const res = await axios.get(`http://localhost:8888/api/notices/${id}`);
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/${id}`);
     notice.value = res.data;
   } catch (error) {
     console.error('공지 상세 조회 실패:', error);

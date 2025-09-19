@@ -133,7 +133,7 @@
         <div class="switch-auth">
           <p>
             이미 계정이 있으신가요?
-            <router-link to="/loginview">로그인</router-link>
+            <router-link to="/login-choice">로그인</router-link>
           </p>
         </div>
       </div>
@@ -292,9 +292,14 @@ const handleRegister = async () => {
   }
 
   try {
-    await api.post('/api/auth/sign-up', { /* ... */ });
+    await api.post('/api/auth/sign-up', { 
+      username: formData.username,
+      password: formData.password,
+      name: formData.name,
+      phoneNumber: formData.phoneNumber,
+      role: formData.role, });
     alert('회원가입이 완료되었습니다.');
-    router.push('/loginview');
+    router.push('/');
 
   } catch (error) {
     // 👇 409 Conflict 에러(사용자 중복)를 받았을 때

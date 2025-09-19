@@ -93,7 +93,7 @@ const fetchNoticesPaged = async (page = 0) => {
   try {
     // API 요청 파라미터로 카테고리, 검색어 포함하려면 백엔드 쪽도 수정 필요
     // 지금은 페이징만 적용되어 있음
-    const res = await axios.get(`http://localhost:8888/api/notices/paged?page=${page}&size=${pageSize}`);
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/paged?page=${page}&size=${pageSize}`);
     notices.value = res.data.content;
     totalPages.value = res.data.totalPages;
     currentPage.value = res.data.pageNumber;
