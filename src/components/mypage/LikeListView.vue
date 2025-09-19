@@ -8,10 +8,13 @@
         <div class="card-content">
           <h3 class="hotel-name">{{ like.hotelName }}</h3>
           <p class="hotel-address">{{ like.address }}</p>
-          <div class="rating-info">
+          <div class="rating-info" v-if="like.rating !== 0 && like.reviewCount !== 0">
             <span class="star filled">★</span>
             <span class="rating-score">{{ like.rating }}</span>
             <span class="review-count">({{ like.reviewCount }})</span>
+          </div>
+          <div class="rating-info" v-else>
+            <span>(리뷰가 없습니다)</span>
           </div>
           <button class="book-button" @click="$router.push({ name: 'place-detail', params: { id: like.contentId }})">예약하기</button>
         </div>

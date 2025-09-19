@@ -36,16 +36,25 @@
                     <div class="infor-view">
                         <h2>{{ data.title }}</h2>
                         <p><i class="fa-solid fa-location-dot"></i> {{ data.address }}</p>
-                        <span style="margin-right: 30px;"><i class="fa-solid fa-star"></i> {{ data.rating }}</span>
+                        <span style="margin-right: 30px;">
+                          <i class="fa-solid fa-star"></i>
+                          <span v-if="data.rating == 0">리뷰 없음</span>
+                          <span v-else><b>&nbsp;{{ data.rating }}점</b></span>
+                        </span>
                         <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}</b>+ 편의시설</span>
-                        <p><b>Very Good</b> {{ data.totalReviews }} reviews</p>
+                        <p>
+                          <b v-if="data.rating == 0">(리뷰 없음)</b>
+                          <b v-else-if="data.rating > 4.5" style="color: darkgreen">매우 좋은</b>
+                          <b v-else-if="data.rating > 4.0" style="color: green">좋은</b>
+                          <b v-else-if="data.rating > 3.5" style="color:limegreen">괜찮은</b>
+                          <b v-else style="color: orange;">무난한</b>
+                          
+                          {{ data.totalReviews }} reviews
+                        </p>
                     </div>
                     <div class="price-view">
                         <p>starting from</p>
                         <p>{{ ((parseInt(data.price)*dateDiff)/10000).toLocaleString() }}만원<span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
-                        <div style="text-align: right;">
-                            <p>excl. tax</p>
-                        </div>
                     </div>
                 </div>
                 <div class="btn-container">
@@ -57,8 +66,11 @@
                             }">
                         </i>
                     </button>
-                    <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
-                        View Place
+                    <button v-if="data.roomCount === 0" class="view-btn" style="color:white; background-color:lightcoral;">
+                        예약 마감
+                    </button>
+                    <button v-else class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
+                        예약 하기
                     </button>
                 </div>
             </div>
@@ -163,7 +175,7 @@ function getDaysDifference(date1, date2) {
 .result-card {
   display: flex;
   width: 100%;
-  height: 300px;
+  height: 350px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   justify-content: center;
@@ -279,7 +291,7 @@ function getDaysDifference(date1, date2) {
 
 .image-container {
   width: 35%;
-  height: 300px;
+  height: 350px;
   object-fit: cover;
   border-bottom: 1px solid #e0e0e0;
 }
@@ -289,12 +301,13 @@ function getDaysDifference(date1, date2) {
 .infor-container {
   background-color: white;
   width: 65%;
-  height: 300px;
+  height: 350px;
   padding: 10px 20px;
+  box-sizing: border-box;
 }
 .text-container {
   width: 100%;
-  height: 200px;
+  height: 250px;
   display: flex;
   justify-content: space-between;
   border-bottom: 1px solid #e0e0e0;
@@ -306,9 +319,10 @@ function getDaysDifference(date1, date2) {
   text-align: left;
 }
 .price-view {
-  margin-top: 50px;
+  margin: 20px 20px;
+  width: 200px;
   height: 200px;
-  text-align: left;
+  text-align: right;
 }
 .price-view p {
   margin: 0px 0px;
@@ -323,7 +337,8 @@ function getDaysDifference(date1, date2) {
 .btn-container {
   padding: 20px 10px 10px 0px;
   width: 100%;
-  height: 15%;
+  box-sizing: border-box;
+  bottom: 10px;
   display: flex;
   justify-content: space-between;
 }
