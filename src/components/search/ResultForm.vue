@@ -49,8 +49,13 @@
                     </div>
                 </div>
                 <div class="btn-container">
-                    <button class="like-btn" @click="likeToggle">
-                        <i class="fa-regular fa-heart"></i>
+                    <button class="like-btn"  @click="likeToggle($event, data.contentId)">
+                        <i class="fa-heart" 
+                            :class="{ 
+                              'fa-solid': wishlistStore.isLiked(data.contentId), 
+                              'fa-regular': !wishlistStore.isLiked(data.contentId) 
+                            }">
+                        </i>
                     </button>
                     <button class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
                         View Place
@@ -77,23 +82,42 @@
 </template>
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import SearchModal from './SearchModal.vue';
+import axios from '@/api/axios';
+import { useWishlistStore } from '@/store/wishlistStore';
+import { useAuthStore } from '@/api/auth';
+import router from '@/router';
 
 const searchStore = useSearchStore();
+const wishlistStore = useWishlistStore();
+const authStore = useAuthStore();
+
 const dateDiff = computed(() => {
   return getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate);
 })
 
-const likeToggle = (event) => {
+const likeToggle = (event, hotelId) => {
+  if (!authStore.isLoggedIn) {
+    if(confirm('로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?')) {
+      router.push({ 
+        name: 'login',
+        query: { redirect: router.currentRoute.value.fullPath } 
+      });
+    }
+    return;
+  }
   const target = event.currentTarget.querySelector('i');
   if (target.classList.contains('fa-solid')) {
+    //버튼 비활성화
     target.classList.remove('fa-solid');
     target.classList.add('fa-regular');
   } else {
+    //버튼 활성화
     target.classList.remove('fa-regular');
     target.classList.add('fa-solid');
   }
+  wishlistStore.toggleWish(hotelId);
 }
 
 const selectOption = (option) => {
