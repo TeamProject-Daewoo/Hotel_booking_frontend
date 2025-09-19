@@ -45,7 +45,9 @@ onMounted(async () => {
             authStore.setInitialized();
         }
     }
+  }
 });
+
 </script>
 
 <template>
