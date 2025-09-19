@@ -94,12 +94,12 @@
           </div>
 
           <div class="input-group">
-            <label for="name">사용자 이름</label>
+            <label for="name">닉네임</label>
             <input
               type="text"
               id="name"
               v-model="formData.name"
-              placeholder="이름을 입력하세요"
+              placeholder="최대 7글자"
               maxlength="7"
               required
               @keydown="preventSpaces"
