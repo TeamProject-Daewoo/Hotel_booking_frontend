@@ -17,7 +17,11 @@ export const useSearchStore = defineStore('search', () => {
   // FilterForm
   const minPrice = ref(0);
   const maxPrice = ref(400000);
+<<<<<<< HEAD
   const rating = ref(1);
+=======
+  const rating = ref(0);
+>>>>>>> ecd6eace46845bf45979ffe7efdab2353875c91e
   const amenities = ref({
     "주차가능":false,       //parkinglodging
     "수영장": false,        //subfacility, 
