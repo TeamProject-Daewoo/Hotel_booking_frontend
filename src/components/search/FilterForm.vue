@@ -28,7 +28,9 @@
                 </button>
             </div>
             <div v-show="isFilterOpen[1]" class="price-range-container">
-                <button v-for="value in 5" :key="value" @click="searchStore.rating=value">
+                <button v-for="value in 5" :key="value" 
+                    @click="clickRatingButton(searchStore.rating === value ? 0 : value)"
+                    :class="{ 'active-rating': searchStore.rating === value }">
                     {{ value }}+
                 </button>
             </div>
@@ -111,10 +113,14 @@ onMounted(() => {
 const toggleFilter = (num) => {
     isFilterOpen.value[num] = !isFilterOpen.value[num];
 };
+
+function clickRatingButton(value) {
+    searchStore.rating = value;
+    searchStore.fetchSearchResult();
+}
 </script>
 
 <style>
-
 /* 필터 컨테이너 전체 스타일 */
 .filter-main-container {
     border-radius: 8px;
@@ -166,10 +172,14 @@ const toggleFilter = (num) => {
     cursor: pointer;
     transition: background-color 0.3s, border-color 0.3s;
 }
+.filter-main-container button.active-rating {
+    background: #dbffea;          
+    border-color: #54f4c1;
+}
 
 /* Rating 버튼 호버 및 클릭 시 스타일 */
 .filter-main-container button:hover {
-    background-color: #f0f0f0;
+    background-color: #dbffea;
     border-color: #54f4c1;
 }
 

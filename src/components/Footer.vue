@@ -15,12 +15,12 @@
         <h4 class="footer-heading">회사 소개</h4>
         <a href="#">About HotelHub</a>
         <a href="#">채용</a>
-        <a href="#">공지사항</a>
+        <router-link to="/notices">공지사항</router-link>
       </div>
 
       <div class="footer-column links-section">
         <h4 class="footer-heading">고객 지원</h4>
-        <a href="#">문의하기</a>
+        <router-link to="/inquiries">문의하기</router-link>
         <a href="#">이용 약관</a>
         <a href="#">개인정보 처리방침</a>
       </div>

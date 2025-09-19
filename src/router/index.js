@@ -19,6 +19,12 @@ import NonMemberBookingView from '@/views/NonMemberBookingView.vue';
 import registerChoice from '@/views/RegisterChoiceView.vue';
 import ReviewForm from '@/views/ReviewForm.vue';
 
+// 🔽 Inquiry 관련 라우트 import 추가
+import InquiryList from '@/components/inquiries/InquiryList.vue';
+import InquiryForm from '@/components/inquiries/InquiryForm.vue';
+import InquiryDetail from '@/components/inquiries/InquiryDetail.vue';
+
+
 const routes = [
   {path: "/", name: "main", component: Main},
   {path: "/search", name: "search", component: SearchView},
@@ -37,6 +43,14 @@ const routes = [
   {path: '/lookup-booking', name: 'NonMemberBookingView', component: NonMemberBookingView},
   {path: '/register-choice', name: 'registerChoice', component: registerChoice},
   {path: '/write-review/:reservationId', name: 'WriteReview', component: ReviewForm},
+
+    // 🔽 문의 관련 라우트 추가
+  { path: "/inquiries", name: "InquiryList", component: InquiryList },
+  { path: "/inquiries/new", name: "InquiryForm", component: InquiryForm },
+  { path: "/inquiries/:id", name: "InquiryDetail", component: InquiryDetail },
+
+  { path: "/notices", name: "NoticeList", component: () => import('@/components/Notice/notice.vue') },
+  { path: '/notices/:id', name: 'NoticeDetail', component: () => import('@/components/Notice/NoticeDetail.vue'), props: true }
 ]
 
 const router = createRouter({
