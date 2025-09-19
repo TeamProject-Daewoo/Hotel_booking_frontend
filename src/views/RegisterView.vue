@@ -57,6 +57,9 @@
             >
               {{ verificationMessage }}
             </p>
+                          <p v-if="isCodeSent && !isEmailVerified" class="info-text">
+  남은 시간: {{ formattedTime }}
+</p>
           </div>
 
           <div class="input-group">
@@ -241,12 +244,16 @@ const sendVerificationCode = async () => {
   verificationMessage.value = "인증번호를 발송 중입니다...";
 
   try {
-    await api.post("/api/auth/send-verification", { email: formData.username });
 
     isCodeSent.value = true;
 
+    await api.post("/api/auth/send-verification", { email: formData.username });
+
     verificationMessage.value =
       "인증번호가 발송되었습니다. 이메일을 확인해주세요.";
+
+      startTimer();
+
   } catch (error) {
     verificationMessageType.value = "error";
     verificationMessage.value =
@@ -284,6 +291,34 @@ const verifyCode = async () => {
     verificationMessageType.value = "error";
   }
 };
+
+const timeLeft = ref(0); // 남은 시간(초 단위)
+let timerInterval = null;
+
+// 타이머 시작 함수
+const startTimer = () => {
+  timeLeft.value = 5 * 60; // 5분 = 300초
+
+  if (timerInterval) clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    if (timeLeft.value > 0) {
+      timeLeft.value--;
+    } else {
+      clearInterval(timerInterval);
+      isCodeSent.value = false; // 시간이 끝나면 다시 발송 가능하게
+      verificationMessage.value = "인증 시간이 만료되었습니다. 다시 시도해주세요.";
+      verificationMessageType.value = "error";
+    }
+  }, 1000);
+};
+
+// mm:ss 형식으로 변환하는 computed
+const formattedTime = computed(() => {
+  const minutes = Math.floor(timeLeft.value / 60);
+  const seconds = timeLeft.value % 60;
+  return `${String(minutes).padStart(1, "0")}:${String(seconds).padStart(2, "0")}`;
+});
 
 const handleRegister = async () => {
   if (!isFormValid.value) {
