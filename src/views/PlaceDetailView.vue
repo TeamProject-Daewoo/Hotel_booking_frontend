@@ -8,6 +8,7 @@
         @book="goFirstRoom"
     />
     <Gallery :images="gallery" />
+
     <Overview :rooms="rooms" :base="base" :building="building" />
     <Rooms
         :rooms="rooms"
@@ -35,6 +36,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
+import { useSearchStore } from '@/api/searchRequestStore' // Pinia 스토어 임포트
 
 import Hero     from '@/components/placedetail/Hero.vue'
 import Gallery  from '@/components/placedetail/Gallery.vue'
@@ -46,6 +48,7 @@ import Reviews  from '@/components/placedetail/Reviews.vue'
 const route = useRoute()
 const router = useRouter()
 const id = route.params.id
+const searchStore = useSearchStore() // Pinia 스토어 사용
 
 const base = ref({})
 const building = ref({})
@@ -53,8 +56,16 @@ const rooms = ref([])
 const reviews = ref([])
 const availabilityData = ref({})
 
-const startDate = new Date().toISOString().slice(0, 10);
-const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+// Date 객체를 YYYY-MM-DD 형식의 문자열로 변환하는 함수
+const toISO = (date) => date.toISOString().slice(0, 10);
+
+// 스토어에서 날짜 정보를 가져옴
+const startDate = computed(() => toISO(searchStore.checkInDate));
+const endDate = computed(() => toISO(searchStore.checkOutDate));
+
+const formattedDateRange = computed(() => {
+  return `${startDate.value} ~ ${endDate.value}`;
+});
 
 function onBookRoom(idx){ router.push({ name: 'room-detail', params: { id: String(id), idx: String(idx ?? 0) } }) }
 function openReviewModal(){ /* 구현부 */ }
@@ -74,8 +85,8 @@ async function fetchAvailability() {
   try {
     const response = await api.post('/api/reservations/availability', {
       contentId: id,
-      startDate: startDate,
-      endDate: endDate
+      startDate: startDate.value, // 스토어의 날짜 사용
+      endDate: endDate.value      // 스토어의 날짜 사용
     });
     availabilityData.value = response.data.availability;
   } catch (error) {
@@ -94,12 +105,10 @@ const processedAvailability = computed(() => {
     let minCount = Infinity;
     for (const date in availabilityData.value) {
       const dailyAvail = availabilityData.value[date];
-      // room.roomcode 대신 room.id를 사용하도록 수정
       if (dailyAvail && dailyAvail[room.id] !== undefined) {
         minCount = Math.min(minCount, dailyAvail[room.id]);
       }
     }
-    // 키도 room.roomcode 대신 room.id로 저장
     result[room.id] = minCount === Infinity ? null : minCount;
   });
   return result;
@@ -163,4 +172,28 @@ const gallery = computed(() => {
 <style scoped>
 .detail-page{max-width:1100px;margin:24px auto;padding:0 16px;font-family:"Noto Sans KR",sans-serif}
 .loading{text-align:center;padding:64px 0}
+
+.info-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 16px;
+  margin: 24px 0;
+  text-align: center;
+}
+.info-card h2 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+.info-card p {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2b7264;
+  margin: 0 0 4px 0;
+}
+.info-card span {
+  font-size: 12px;
+  color: #6c757d;
+}
 </style>
