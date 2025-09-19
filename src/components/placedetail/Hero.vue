@@ -30,7 +30,6 @@
           <span class="rate-reviews">{{ reviewCountNum }} reviews</span>
         </div>
       </div>
-
       <div class="cta-box">
         <!-- 가격 -->
         <div v-if="showPrice" class="price-chip" aria-label="가격 정보">
@@ -51,8 +50,13 @@
 
         <!-- 액션: 찜 / 공유 / 예약 -->
         <div class="cta-actions">
-          <button class="icon-btn" :aria-pressed="liked" aria-label="찜하기" @click="toggleLike">
-            <i :class="liked ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+          <button class="icon-btn" aria-label="찜하기" @click="likeToggle(base.contentid)">
+            <i class="fa-heart" 
+                :class="{ 
+                  'fa-solid': wishlistStore.isLiked(base.contentid), 
+                  'fa-regular': !wishlistStore.isLiked(base.contentid) 
+                }">
+            </i>
           </button>
 
           <button class="icon-btn" aria-label="공유하기" @click="onShare">
@@ -75,7 +79,13 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '@/api/auth';
+import router from '@/router';
+import { useWishlistStore } from '@/store/wishlistStore'
 import { computed, ref } from 'vue'
+
+const wishlistStore = useWishlistStore();
+const authStore = useAuthStore();
 
 const props = defineProps({
   rooms: { type: Array, default: () => [] },
@@ -163,6 +173,19 @@ const strikeValue = computed(() => {
 
 const showPrice = computed(() => priceValue.value != null && priceValue.value > 0)
 
+function likeToggle(hotelid) {
+  if (!authStore.isLoggedIn) {
+    if(confirm('로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?')) {
+      router.push({ 
+        name: 'login',
+        query: { redirect: router.currentRoute.value.fullPath } 
+      });
+    }
+    return;
+  }
+  wishlistStore.toggleWish(hotelid)
+}
+
 // 예약 가능 여부
 const canBook = computed(() => priceValue.value != null && priceValue.value > 0)
 
@@ -204,10 +227,6 @@ const ratingLabelText = computed(() => {
 })
 
 const hasReviewInfo = computed(() => ratingNum.value != null || reviewCountNum.value > 0)
-
-// 찜/공유
-const liked = ref(false)
-const toggleLike = () => { liked.value = !liked.value }
 
 const onShare = async () => {
   const shareData = {

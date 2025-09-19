@@ -53,6 +53,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
+import { useWishlistStore } from '@/store/wishlistStore';
 
 const user_name = ref('');
 const password = ref('');
@@ -86,9 +87,19 @@ const handleLogin = async () => {
             username: user_name.value,
             password: password.value,
         });
-        
         authStore.setToken(response.data.accessToken);
-        router.push('/');
+        
+        //찜목록 db동기화
+        const wishlistStore = useWishlistStore();
+        await wishlistStore.fetchWishlist();
+
+        //찜목록에서 로그인 페이지로 이동했다면 돌아가기
+        const redirectPath = router.currentRoute.value.query.redirect;
+        if (redirectPath) {
+          router.push(redirectPath);
+        } else {
+            router.push('/');
+        }
 
     } catch (error) {
         console.error("로그인 실패:", error);
