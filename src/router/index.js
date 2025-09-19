@@ -19,15 +19,12 @@ import NonMemberBookingView from '@/views/NonMemberBookingView.vue';
 import registerChoice from '@/views/RegisterChoiceView.vue';
 import ReviewForm from '@/views/ReviewForm.vue';
 
-<<<<<<< HEAD
 // 🔽 Inquiry 관련 라우트 import 추가
 import InquiryList from '@/components/inquiries/InquiryList.vue';
 import InquiryForm from '@/components/inquiries/InquiryForm.vue';
 import InquiryDetail from '@/components/inquiries/InquiryDetail.vue';
 
 
-=======
->>>>>>> ecd6eace46845bf45979ffe7efdab2353875c91e
 const routes = [
   {path: "/", name: "main", component: Main},
   {path: "/search", name: "search", component: SearchView},
