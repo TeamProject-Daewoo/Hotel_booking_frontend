@@ -34,10 +34,11 @@ const handleKakaoBackendLogin = async (code) => {
   try {
     // 우리 백엔드에 인가 코드를 보내고, 우리 서비스의 JWT를 받아옵니다.
     const response = await api.post('/api/auth/kakao-login', { code });
-    
+    console.log('로그인 보냄')
     // 우리 서비스의 Access Token을 Pinia에 저장합니다. (Refresh Token은 서버가 쿠키로 설정)
+    console.log("카카오 콜백", response.data.accessToken)
     authStore.setToken(response.data.accessToken);
-
+    console.log('저장완료')
     alert('카카오 계정으로 로그인되었습니다.');
     router.push('/'); // 로그인 성공 후 메인 페이지로 이동
 

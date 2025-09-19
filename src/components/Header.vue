@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/api/auth';
 import api from '@/api/axios';
@@ -29,14 +30,31 @@ function goToLookup() {
 }
 
 const handleLogout = async () => {
-  try {
-    await api.post('/api/auth/logout');
-    authStore.logout();
-    alert('로그아웃되었습니다.');
-    router.push('/');
-  } catch (error) {
-    console.error('로그아웃 실패:', error);
-  }
+    // 스토어에서 현재 사용자의 로그인 타입을 확인
+    const loginType = authStore.loginType;
+
+    console.log(loginType)
+
+    if (loginType === 'KAKAO') {
+
+        // 카카오 로그인의 경우: 카카오 로그아웃 URL로 리디렉션
+        const KAKAO_RESTAPI_KEY = import.meta.env.VITE_KAKAO_RESTAPI_KEY;; // 👈 본인의 REST API 키
+        const KAKAO_LOGOUT_REDIRECT_URI = 'http://localhost:5173/logout-callback'; // 👈 다음 단계에서 만들 콜백 경로
+
+        window.location.href = `https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_RESTAPI_KEY}&logout_redirect_uri=${KAKAO_LOGOUT_REDIRECT_URI}`;
+    
+    } else {
+        // 일반 이메일 로그인의 경우: 기존 로그아웃 방식 사용
+        try {
+          authStore.logout();
+            await api.post('/api/auth/logout');
+
+            alert('로그아웃되었습니다.');
+            router.push('/');
+        } catch (error) {
+            console.error('로그아웃 실패:', error);
+        }
+    }
 };
 </script>
 
@@ -56,7 +74,7 @@ const handleLogout = async () => {
         <template v-else>
           <button class="lookup-button" @click="goToLookup">비회원 예약조회</button>
           <button class="signup" @click.prevent="goRegister">회원 가입</button>
-          <router-link to="/login">
+          <router-link to="/login-choice">
             <button class="login">로그인</button>
           </router-link>
         </template>

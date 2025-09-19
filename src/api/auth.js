@@ -5,6 +5,7 @@ export const useAuthStore = defineStore('auth', {
     accessToken: null,
     loggedInUser: null,
     userName: null,
+    loginType: null,
     isInitialized: false,
   }),
   actions: {
@@ -12,9 +13,12 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = token;
 
       const payload = this.parseJwt(token);
+
+      console.log('setToken### : ', payload)
       
       this.loggedInUser = payload?.sub || null;
       this.userName = payload?.name || null;
+      this.loginType = payload?.loginType || null;
     },
     logout() {
       this.accessToken = null;

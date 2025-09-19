@@ -26,11 +26,13 @@
 <script setup>
 import { onMounted } from 'vue';
 
+const KAKAO_JAVASCRIPT_KEY = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
+
 // 1. 카카오 SDK 초기화
 const initializeKakaoSdk = () => {
   if (window.Kakao && !window.Kakao.isInitialized()) {
     // 
-    window.Kakao.init('cfc0f362627882be0a7ca486a9de3fa0'); // 👈 카카오 개발자 사이트의 JavaScript 키
+    window.Kakao.init(KAKAO_JAVASCRIPT_KEY); // 👈 카카오 개발자 사이트의 JavaScript 키
     console.log('카카오 SDK가 초기화되었습니다.');
   } 
 };

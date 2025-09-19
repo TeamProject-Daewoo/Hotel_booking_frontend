@@ -18,6 +18,8 @@ import BookingListView from "@/components/mypage/BookingListView.vue";
 import NonMemberBookingView from '@/views/NonMemberBookingView.vue';
 import registerChoice from '@/views/RegisterChoiceView.vue';
 import KakaoCallback from '../views/KakaoCallback.vue';
+import LogoutCallback from '../components/kakao/LogoutCallback.vue';
+import LoginChoiceView from '../views/LoginChoiceView.vue';
 
 const routes = [
   {path: "/", name: "main", component: Main},
@@ -37,6 +39,8 @@ const routes = [
   {path: '/lookup-booking', name: 'NonMemberBookingView', component: NonMemberBookingView},
   {path: '/register-choice', name: 'registerChoice', component: registerChoice},
   {path: '/kakao-callback', name: 'KakaoCallback', component: KakaoCallback},
+  {path: '/logout-callback', name: 'LogoutCallback', component: LogoutCallback},
+  {path: '/login-choice', name: 'LoginChoiceView', component: LoginChoiceView},
 ]
 
 const router = createRouter({
