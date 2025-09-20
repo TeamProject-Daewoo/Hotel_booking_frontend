@@ -1,16 +1,16 @@
 <template>
   <div class="search-wrapper">
       <div class="suggestions-container">
-        <div v-if="!props.keyword">
+        <div v-if="!searchStore.inputData">
           <h5 class="suggestions-heading">최근 검색어</h5>
           <div v-if="historyStore.recentSearches.length > 0" class="recent-searches-horizontal">
             <div class="tags-container">
               <span
                 v-for="keyword in historyStore.recentSearches" :key="keyword"
                 class="recent-search-item"
-                @mousedown="onSelect(keyword)"
+                @mousedown.prevent="onSelect(keyword)"
               >
-                <span>{{ keyword }}</span><button @mousedown.prevent.stop="onDelete(keyword)" class="history-delete-btn"><i class="fa-solid fa-xmark"></i></button>
+                <span>{{ keyword }}</span><button @mousedown.prevent.stop="deleteHistory(keyword)" class="history-delete-btn"><i class="fa-solid fa-xmark"></i></button>
               </span>
             </div>
           </div>
@@ -26,7 +26,7 @@
               v-for="(suggestion, index) in searchStore.suggestions.value"
               :key="index"
               class="suggestion-item"
-              @mousedown="onSelect(suggestion)"
+              @mousedown.prevent="onSelect(suggestion)"
               v-html="highlightMatch(suggestion)"
             ></li>
           </ul>
@@ -41,38 +41,39 @@
 
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
-import { useRecentHistory } from '@/store/recentHistoryStore';
+import { useHistoryStore } from '@/store/recentHistoryStore';
 import { computed } from 'vue';
 
+const searchStore = useSearchStore();
+const historyStore = useHistoryStore();
+
+const emit = defineEmits(['select-suggestion'])
+const onSelect = (suggestion) => {
+  emit('select-suggestion', suggestion);
+}
 const props = defineProps({
   keyword: {
     type: String,
-    required: true
+    requried: true
   }
-});
-
-const emit = defineEmits(['select-suggestion', 'delete-history']);
-
-const searchStore = useSearchStore();
-const historyStore = useRecentHistory();
+})
 
 const shouldShow = computed(() => {
   return historyStore.recentSearches.length > 0 || searchStore.suggestions?.length > 0;
 });
 
-const onSelect = (suggestion) => {
-  emit('select-suggestion', suggestion);
-};
-
-const onDelete = (keyword) => {
-  emit('delete-history', keyword);
+const deleteHistory = (item) => {
+  historyStore.deleteRecentSearch(item);
 };
 
 const highlightMatch = (suggestion) => {
-  if (!props.keyword) {
+  const keywordToHighlight = props.keyword;
+  if (!keywordToHighlight || keywordToHighlight.trim() === '') {
     return suggestion;
   }
-  const regex = new RegExp(`(${props.keyword})`, 'gi');
+  //특수문자 예외 방지
+  const escapedKeyword = keywordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escapedKeyword})`, 'gi');
   return suggestion.replace(regex, '<strong>$1</strong>');
 };
 </script>

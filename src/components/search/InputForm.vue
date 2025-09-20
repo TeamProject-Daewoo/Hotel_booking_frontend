@@ -4,7 +4,7 @@
             <label for="destination">Enter Destination</label>
             <div class="destination-input-form">
                 <span><i class="fa-solid fa-hotel"></i>&nbsp;</span>
-                <span><KeyWordForm @handel-search="setKeyword"/></span>
+                <span><KeyWordForm/></span>
             </div>
         </div>
 
@@ -44,14 +44,14 @@
                             :disabled="tempRoomCount <= 1"
                         >-</button>
                         <span>{{ tempRoomCount }}</span>
-                        <button @click="tempRoomCount++">+</button>
+                        <button @click="roomCountUp">+</button>
                     </div>
                 </div>
                 <div class="guest-item">
                     <span>인원 수</span>
                     <div class="counter-box">
                         <button 
-                            @click="tempGuestCount--"
+                            @click="guestCountDown"
                             :disabled="tempGuestCount <= 1"
                         >-</button>
                         <span>{{ tempGuestCount }}</span>
@@ -71,10 +71,10 @@ import { useSearchStore } from '@/api/searchRequestStore';
 import axios from '@/api/axios';
 import _ from 'lodash';
 import KeyWordForm from './KeyWordForm.vue';
-import { useRecentHistory } from '@/store/recentHistoryStore';
+import { useHistoryStore } from '@/store/recentHistoryStore';
 
 const searchStore = useSearchStore();
-const historyStore = useRecentHistory();
+const historyStore = useHistoryStore();
 
 const isModalOpen = ref(false);
 const modalType = ref('');
@@ -93,6 +93,13 @@ const formatDate = (date) => {
 
 const checkInDateView = ref(formatDate(searchStore.checkInDate));
 const checkOutDateView = ref(formatDate(searchStore.checkOutDate));
+
+const guestCountDown = () => {
+    tempRoomCount.value = Math.min(--tempGuestCount.value, tempRoomCount.value);
+}
+const roomCountUp = () => {
+    tempGuestCount.value = Math.max(tempGuestCount.value, ++tempRoomCount.value);
+} 
 
 const openModal = (type) => {
     modalType.value = type;
@@ -128,11 +135,17 @@ function getDaysDifference(date1, date2) {
 }
 
 const keyword = ref('');
-const setKeyword = (newkeyword) => {
-    keyword.value = newkeyword;
-};
+watch(
+  () => searchStore.inputData,
+  (newKeyword, oldKeyword) => {
+    if (newKeyword !== oldKeyword) {
+      keyword.value = searchStore.inputData;
+    }
+  }
+);
 const handleSearch = () => {
-    if(keyword.value && keyword.value.trim() !== '') {
+    if(keyword.value !== '') {
+        searchStore.keyword = keyword.value;
         searchStore.fetchSearchResult();
         historyStore.addRecentSearch(keyword.value);
     }
@@ -357,6 +370,12 @@ const handleSearch = () => {
   justify-content: center;
   align-items: center;
   padding: 0;
+}
+.counter-box button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .counter-box button:hover {

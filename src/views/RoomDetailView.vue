@@ -50,9 +50,12 @@ import DatePicker     from '@/components/roomdetail/DatePicker.vue';
 import PaymentOptions from '@/components/roomdetail/PaymentOptions.vue';
 import Userinfo       from '@/components/roomdetail/Userinfo.vue';
 import SummaryCard    from '@/components/roomdetail/SummaryCard.vue';
+import { useSearchStore } from '@/api/searchRequestStore';
 
 const route = useRoute()
 const router = useRouter()
+const searchStore = useSearchStore();
+
 const id   = route.params.id
 const idx  = Number(route.params.idx)
 
@@ -66,8 +69,9 @@ const ready    = ref(false)
 const today = new Date()
 const d = (x)=> new Date(today.getFullYear(), today.getMonth(), today.getDate() + x)
 const toISO = (date)=> date.toISOString().slice(0,10)
-const checkIn  = ref(toISO(d(1)))
-const checkOut = ref(toISO(d(2)))
+const checkIn  = ref(toISO(searchStore.checkInDate))
+const checkOut = ref(toISO(searchStore.checkOutDate))
+console.log(checkIn.value, checkOut.value)
 const nights   = computed(()=>{
   const s = new Date(checkIn.value), e = new Date(checkOut.value)
   const diff = Math.round((e - s) / 86400000)

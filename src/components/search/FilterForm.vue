@@ -112,7 +112,7 @@ const ratingCounts = [2, 2.5, 3, 3.5, 4, 4.5]
 //백엔드에 api 호출
 const handleSearch = () => {
     if(searchStore.result != null)
-    searchStore.fetchSearchResult();
+        searchStore.fetchSearchResult();
 };
 
 onMounted(() => {

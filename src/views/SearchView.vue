@@ -8,10 +8,9 @@
                 <FilterForm/>
             </div>
             <div class="result-container">
-                <ResultForm :response="response"/>
+                <ResultForm/>
             </div>
         </div>
-        <LoadMapButton/>
     </div>
 </template>
 

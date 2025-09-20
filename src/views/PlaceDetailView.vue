@@ -44,11 +44,13 @@ import Overview from '@/components/placedetail/Overview.vue'
 import Rooms    from '@/components/placedetail/Rooms.vue'
 import Map      from '@/components/placedetail/Map.vue'
 import Reviews  from '@/components/placedetail/Reviews.vue'
+import { useHistoryStore } from '@/store/recentHistoryStore'
 
 const route = useRoute()
 const router = useRouter()
 const id = route.params.id
 const searchStore = useSearchStore() // Pinia 스토어 사용
+const historyStore = useHistoryStore();
 
 const base = ref({})
 const building = ref({})
@@ -122,7 +124,12 @@ onMounted(async () => {
       api.get(`/tour/intro/db/${id}`),
       api.get(`/api/reviews/hotel/${id}`)
     ])
-    if (b.status === 'fulfilled') base.value = normalizeBase(b.value.data)
+    if (b.status === 'fulfilled') {
+      base.value = normalizeBase(b.value.data)
+      //방문 목록에 추가
+      historyStore.addViewHistory(b.value.data);
+      // console.log(historyStore.recentlyViewed)
+    }
     if (d.status === 'fulfilled') {
       rooms.value = Array.isArray(d.value.data) ? d.value.data : []
     }

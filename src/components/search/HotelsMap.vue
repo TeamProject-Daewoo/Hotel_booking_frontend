@@ -17,6 +17,7 @@ const markers = ref([])
 const resolvedAddresses = ref({})
 const infowindow = ref(null)
 const customOverlays = ref([]);
+const emptyImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23E5E7EB'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='30' fill='%239CA3AF' dominant-baseline='middle' text-anchor='middle'%3E제공되지 않는 이미지입니다.%3C/text%3E%3C/svg%3E"
 
 const KAKAO_APPKEY = import.meta.env.VITE_KAKAO_MAP_APPKEY
 let kakaoSdkPromise
@@ -25,7 +26,7 @@ function loadKakaoSdk () {
   if (!kakaoSdkPromise) {
     kakaoSdkPromise = new Promise((resolve, reject) => {
       const script = document.createElement('script')
-      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APPKEY}&autoload=false&libraries=services`
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APPKEY}&autoload=false&libraries=services,clusterer`
       script.async = true
       script.onload = () => {
         window.kakao.maps.load(() => resolve())
@@ -46,7 +47,6 @@ function initMap() {
 
   // 지도를 담을 HTML 요소
   const container = document.getElementById('kakao-map-container');
-  // `container`가 null인지 확인하는 예외 처리를 추가하는 것이 좋습니다.
   if (!container) {
     console.error('지도를 담을 HTML 요소가 없습니다.');
     return;
@@ -60,9 +60,8 @@ function initMap() {
     };
     map.value = new window.kakao.maps.Map(container, options);
 
-    // 인포윈도우 객체는 하나만 생성합니다.
     infowindow.value = new window.kakao.maps.InfoWindow({
-        zIndex: 1 // 다른 지도 요소 위에 표시될 z-index 설정
+        zIndex: 1
     });
 
     for (const card of searchCards) {
@@ -90,11 +89,12 @@ function initMap() {
         window.kakao.maps.event.addListener(marker, 'click', () => {
           // console.log(card)
             let content = `
-                <div style="padding:5px;font-size:12px;text-align:center;">
-                    <img src="${card.image}" style="width:100%;max-height:120px;object-fit:cover;border-radius:5px;"><br>
+                <div style="width:300px; padding:5px;font-size:14px;text-align:center;">
+                    <img src="${card.image || emptyImage }" style="width:100%;object-fit:cover;border-radius:5px;"><br>
                     <b>${card.title}</b><br>
                     <span>${resolvedAddresses.value[card.id] || '주소 정보 없음'}</span><br>
-                    <span style="color:green">￦${card.price.toLocaleString()}~
+                    <span style="color:green">￦${card.price.toLocaleString()}~</span><br>
+                    <b><span style="color:rgb(248,186,52)"><i class="fa-solid fa-star"></i> ${ (card.rating > 0) ? card.rating.toFixed(1) : '없음' }</span></b>
                 </div>`;
             infowindow.value.setContent(content);
             infowindow.value.open(map.value, marker);
