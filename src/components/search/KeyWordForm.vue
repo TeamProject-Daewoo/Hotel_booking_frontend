@@ -41,7 +41,8 @@ const callSuggestionAPI = async (newKeyword) => {
     return;
   }
   try {
-    const response = await axios.get(`http://localhost:8888/api/recommend?keyword=${newKeyword}`);
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/recommend?keyword=${keyword}`);
+
     searchStore.suggestions.value = response.data;
   } catch (error) {
     console.error("API 호출 실패:", error);

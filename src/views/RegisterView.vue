@@ -57,6 +57,9 @@
             >
               {{ verificationMessage }}
             </p>
+                          <p v-if="isCodeSent && !isEmailVerified" class="info-text">
+  남은 시간: {{ formattedTime }}
+</p>
           </div>
 
           <div class="input-group">
@@ -94,12 +97,12 @@
           </div>
 
           <div class="input-group">
-            <label for="name">사용자 이름</label>
+            <label for="name">닉네임</label>
             <input
               type="text"
               id="name"
               v-model="formData.name"
-              placeholder="이름을 입력하세요"
+              placeholder="최대 7글자"
               maxlength="7"
               required
               @keydown="preventSpaces"
@@ -133,7 +136,7 @@
         <div class="switch-auth">
           <p>
             이미 계정이 있으신가요?
-            <router-link to="/loginview">로그인</router-link>
+            <router-link to="/login-choice">로그인</router-link>
           </p>
         </div>
       </div>
@@ -146,6 +149,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { reactive, ref, computed, watch } from "vue";
@@ -168,6 +172,7 @@ const isCodeSent = ref(false);
 const isEmailVerified = ref(false);
 const verificationMessage = ref("");
 const verificationMessageType = ref("info"); // 'info', 'success', 'error'
+const registrationError = ref(null);
 
 const handleCodeInput = (event) => {
   // 입력값에서 숫자 이외의 문자를 모두 제거합니다.
@@ -239,12 +244,16 @@ const sendVerificationCode = async () => {
   verificationMessage.value = "인증번호를 발송 중입니다...";
 
   try {
-    await api.post("/api/auth/send-verification", { email: formData.username });
 
     isCodeSent.value = true;
 
+    await api.post("/api/auth/send-verification", { email: formData.username });
+
     verificationMessage.value =
       "인증번호가 발송되었습니다. 이메일을 확인해주세요.";
+
+      startTimer();
+
   } catch (error) {
     verificationMessageType.value = "error";
     verificationMessage.value =
@@ -283,6 +292,34 @@ const verifyCode = async () => {
   }
 };
 
+const timeLeft = ref(0); // 남은 시간(초 단위)
+let timerInterval = null;
+
+// 타이머 시작 함수
+const startTimer = () => {
+  timeLeft.value = 5 * 60; // 5분 = 300초
+
+  if (timerInterval) clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    if (timeLeft.value > 0) {
+      timeLeft.value--;
+    } else {
+      clearInterval(timerInterval);
+      isCodeSent.value = false; // 시간이 끝나면 다시 발송 가능하게
+      verificationMessage.value = "인증 시간이 만료되었습니다. 다시 시도해주세요.";
+      verificationMessageType.value = "error";
+    }
+  }, 1000);
+};
+
+// mm:ss 형식으로 변환하는 computed
+const formattedTime = computed(() => {
+  const minutes = Math.floor(timeLeft.value / 60);
+  const seconds = timeLeft.value % 60;
+  return `${String(minutes).padStart(1, "0")}:${String(seconds).padStart(2, "0")}`;
+});
+
 const handleRegister = async () => {
   if (!isFormValid.value) {
     alert("입력 양식을 모두 올바르게 채워주세요.");
@@ -290,20 +327,28 @@ const handleRegister = async () => {
   }
 
   try {
-    // DTO에 정의된 필드명과 일치시켜서 전송
-    await api.post("/api/auth/sign-up", {
+    await api.post('/api/auth/sign-up', { 
       username: formData.username,
       password: formData.password,
       name: formData.name,
       phoneNumber: formData.phoneNumber,
-      role: formData.role,
-    });
+      role: formData.role, });
+    alert('회원가입이 완료되었습니다.');
+    router.push('/');
 
-    alert("회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.");
-    router.push("/login");
   } catch (error) {
-    console.error("회원가입 실패:", error);
-    alert(error.response?.data || "회원가입 중 오류가 발생했습니다.");
+    // 👇 409 Conflict 에러(사용자 중복)를 받았을 때
+    if (error.response && error.response.status === 409) {
+      // 에러 정보를 state에 담아 새로운 페이지로 이동
+      router.push({ 
+        name: 'registrationFailed', 
+        state: { errorInfo: error.response.data } 
+      });
+    } else {
+      // 그 외 다른 에러는 기존처럼 처리
+      console.error('회원가입 실패:', error);
+      alert(error.response?.data || '회원가입 중 오류가 발생했습니다.');
+    }
   }
 };
 </script>

@@ -16,6 +16,7 @@ const headerStyle = computed(() => ({
   height: route.path === '/' ? '0px' : '80px'
 }));
 
+
 onMounted(async () => {
   historyStore.loadRecentSearches();
   historyStore.loadViewHistory();
@@ -35,6 +36,7 @@ onMounted(async () => {
     }
   }
 });
+
 </script>
 
 <template>

@@ -17,13 +17,16 @@ import PaymentProcess from '../components/payment/PaymentProcess.vue';
 import BookingListView from "@/components/mypage/BookingListView.vue";
 import NonMemberBookingView from '@/views/NonMemberBookingView.vue';
 import registerChoice from '@/views/RegisterChoiceView.vue';
+import KakaoCallback from '../views/KakaoCallback.vue';
+import LogoutCallback from '../components/kakao/LogoutCallback.vue';
+import LoginChoiceView from '../views/LoginChoiceView.vue';
 import ReviewForm from '@/views/ReviewForm.vue';
+import registrationFailed from '../views/RegistrationFailedView.vue';
 
 // 🔽 Inquiry 관련 라우트 import 추가
 import InquiryList from '@/components/inquiries/InquiryList.vue';
 import InquiryForm from '@/components/inquiries/InquiryForm.vue';
 import InquiryDetail from '@/components/inquiries/InquiryDetail.vue';
-
 
 const routes = [
   {path: "/", name: "main", component: Main},
@@ -42,7 +45,11 @@ const routes = [
   {path: '/mypage/bookinglist', name: 'BookingListView',component: BookingListView},
   {path: '/lookup-booking', name: 'NonMemberBookingView', component: NonMemberBookingView},
   {path: '/register-choice', name: 'registerChoice', component: registerChoice},
+  {path: '/kakao-callback', name: 'KakaoCallback', component: KakaoCallback},
+  {path: '/logout-callback', name: 'LogoutCallback', component: LogoutCallback},
+  {path: '/login-choice', name: 'LoginChoiceView', component: LoginChoiceView},
   {path: '/write-review/:reservationId', name: 'WriteReview', component: ReviewForm},
+  {path: '/registration-failed', name: 'registrationFailed', component: registrationFailed},
 
     // 🔽 문의 관련 라우트 추가
   { path: "/inquiries", name: "InquiryList", component: InquiryList },
