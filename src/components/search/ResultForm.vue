@@ -87,9 +87,26 @@
         </div>
     </div>
     <div class="result-main-container" v-else>
-        <div class="result-card">
-            <h3>검색 버튼을 눌러서 검색하세요!</h3>
-       </div>
+        <div v-if="viewHistoryStore.recentlyViewed.length > 0" class="history-container">
+          <h4 class="history-title">최근 방문</h4>
+          <div class="history-cards-wrapper">
+            <div 
+              v-for="hotel in viewHistoryStore.recentlyViewed.slice(0, 3)" 
+              :key="hotel.contentid" 
+              class="history-card"
+              @click="goToDetail(hotel.contentid)"
+            >
+              <img :src="hotel.firstimage || defaultImage" alt="호텔 이미지" class="card-image">
+              <div class="card-info">
+                <p class="card-title">{{ hotel.title }}</p>
+                <p class="card-address">{{ hotel.addr1 }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="result-card" v-else>
+          <h3>검색 버튼을 눌러서 검색하세요!</h3>
+        </div>
     </div>
 </template>
 <script setup>
@@ -143,6 +160,12 @@ const selectOption = (option) => {
     searchStore.fetchSearchResult();
     closeModal();
 }
+
+const defaultImage = '/images/default-hotel.png'; 
+// 카드 클릭 시 상세 페이지로 이동하는 함수
+const goToDetail = (hotelId) => {
+  router.push(`/hotel/${hotelId}`);
+};
 
 const sortOptions = [
     '인기 순',
@@ -395,5 +418,50 @@ function getDaysDifference(date1, date2) {
 .empty-result-container h3 {
   color: #888;
   font-weight: 500;
+}
+
+.history-container {
+  width: 100%;
+}
+.history-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+.history-cards-wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3개의 카드를 나란히 배치 */
+  gap: 20px;
+}
+.history-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.history-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.card-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background-color: #f0f0f0;
+}
+.card-info {
+  padding: 12px;
+}
+.card-title {
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-address {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
 }
 </style>

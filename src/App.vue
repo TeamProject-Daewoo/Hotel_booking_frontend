@@ -18,6 +18,7 @@ const headerStyle = computed(() => ({
 
 onMounted(async () => {
   historyStore.loadRecentSearches();
+  historyStore.loadViewHistory();
   if (!authStore.isInitialized) {
     try {
       const response = await api.post('/api/auth/refresh');

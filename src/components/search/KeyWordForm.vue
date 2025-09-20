@@ -30,6 +30,8 @@ import SearchSuggestions from './SearchSuggestions.vue';
 const searchStore = useSearchStore();
 const historyStore = useRecentHistory();
 const isInputFocused = ref(false);
+
+const emits = defineEmits(['handelSearch'])
 const keyword = ref('');
 
 // --- API 호출 로직 ---
@@ -54,6 +56,7 @@ watch(keyword, (newKeyword) => {
 
 const handleInput = (event) => {
   keyword.value = event.target.value;
+  emits('handelSearch', keyword.value);
   debouncedFetch(keyword.value);
 };
 
@@ -67,6 +70,7 @@ const handleFocus = () => {
 //추천 검색어 선택
 const selectSuggestion = async (suggestion) => {
   keyword.value = suggestion;
+  emits('handelSearch', keyword.value);
   finalizeSearch();
 };
 
@@ -77,7 +81,7 @@ const deleteHistory = (item) => {
 //검색 확정
 const finalizeSearch = () => {
   searchStore.keyword = keyword.value;
-  // isInputFocused.value = false;
+  isInputFocused.value = false;
   historyStore.addRecentSearch(keyword.value);
   //결과 화면 랜더링
   searchStore.fetchSearchResult();

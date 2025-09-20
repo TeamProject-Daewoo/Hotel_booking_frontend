@@ -4,7 +4,7 @@
             <label for="destination">Enter Destination</label>
             <div class="destination-input-form">
                 <span><i class="fa-solid fa-hotel"></i>&nbsp;</span>
-                <span><KeyWordForm/></span>
+                <span><KeyWordForm @handel-search="setKeyword"/></span>
             </div>
         </div>
 
@@ -23,7 +23,7 @@
             </button>
         </div>
         <div class="search-button-container">
-            <button class="search-button" @click="handleSearch(searchStore.keyword)"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
+            <button class="search-button" @click="handleSearch"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
         </div>
         <SearchModal :isOpen="isModalOpen" @close="closeModal">
             <div v-if="modalType === 'datePicker'">
@@ -127,9 +127,18 @@ function getDaysDifference(date1, date2) {
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
 
-const handleSearch = (keyword) => {
-  searchStore.fetchSearchResult();
-  historyStore.addRecentSearch(keyword);
+const keyword = ref('');
+const setKeyword = (newkeyword) => {
+    keyword.value = newkeyword;
+};
+const handleSearch = () => {
+    if(keyword.value && keyword.value.trim() !== '') {
+        searchStore.fetchSearchResult();
+        historyStore.addRecentSearch(keyword.value);
+    }
+    else {
+        alert('키워드를 입력해주세요!')
+    }
 };
 </script>
 <style scoped>
