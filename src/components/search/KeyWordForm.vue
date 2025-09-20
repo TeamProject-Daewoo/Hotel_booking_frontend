@@ -1,53 +1,90 @@
 <template>
-  <div class="search-wrapper">
+  <div class="search-wrapper" :class="{ 'is-focused': isInputFocused }">
     <input
       type="text"
-      :value="searchStore.keyword"
-      @input="updateKeywordAndFetch"
-      @focus="isInputFocused = true"
+      :value="keyword"
+      @input="handleInput"
+      @focus="handleFocus"
       @blur="hideSuggestions"
+      @keyup.enter="finalizeSearch"
       placeholder="호텔명 또는 지역 입력"
       class="search-input"
     >
-    <SearchSuggestions v-if="isInputFocused" />
+    <SearchSuggestions
+      v-if="isInputFocused"
+      :keyword="keyword"
+      @select-suggestion="selectSuggestion"
+      @delete-history="deleteHistory"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import _ from 'lodash';
 import { useSearchStore } from '@/api/searchRequestStore';
-import SearchSuggestions from './SearchSuggestions.vue';
 import axios from '@/api/axios';
+import { useRecentHistory } from '@/store/recentHistoryStore';
+import SearchSuggestions from './SearchSuggestions.vue';
 
 const searchStore = useSearchStore();
+const historyStore = useRecentHistory();
 const isInputFocused = ref(false);
+const keyword = ref('');
 
-const callSuggestionAPI = async (keyword) => { 
-    if (!keyword || keyword.trim() === '') {
+// --- API 호출 로직 ---
+const callSuggestionAPI = async (newKeyword) => {
+  if (!newKeyword || newKeyword.trim() === '') {
     searchStore.suggestions.value = [];
     return;
   }
   try {
-    const response = await axios.get(`http://localhost:8888/api/recommend?keyword=${keyword}`);
+    const response = await axios.get(`http://localhost:8888/api/recommend?keyword=${newKeyword}`);
     searchStore.suggestions.value = response.data;
   } catch (error) {
-    console.error("추천 검색어 API 호출 실패:", error);
+    console.error("API 호출 실패:", error);
     searchStore.suggestions.value = [];
   }
- };
+};
 const debouncedFetch = _.debounce(callSuggestionAPI, 200);
 
-const updateKeywordAndFetch = (event) => {
-  searchStore.keyword = event.target.value;
-  debouncedFetch(searchStore.keyword);
+watch(keyword, (newKeyword) => {
+  debouncedFetch(newKeyword);
+});
+
+const handleInput = (event) => {
+  keyword.value = event.target.value;
+  debouncedFetch(keyword.value);
 };
 
-// input 포커스가 사라지면 잠시 후 추천창을 닫습니다.
+const handleFocus = () => {
+  isInputFocused.value = true;
+  if (keyword.value && keyword.value.trim() !== '') {
+    debouncedFetch(keyword.value);
+  }
+};
+
+//추천 검색어 선택
+const selectSuggestion = async (suggestion) => {
+  keyword.value = suggestion;
+  finalizeSearch();
+};
+
+const deleteHistory = (item) => {
+  historyStore.deleteRecentSearch(item);
+};
+
+//검색 확정
+const finalizeSearch = () => {
+  searchStore.keyword = keyword.value;
+  // isInputFocused.value = false;
+  historyStore.addRecentSearch(keyword.value);
+  //결과 화면 랜더링
+  searchStore.fetchSearchResult();
+};
+
 const hideSuggestions = () => {
-  setTimeout(() => {
     isInputFocused.value = false;
-  }, 200); // mousedown 이벤트가 실행될 시간을 벌어줍니다.
 };
 </script>
 

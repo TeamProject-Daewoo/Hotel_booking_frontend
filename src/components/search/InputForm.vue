@@ -23,7 +23,7 @@
             </button>
         </div>
         <div class="search-button-container">
-            <button class="search-button" @click="searchStore.fetchSearchResult"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
+            <button class="search-button" @click="handleSearch(searchStore.keyword)"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
         </div>
         <SearchModal :isOpen="isModalOpen" @close="closeModal">
             <div v-if="modalType === 'datePicker'">
@@ -71,8 +71,10 @@ import { useSearchStore } from '@/api/searchRequestStore';
 import axios from '@/api/axios';
 import _ from 'lodash';
 import KeyWordForm from './KeyWordForm.vue';
+import { useRecentHistory } from '@/store/recentHistoryStore';
 
 const searchStore = useSearchStore();
+const historyStore = useRecentHistory();
 
 const isModalOpen = ref(false);
 const modalType = ref('');
@@ -125,6 +127,10 @@ function getDaysDifference(date1, date2) {
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
 
+const handleSearch = (keyword) => {
+  searchStore.fetchSearchResult();
+  historyStore.addRecentSearch(keyword);
+};
 </script>
 <style scoped>
 .search-main-container {

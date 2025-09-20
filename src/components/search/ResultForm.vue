@@ -100,11 +100,17 @@ import axios from '@/api/axios';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useAuthStore } from '@/api/auth';
 import router from '@/router';
+import { useRecentHistory } from '@/store/recentHistoryStore';
 
 const searchStore = useSearchStore();
 const wishlistStore = useWishlistStore();
 const authStore = useAuthStore();
+const historyStore = useRecentHistory();
 
+//로컬 스토리지 불러오기
+onMounted(() => {
+  historyStore.loadRecentSearches();
+});
 const dateDiff = computed(() => {
   return getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate);
 })

@@ -14,8 +14,35 @@
             <div v-show="isFilterOpen[0]" class="price-range-container" style="width: 100%;">
                 <div @change="handleSearch" ref="slider"></div>
                 <div class="price-label">
-                    <p>{{ searchStore.minPrice.toLocaleString() }}원</p>
-                    <p>{{ searchStore.maxPrice.toLocaleString() }}원</p>
+                    <div class="price-input-wrapper">
+                        <p v-if="!isMinPriceEditing" @click="editPrice('min')">
+                        {{ searchStore.minPrice.toLocaleString() }}원
+                        </p>
+                        <input
+                        v-else
+                        ref="minPriceInput"
+                        v-model.number="editedMinPrice"
+                        type="number"
+                        @keyup.enter="updatePrice('min')"
+                        @blur="updatePrice('min')"
+                        class="price-input"
+                        />
+                    </div>
+
+                    <div class="price-input-wrapper">
+                        <p v-if="!isMaxPriceEditing" @click="editPrice('max')">
+                        {{ searchStore.maxPrice.toLocaleString() }}원
+                        </p>
+                        <input
+                        v-else
+                        ref="maxPriceInput"
+                        v-model.number="editedMaxPrice"
+                        type="number"
+                        @keyup.enter="updatePrice('max')"
+                        @blur="updatePrice('max')"
+                        class="price-input"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -28,7 +55,7 @@
                 </button>
             </div>
             <div v-show="isFilterOpen[1]" class="price-range-container">
-                <button v-for="value in 5" :key="value" 
+                <button v-for="value in ratingCounts" :key="value" 
                     @click="clickRatingButton(searchStore.rating === value ? 0 : value)"
                     :class="{ 'active-rating': searchStore.rating === value }">
                     {{ value }}+
@@ -69,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import noUiSlider from "nouislider";
 import "nouislider/dist/nouislider.css";
 import { useSearchStore } from '@/api/searchRequestStore';
@@ -78,7 +105,9 @@ const searchStore = useSearchStore();
 
 const isFilterOpen = ref([true, true, true, true]);
 const slider = ref(null);
+let sliderInstance = null;
 const minPriceSlider = ref(null);
+const ratingCounts = [2, 2.5, 3, 3.5, 4, 4.5]
 
 //백엔드에 api 호출
 const handleSearch = () => {
@@ -87,13 +116,14 @@ const handleSearch = () => {
 };
 
 onMounted(() => {
-    noUiSlider.create(slider.value, {
+    sliderInstance = noUiSlider.create(slider.value, {
         start: [searchStore.minPrice, searchStore.maxPrice],
         connect: true,
         range: {
             min: 0,
             max: 500000
-        }
+        },
+        step: 1000,
     });
     //onchange 등록
     slider.value.noUiSlider.on('change', (values) => {
@@ -118,6 +148,61 @@ function clickRatingButton(value) {
     searchStore.rating = value;
     searchStore.fetchSearchResult();
 }
+
+const isMinPriceEditing = ref(false);
+const isMaxPriceEditing = ref(false);
+
+// 편집 중인 값을 임시로 저장하는 변수
+const editedMinPrice = ref(0);
+const editedMaxPrice = ref(0);
+
+const minPriceInput = ref(null);
+const maxPriceInput = ref(null);
+
+// 편집 모드로 전환하는 함수
+const editPrice = async (type) => {
+  if (type === 'min') {
+    isMinPriceEditing.value = true;
+    editedMinPrice.value = searchStore.minPrice; // 현재 스토어 값으로 초기화
+    // DOM 업데이트가 끝난 후 input에 포커스
+    await nextTick();
+    minPriceInput.value?.focus();
+  } else {
+    isMaxPriceEditing.value = true;
+    editedMaxPrice.value = searchStore.maxPrice;
+    await nextTick();
+    maxPriceInput.value?.focus();
+  }
+};
+const updatePrice = (type) => {
+  if (type === 'min') {
+    // 간단한 유효성 검사 (최소값이 최대값보다 클 수 없음)
+    if (editedMinPrice.value > searchStore.maxPrice) {
+      editedMinPrice.value = searchStore.maxPrice;
+    }
+    searchStore.minPrice = editedMinPrice.value;
+    isMinPriceEditing.value = false;
+  } else {
+    // 최대값이 최소값보다 작을 수 없음
+    if (editedMaxPrice.value < searchStore.minPrice) {
+      editedMaxPrice.value = searchStore.minPrice;
+    }
+    searchStore.maxPrice = editedMaxPrice.value;
+    isMaxPriceEditing.value = false;
+  }
+};
+watch(
+  () => [searchStore.minPrice, searchStore.maxPrice],
+  ([newMin, newMax]) => {
+    if (sliderInstance) {
+      // 현재 슬라이더 값과 스토어 값이 다를 때만 업데이트 (무한 루프 방지)
+      const currentSliderValues = sliderInstance.get();
+      if (currentSliderValues[0] !== newMin || currentSliderValues[1] !== newMax) {
+          sliderInstance.set([newMin, newMax]);
+      }
+    }
+  }
+);
 </script>
 
 <style>
@@ -195,7 +280,6 @@ function clickRatingButton(value) {
     gap: 8px;
 }
 
-/* Checkbox와 Label 스타일 */
 .filter-main-container input[type="checkbox"] {
     margin-right: 8px;
 }
@@ -246,6 +330,29 @@ function clickRatingButton(value) {
     font-size: 0.9em;
     color: #666;
     margin-top: 5px;
+}
+.price-input-wrapper {
+  cursor: pointer;
+}
+.price-input {
+  height: 100%;
+  width: 100%;
+  border: none;
+  outline: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  width: 75px;
+  text-align: center;
+  bottom: 0;
+  font-size: inherit;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 .noUi-target {
