@@ -30,31 +30,31 @@ function goToLookup() {
 }
 
 const handleLogout = async () => {
-    // 스토어에서 현재 사용자의 로그인 타입을 확인
-    const loginType = authStore.loginType;
+  // 스토어에서 현재 사용자의 로그인 타입을 확인
+  const loginType = authStore.loginType;
 
-    console.log(loginType)
+  console.log(loginType)
 
-    if (loginType === 'KAKAO') {
+  if (loginType === 'KAKAO') {
 
-        // 카카오 로그인의 경우: 카카오 로그아웃 URL로 리디렉션
-        const KAKAO_RESTAPI_KEY = import.meta.env.VITE_KAKAO_RESTAPI_KEY;; // 👈 본인의 REST API 키
-        const KAKAO_LOGOUT_REDIRECT_URI = `${import.meta.env.VITE_API_URL_FRONT}/logout-callback`; // 👈 다음 단계에서 만들 콜백 경로
+    // 카카오 로그인의 경우: 카카오 로그아웃 URL로 리디렉션
+    const KAKAO_RESTAPI_KEY = import.meta.env.VITE_KAKAO_RESTAPI_KEY;; // 👈 본인의 REST API 키
+    const KAKAO_LOGOUT_REDIRECT_URI = `${import.meta.env.VITE_API_URL_FRONT}/logout-callback`; // 👈 다음 단계에서 만들 콜백 경로
 
-        window.location.href = `https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_RESTAPI_KEY}&logout_redirect_uri=${KAKAO_LOGOUT_REDIRECT_URI}`;
-    
-    } else {
-        // 일반 이메일 로그인의 경우: 기존 로그아웃 방식 사용
-        try {
-          authStore.logout();
-            await api.post('/api/auth/logout');
+    window.location.href = `https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_RESTAPI_KEY}&logout_redirect_uri=${KAKAO_LOGOUT_REDIRECT_URI}`;
 
-            alert('로그아웃되었습니다.');
-            router.push('/');
-        } catch (error) {
-            console.error('로그아웃 실패:', error);
-        }
+  } else {
+    // 일반 이메일 로그인의 경우: 기존 로그아웃 방식 사용
+    try {
+      authStore.logout();
+      await api.post('/api/auth/logout');
+
+      alert('로그아웃되었습니다.');
+      router.push('/');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
     }
+  }
 };
 </script>
 
