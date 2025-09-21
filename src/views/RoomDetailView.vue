@@ -36,7 +36,10 @@
     </div>
   </div>
 
-  <div v-else class="loading">불러오는 중...</div>
+  <div v-else class="loading-container">
+    <div class="spinner"></div>
+    <p>객실 정보를 불러오는 중입니다...</p>
+  </div>
 </template>
 
 <script setup>
@@ -210,5 +213,33 @@ function onContinue(){
 @media (max-width: 960px) {
   .grid { grid-template-columns: 1fr }
   .right-col { position: static }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  color: #6b7280;
+}
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #f3f4f6;
+  border-bottom-color: #4f46e5;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+  margin-bottom: 16px;
+}
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.loading-container p {
+  font-size: 1rem;
+  font-weight: 500;
 }
 </style>
