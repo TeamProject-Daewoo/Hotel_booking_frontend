@@ -31,11 +31,7 @@ import InquiryDetail from '@/components/inquiries/InquiryDetail.vue';
 const routes = [
   {path: "/", name: "main", component: Main},
   {path: "/search", name: "search", component: SearchView},
-  {path: "/mypage", name: "mypage", component: MypageView,
-    children: [
-      { path: 'bookinglist', component: BookingListView }
-    ]
-  },
+  {path: "/mypage", name: "mypage", component: MypageView},
   {path: "/login", name: "login", component: LoginView},
   {path: "/register", name: "register", component: RegisterView},
   {path: "/place/:id", name: "place-detail", component: PlaceDetailView},
@@ -46,6 +42,7 @@ const routes = [
   {path: '/payment-fail', name: 'PaymentFail',component: PaymentFail},
   {path: '/reservation-complete/:reservationId', name: 'ReservationComplete', component: ReservationComplete},
   {path: '/payment-process', name: 'PaymentProcess', component: PaymentProcess},
+  {path: '/mypage/bookinglist', name: 'BookingListView',component: BookingListView},
   {path: '/lookup-booking', name: 'NonMemberBookingView', component: NonMemberBookingView},
   {path: '/register-choice', name: 'registerChoice', component: registerChoice},
   {path: '/kakao-callback', name: 'KakaoCallback', component: KakaoCallback},
