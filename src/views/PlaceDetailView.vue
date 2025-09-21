@@ -117,6 +117,13 @@ const processedAvailability = computed(() => {
 });
 
 onMounted(async () => {
+  //메인에서 상세 이동 시 스크롤 위로
+  if (route.query.from === 'main') {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+     const newQuery = { ...route.query };
+    delete newQuery.from;
+    router.replace({ query: newQuery }); 
+  }
   try {
     const [b, d, i, r] = await Promise.allSettled([
       api.get(`/accommodations/${id}`),

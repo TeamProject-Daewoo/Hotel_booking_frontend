@@ -20,35 +20,40 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import _ from 'lodash';
 import { useSearchStore } from '@/api/searchRequestStore';
 import axios from '@/api/axios';
 import { useHistoryStore } from '@/store/recentHistoryStore';
 import SearchSuggestions from './SearchSuggestions.vue';
+import { storeToRefs } from 'pinia';
+import router from '@/router';
+import { useRoute } from 'vue-router';
 
 const searchStore = useSearchStore();
 const historyStore = useHistoryStore();
-const isInputFocused = ref(false);
+const route = useRoute();
 
+const isInputFocused = ref(false);
 const inputRef = ref(null);
-const keyword = ref('');
-watch(
-  () => searchStore.inputData,
-  (newKeyword, oldKeyword) => {
-    if (newKeyword !== oldKeyword) {
-      keyword.value = searchStore.inputData;
-    }
-  }
-);
+const { keyword } = storeToRefs(searchStore);
+
 const searchKeyword = computed(() => {
   // 문자열 끝에 있는 완성되지 않은 한글 자음/모음을 찾아서 반환
   return keyword.value.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, '');
 });
+onMounted(() => {
+  if (route.query.from === 'search') {
+    inputRef.value.focus();
+  }
+  const newQuery = { ...route.query };
+  delete newQuery.from;
+  router.replace({ query: newQuery }); 
+});
 
 // --- API 호출 로직 ---
 const callSuggestionAPI = async (newKeyword) => {
-  console.log(newKeyword)
+  // console.log(newKeyword)
   if (!newKeyword || newKeyword.trim() === '') {
     searchStore.suggestions.value = [];
     return;
@@ -62,9 +67,10 @@ const callSuggestionAPI = async (newKeyword) => {
     searchStore.suggestions.value = [];
   }
 };
-const debouncedFetch = _.debounce(callSuggestionAPI, 200);
+const debouncedFetch = _.debounce(callSuggestionAPI, 100);
 watch(keyword, (newKeyword) => {
-  debouncedFetch(newKeyword.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, ''));
+  if(newKeyword.length > 1) newKeyword = newKeyword.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, '')
+  debouncedFetch(newKeyword);
 });
 
 

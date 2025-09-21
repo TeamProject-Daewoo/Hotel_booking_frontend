@@ -64,7 +64,7 @@
     </div>
 </template>
 <script setup>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import SearchModal from './SearchModal.vue';
 import DatePicker from './DatePicker.vue';
 import { useSearchStore } from '@/api/searchRequestStore';
@@ -72,9 +72,13 @@ import axios from '@/api/axios';
 import _ from 'lodash';
 import KeyWordForm from './KeyWordForm.vue';
 import { useHistoryStore } from '@/store/recentHistoryStore';
+import { storeToRefs } from 'pinia';
+import { useRoute } from 'vue-router';
+import router from '@/router';
 
 const searchStore = useSearchStore();
 const historyStore = useHistoryStore();
+const route = useRoute();
 
 const isModalOpen = ref(false);
 const modalType = ref('');
@@ -134,15 +138,17 @@ function getDaysDifference(date1, date2) {
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
 
-const keyword = ref('');
-watch(
-  () => searchStore.inputData,
-  (newKeyword, oldKeyword) => {
-    if (newKeyword !== oldKeyword) {
-      keyword.value = searchStore.inputData;
-    }
+const { keyword } = storeToRefs(searchStore);
+onMounted(() => {
+  if (route.query.from === 'main') {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    handleSearch();
   }
-);
+  //새로고침 시 재실행 방지
+  const newQuery = { ...route.query };
+  delete newQuery.from;
+  router.replace({ query: newQuery }); 
+});
 const handleSearch = () => {
     if(keyword.value !== '') {
         searchStore.keyword = keyword.value;

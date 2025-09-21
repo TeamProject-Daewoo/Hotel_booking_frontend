@@ -9,7 +9,7 @@
 export default {
     methods: {
         search() {
-            this.$router.push('/search')
+            this.$router.push({path: '/search', query: { from: 'search' }})
         }
     }
 }

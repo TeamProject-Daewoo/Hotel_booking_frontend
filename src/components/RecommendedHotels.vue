@@ -1,13 +1,13 @@
 <template>
   <section class="recommend-section">
     <div class="section-header">
-      <h2 class="section-title">국내 인기 여행지</h2>
-      <p class="section-subtitle">지금 바로 떠나기 좋은 국내 최고의 여행지들을 만나보세요.</p>
+      <h2 class="section-title">국내 인기 지역</h2>
+      <p class="section-subtitle">많은 사람들이 이곳에 방문했어요.</p>
     </div>
     <div class="carousel-container">
       <button @click="scrollLeft" class="nav-button prev">&lt;</button>
       <div class="carousel-track" ref="carouselTrack">
-        <div v-for="dest in destinations" :key="dest.city" class="destination-card">
+        <div v-for="dest in destinations" :key="dest.city" class="destination-card" @click="regionSearch(dest.city)">
           <img :src="dest.imageUrl" :alt="dest.city" class="card-image"/>
           <div class="card-overlay">
             <h3 class="city-name">{{ dest.city }}</h3>
@@ -20,7 +20,11 @@
 </template>
 
 <script setup>
+import { useSearchStore } from '@/api/searchRequestStore';
+import router from '@/router';
 import { ref } from 'vue';
+
+const searchStore = useSearchStore();
 
 const carouselTrack = ref(null);
 
@@ -38,15 +42,20 @@ const destinations = ref([
   { city: '대구', imageUrl: 'https://cdn.pixabay.com/photo/2022/02/03/05/08/daegu-6989752_1280.jpg' },
 ]);
 
+const regionSearch = (city) => {
+  searchStore.inputData = searchStore.keyword = city;
+  // console.log(searchStore.inputData);
+  router.push({ path: '/search',  query: { from: 'main' }});
+}
 const scrollLeft = () => {
   if (carouselTrack.value) {
-    carouselTrack.value.scrollBy({ left: -300, behavior: 'smooth' });
+    carouselTrack.value.scrollBy({ left: -1700, behavior: 'smooth' });
   }
 };
 
 const scrollRight = () => {
   if (carouselTrack.value) {
-    carouselTrack.value.scrollBy({ left: 300, behavior: 'smooth' });
+    carouselTrack.value.scrollBy({ left: 1700, behavior: 'smooth' });
   }
 };
 </script>

@@ -98,7 +98,7 @@
               @click="goToDetail(hotel.contentid)"
             >
              <div class="card-delete-btn" @click="historyStore.deleteRecentView(hotel.contentid)">
-                <i class="fa-solid fa-xmark" style="color: white;"></i>
+                <i class="fa-solid fa-xmark" style="color: white; text-shadow: 2px 2px 2px black; "></i>
               </div>
               <img :src="hotel.firstimage || emptyImage" alt="이미지" class="card-image">
               <div class="card-info">
