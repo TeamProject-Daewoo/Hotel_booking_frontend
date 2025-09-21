@@ -1,6 +1,5 @@
 <script setup>
-import { computed } from 'vue';
-import { nextTick } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/api/auth';
 import api from '@/api/axios';
@@ -8,9 +7,25 @@ import api from '@/api/axios';
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const isScrolled = ref(false);
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 640; // 10px만 스크롤 되어도 배경이 생기도록 설정
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
 
 const headerClass = computed(() => {
-  return route.path === '/' ? 'transparent-header' : 'white-header';
+  if (route.path === '/') {
+    return isScrolled.value ? 'white-header' : 'transparent-header';
+  }
+  return 'white-header';
 });
 
 function goHome() {
@@ -30,25 +45,16 @@ function goToLookup() {
 }
 
 const handleLogout = async () => {
-  // 스토어에서 현재 사용자의 로그인 타입을 확인
   const loginType = authStore.loginType;
 
-  console.log(loginType)
-
   if (loginType === 'KAKAO') {
-
-    // 카카오 로그인의 경우: 카카오 로그아웃 URL로 리디렉션
-    const KAKAO_RESTAPI_KEY = import.meta.env.VITE_KAKAO_RESTAPI_KEY;; // 👈 본인의 REST API 키
-    const KAKAO_LOGOUT_REDIRECT_URI = `${import.meta.env.VITE_API_URL_FRONT}/logout-callback`; // 👈 다음 단계에서 만들 콜백 경로
-
+    const KAKAO_RESTAPI_KEY = import.meta.env.VITE_KAKAO_RESTAPI_KEY;
+    const KAKAO_LOGOUT_REDIRECT_URI = `${import.meta.env.VITE_API_URL_FRONT}/logout-callback`;
     window.location.href = `https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_RESTAPI_KEY}&logout_redirect_uri=${KAKAO_LOGOUT_REDIRECT_URI}`;
-
   } else {
-    // 일반 이메일 로그인의 경우: 기존 로그아웃 방식 사용
     try {
       authStore.logout();
       await api.post('/api/auth/logout');
-
       alert('로그아웃되었습니다.');
       router.push('/');
     } catch (error) {
@@ -90,19 +96,57 @@ header {
   left: 0;
   width: 100%;
   z-index: 1000;
-  transition: background-color 0.4s ease, border-color 0.4s ease;
+  transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .transparent-header {
   background-color: transparent;
   border-bottom: 1px solid transparent;
 }
+.transparent-header .logo-image {
+  filter: brightness(0) invert(1);
+}
+.transparent-header .user-greeting,
+.transparent-header .user-actions .login,
+.transparent-header .user-actions .signup,
+.transparent-header .user-actions .logout,
+.transparent-header .user-actions .lookup-button {
+  color: white;
+  border-color: white;
+}
+.transparent-header .user-actions .login {
+  border: none;
+}
+.transparent-header .user-actions .login:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+.transparent-header .user-actions .signup:hover,
+.transparent-header .user-actions .logout:hover,
+.transparent-header .user-actions .lookup-button:hover {
+  background-color: white !important;
+  color: black !important;
+}
 
 .white-header {
   background-color: #fff;
-  border-bottom: 1px solid #ccc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #eee;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
+.white-header .logo-image {
+  filter: none;
+}
+.white-header .user-greeting,
+.white-header .user-actions .login,
+.white-header .user-actions .signup,
+.white-header .user-actions .logout,
+.white-header .user-actions .lookup-button {
+  color: #333; /* 기본 텍스트 색상 */
+}
+.white-header .user-actions .signup { border-color: #007bff; color: #007bff; }
+.white-header .user-actions .login { border: none; }
+.white-header .user-actions .logout { border-color: #dc3545; color: #dc3545; }
+.white-header .user-actions .lookup-button { border-color: #28a745; color: #28a745; }
+
 
 .navbar {
   display: flex;
@@ -110,29 +154,20 @@ header {
   align-items: center;
   padding: 15px 40px;
 }
-
 .logo-image {
   height: 45px;
   width: auto;
-  filter: brightness(0) invert(1);
 }
-
-.white-header .logo-image {
-  filter: none;
-}
-
 .user-actions {
   display: flex;
   align-items: center;
   gap: 15px;
 }
-
 .user-greeting {
   margin-right: 10px;
   cursor: pointer;
   font-weight: 500;
 }
-
 .user-actions button {
   padding: 8px 18px;
   cursor: pointer;
@@ -143,64 +178,19 @@ header {
   background-color: transparent;
 }
 
-.user-actions .signup {
-  color: #007bff;
-  border-color: #007bff;
-}
 .user-actions .signup:hover {
   background-color: #007bff !important;
   color: white !important;
 }
-
-.user-actions .login {
-  color: #333;
-  border: none;
-}
 .user-actions .login:hover {
   background-color: #f4f4f4 !important;
-}
-
-.user-actions .logout {
-  color: #dc3545;
-  border-color: #dc3545;
 }
 .user-actions .logout:hover {
   background-color: #dc3545 !important;
   color: white !important;
 }
-
-.user-actions .lookup-button {
-  color: #28a745;
-  border-color: #28a745;
-}
-
 .user-actions .lookup-button:hover {
   background-color: #28a745 !important;
   color: white !important;
 }
-
-
-.transparent-header .user-greeting,
-.transparent-header .user-actions .login,
-.transparent-header .user-actions .signup,
-.transparent-header .user-actions .logout,
-.transparent-header .user-actions .lookup-button {
-  color: white;
-  border-color: white;
-}
-
-.transparent-header .user-actions .login {
-  border: none;
-}
-.transparent-header .user-actions .login:hover {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-.transparent-header .user-actions .signup:hover,
-.transparent-header .user-actions .logout:hover,
-.transparent-header .user-actions .lookup-button:hover {
-  background-color: white !important;
-  color: black !important;
-}
-
 </style>
