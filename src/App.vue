@@ -6,9 +6,11 @@ import Header from './components/Header.vue';
 import { useAuthStore } from './api/auth';
 import api from './api/axios';
 import { useWishlistStore } from './store/wishlistStore';
+import { useHistoryStore } from './store/recentHistoryStore';
 
 const authStore = useAuthStore();
 const route = useRoute(); // 현재 라우트 정보를 가져옵니다.
+const historyStore = useHistoryStore();
 
 const headerStyle = computed(() => ({
   height: route.path === '/' ? '0px' : '80px'
@@ -16,6 +18,8 @@ const headerStyle = computed(() => ({
 
 
 onMounted(async () => {
+  historyStore.loadRecentSearches();
+  historyStore.loadViewHistory();
   if (!authStore.isInitialized) {
     try {
       const response = await api.post('/api/auth/refresh');

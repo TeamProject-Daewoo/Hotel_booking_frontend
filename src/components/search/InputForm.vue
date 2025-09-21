@@ -23,7 +23,7 @@
             </button>
         </div>
         <div class="search-button-container">
-            <button class="search-button" @click="searchStore.fetchSearchResult"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
+            <button class="search-button" @click="handleSearch"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
         </div>
         <SearchModal :isOpen="isModalOpen" @close="closeModal">
             <div v-if="modalType === 'datePicker'">
@@ -44,14 +44,14 @@
                             :disabled="tempRoomCount <= 1"
                         >-</button>
                         <span>{{ tempRoomCount }}</span>
-                        <button @click="tempRoomCount++">+</button>
+                        <button @click="roomCountUp">+</button>
                     </div>
                 </div>
                 <div class="guest-item">
                     <span>인원 수</span>
                     <div class="counter-box">
                         <button 
-                            @click="tempGuestCount--"
+                            @click="guestCountDown"
                             :disabled="tempGuestCount <= 1"
                         >-</button>
                         <span>{{ tempGuestCount }}</span>
@@ -64,15 +64,21 @@
     </div>
 </template>
 <script setup>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import SearchModal from './SearchModal.vue';
 import DatePicker from './DatePicker.vue';
 import { useSearchStore } from '@/api/searchRequestStore';
 import axios from '@/api/axios';
 import _ from 'lodash';
 import KeyWordForm from './KeyWordForm.vue';
+import { useHistoryStore } from '@/store/recentHistoryStore';
+import { storeToRefs } from 'pinia';
+import { useRoute } from 'vue-router';
+import router from '@/router';
 
 const searchStore = useSearchStore();
+const historyStore = useHistoryStore();
+const route = useRoute();
 
 const isModalOpen = ref(false);
 const modalType = ref('');
@@ -91,6 +97,13 @@ const formatDate = (date) => {
 
 const checkInDateView = ref(formatDate(searchStore.checkInDate));
 const checkOutDateView = ref(formatDate(searchStore.checkOutDate));
+
+const guestCountDown = () => {
+    tempRoomCount.value = Math.min(--tempGuestCount.value, tempRoomCount.value);
+}
+const roomCountUp = () => {
+    tempGuestCount.value = Math.max(tempGuestCount.value, ++tempRoomCount.value);
+} 
 
 const openModal = (type) => {
     modalType.value = type;
@@ -125,6 +138,27 @@ function getDaysDifference(date1, date2) {
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
 
+const { keyword } = storeToRefs(searchStore);
+onMounted(() => {
+  if (route.query.from === 'main') {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    handleSearch();
+  }
+  //새로고침 시 재실행 방지
+  const newQuery = { ...route.query };
+  delete newQuery.from;
+  router.replace({ query: newQuery }); 
+});
+const handleSearch = () => {
+    if(keyword.value !== '') {
+        searchStore.keyword = keyword.value;
+        searchStore.fetchSearchResult();
+        historyStore.addRecentSearch(keyword.value);
+    }
+    else {
+        alert('키워드를 입력해주세요!')
+    }
+};
 </script>
 <style scoped>
 .search-main-container {
@@ -342,6 +376,12 @@ function getDaysDifference(date1, date2) {
   justify-content: center;
   align-items: center;
   padding: 0;
+}
+.counter-box button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .counter-box button:hover {

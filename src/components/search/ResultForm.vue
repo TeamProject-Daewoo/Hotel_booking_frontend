@@ -29,7 +29,7 @@
         </div>
         <div class="result-card" v-for="data in searchStore.result.data.searchCards" :key="data.id">
             <div class="image-container">
-                <img :src="data.image">
+                <img :src="data.image || emptyImage">
             </div>
             <div class="infor-container">
                 <div class="text-container">
@@ -39,7 +39,7 @@
                         <span style="margin-right: 30px;">
                           <i class="fa-solid fa-star"></i>
                           <span v-if="data.rating == 0">리뷰 없음</span>
-                          <span v-else><b>&nbsp;{{ data.rating }}점</b></span>
+                          <span v-else><b>&nbsp;{{ data.rating.toFixed(1) }}점</b></span>
                         </span>
                         <span><i class="fa-solid fa-mug-saucer"></i> <b>{{ data.totalAminities }}</b>+ 편의시설</span>
                         <p>
@@ -69,12 +69,13 @@
                     <button v-if="data.roomCount === 0" class="view-btn" style="color:white; background-color:lightcoral;">
                         예약 마감
                     </button>
-                    <button v-else class="view-btn" @click="$router.push({ name: 'place-detail', params: { id: data.contentId }})">
+                    <button v-else class="view-btn" @click="goToDetail(data.contentId)">
                         예약 하기
                     </button>
                 </div>
             </div>
         </div>
+        <LoadMapButton/>
     </div>
     <div class="result-main-container" v-else-if="searchStore.isLoading">
         <div class="result-card">
@@ -87,9 +88,29 @@
         </div>
     </div>
     <div class="result-main-container" v-else>
-        <div class="result-card">
-            <h3>검색 버튼을 눌러서 검색하세요!</h3>
-       </div>
+        <div v-if="historyStore.recentlyViewed.length > 0" class="history-container">
+          <h4 class="history-title">최근 방문</h4>
+          <div class="history-cards-wrapper">
+            <div 
+              v-for="hotel in historyStore.recentlyViewed" 
+              :key="hotel.contentid" 
+              class="history-card"
+              @click="goToDetail(hotel.contentid)"
+            >
+             <div class="card-delete-btn" @click="historyStore.deleteRecentView(hotel.contentid)">
+                <i class="fa-solid fa-xmark" style="color: white; text-shadow: 2px 2px 2px black; "></i>
+              </div>
+              <img :src="hotel.firstimage || emptyImage" alt="이미지" class="card-image">
+              <div class="card-info">
+                <p class="card-title">{{ hotel.title }}</p>
+                <p class="card-address">{{ hotel.addr1 }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="result-card" v-else>
+          <h3>검색 버튼을 눌러서 검색하세요!</h3>
+        </div>
     </div>
 </template>
 <script setup>
@@ -100,11 +121,18 @@ import axios from '@/api/axios';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useAuthStore } from '@/api/auth';
 import router from '@/router';
+import { useHistoryStore } from '@/store/recentHistoryStore';
+import LoadMapButton from './LoadMapButton.vue';
 
 const searchStore = useSearchStore();
 const wishlistStore = useWishlistStore();
 const authStore = useAuthStore();
+const historyStore = useHistoryStore();
 
+//로컬 스토리지 불러오기
+onMounted(() => {
+  historyStore.loadRecentSearches();
+});
 const dateDiff = computed(() => {
   return getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate);
 })
@@ -134,9 +162,15 @@ const likeToggle = (event, hotelId) => {
 
 const selectOption = (option) => {
     searchStore.order = option;
-    searchStore.fetchSearchResult();
+    if(searchStore.inputData != '')
+      searchStore.fetchSearchResult();
     closeModal();
 }
+
+const emptyImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23E5E7EB'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='30' fill='%239CA3AF' dominant-baseline='middle' text-anchor='middle'%3E제공되지 않는 이미지입니다.%3C/text%3E%3C/svg%3E"
+const goToDetail = (hotelId) => {
+  router.push(`/place/${hotelId}`);
+};
 
 const sortOptions = [
     '인기 순',
@@ -154,7 +188,8 @@ const closeModal = () => {
 
 const selectCategory = (category) => {
     searchStore.category = category;
-    searchStore.fetchSearchResult();
+    if(searchStore.inputData != '')
+      searchStore.fetchSearchResult();
 };
 
 function getDaysDifference(date1, date2) {
@@ -290,13 +325,17 @@ function getDaysDifference(date1, date2) {
 }
 
 .image-container {
-  width: 35%;
+  width: 500px; 
   height: 350px;
   object-fit: cover;
+  overflow: hidden;
   border-bottom: 1px solid #e0e0e0;
 }
 .image-container img {
+  width: 100%;
   height: 100%;
+  object-fit: cover; 
+  object-position: center; 
 }
 .infor-container {
   background-color: white;
@@ -389,5 +428,59 @@ function getDaysDifference(date1, date2) {
 .empty-result-container h3 {
   color: #888;
   font-weight: 500;
+}
+
+.history-container {
+  width: 100%;
+}
+.history-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+.history-cards-wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3개의 카드를 나란히 배치 */
+  gap: 20px;
+}
+.history-card {
+  border: 1px solid #e5e5e5;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.history-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.card-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background-color: #f0f0f0;
+}
+.card-info {
+  padding: 12px;
+}
+.card-title {
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-address {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+.card-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: white;
+  font-size: 16pt;
+  cursor: pointer;
 }
 </style>

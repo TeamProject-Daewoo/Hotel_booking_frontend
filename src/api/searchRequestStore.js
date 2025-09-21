@@ -6,7 +6,8 @@ import axios from '@/api/axios';
 export const useSearchStore = defineStore('search', () => {
   
   //InputForm
-  const keyword = ref('');
+  const inputData = ref('');    //현재 입력된 정보
+  const keyword = ref('');      //최종 확정 키워드
   const suggestions = ref([]);
   const d = new Date();
   const checkInDate = ref(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -72,7 +73,7 @@ export const useSearchStore = defineStore('search', () => {
 
   const fetchSearchResult = async () => {
     // console.log(result);
-      if(keyword.value == '') {
+      if(inputData.value == '') {
         alert('호텔명이나 지역을 입력해주세요');
         return;
       }
@@ -96,6 +97,7 @@ export const useSearchStore = defineStore('search', () => {
     rating,
     freebies,
     amenities,
+    inputData,
     keyword,
     suggestions,
     checkInDate,

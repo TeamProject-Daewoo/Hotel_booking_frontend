@@ -41,7 +41,7 @@ const deleteWishlist = async (contentId) => {
 .view-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; }
 .like-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 .like-card { position: relative; height: 500px; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-.like-delete-btn {position: absolute; top: 0; right: 6px; color: white; font-size: 16pt; cursor: pointer;}
+.like-delete-btn { text-shadow: 2px 2px 2px black; position: absolute; top: 0; right: 6px; color: white; font-size: 16pt; cursor: pointer;}
 .hotel-image { width: 100%; height: 50%; object-fit: cover; margin: 0;}
 .card-content { height: 50%; margin: 0; display: flex; flex-direction: column; padding: 1rem; box-sizing: border-box;}
 .book-button { margin-top: auto; width: 100%; background-color: #1e40af; color: white; border: none; padding: 0.75rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer;}
