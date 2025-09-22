@@ -6,10 +6,9 @@
 
     <div class="grid">
       <div class="left-col">
-        <DatePicker
-          v-model:checkIn="checkIn"
-          v-model:checkOut="checkOut"
-          :building="building"
+        <DateDisplay 
+          :checkIn="checkIn"
+          :checkOut="checkOut"
         />
         <PaymentOptions v-model="payMode" />
         <Userinfo 
@@ -49,7 +48,7 @@ import api from '@/api/axios';
 
 import Breadcrumb     from '@/components/roomdetail/Breadcrumb.vue';
 import RoomHero       from '@/components/roomdetail/RoomHero.vue';
-import DatePicker     from '@/components/roomdetail/DatePicker.vue';
+import DateDisplay from '@/components/roomdetail/DateDisplay.vue';
 import PaymentOptions from '@/components/roomdetail/PaymentOptions.vue';
 import Userinfo       from '@/components/roomdetail/Userinfo.vue';
 import SummaryCard    from '@/components/roomdetail/SummaryCard.vue';
@@ -68,12 +67,11 @@ const rooms    = ref([])
 const room     = ref({})
 const ready    = ref(false)
 
-/* 날짜 초기화 */
-const today = new Date()
-const d = (x)=> new Date(today.getFullYear(), today.getMonth(), today.getDate() + x)
-const toISO = (date)=> date.toISOString().slice(0,10)
-const checkIn  = ref(toISO(searchStore.checkInDate))
-const checkOut = ref(toISO(searchStore.checkOutDate))
+/* 날짜 설정 */
+const checkIn = ref('');
+const checkOut = ref('');
+checkIn.value = route.query.checkIn;
+checkOut.value = route.query.checkOut;
 console.log(checkIn.value, checkOut.value)
 const nights   = computed(()=>{
   const s = new Date(checkIn.value), e = new Date(checkOut.value)
@@ -85,12 +83,20 @@ onMounted(async () => {
   try {
     const [b, dRes, i] = await Promise.allSettled([
       api.get(`/accommodations/${id}`),
-      api.get(`/tour/detail/db/content/${id}`),  // ✅ DB 기반으로 통일
+      api.get(`/tour/detail/db/content/${id}`, 
+      {
+        params: 
+          {
+              checkIn: checkIn.value,
+              checkOut: checkOut.value
+          }
+      }),
       api.get(`/tour/intro/db/${id}`)
     ])
     if (b.status==='fulfilled') base.value = normalizeBase(b.value.data || {})
     if (dRes.status==='fulfilled') rooms.value = Array.isArray(dRes.value.data) ? dRes.value.data : []
     if (i.status==='fulfilled') building.value = i.value.data || {}
+
 
     // ✅ idx 범위 체크 후 적용
     const validIdx = idx >= 0 && idx < rooms.value.length ? idx : 0
@@ -102,11 +108,6 @@ onMounted(async () => {
 function stripAngle(u){ return String(u||'').replace(/^<|>$/g,'') }
 function normalizeBase(b){ return {...b, firstimage:stripAngle(b.firstimage), firstimage2:stripAngle(b.firstimage2)} }
 function asNum(v){ return Number(String(v||'0').replace(/[^\d]/g,'')) || 0 }
-function lowestPrice(r){
-  const arr=[r.roomoffseasonminfee1,r.roomoffseasonminfee2,r.roompeakseasonminfee1,r.roompeakseasonminfee2]
-    .map(asNum).filter(n=>n>0)
-  return arr.length ? Math.min(...arr) : 0
-}
 
 /* 결제/예약자 입력 */
 const payMode   = ref('full')   // 'full' | 'partial'
@@ -129,12 +130,8 @@ watch(phone, (val) => {
 })
 
 /* 요금 계산 */
-const nightly    = computed(()=> lowestPrice(room.value))
-const baseFare   = computed(()=> nightly.value * (nights.value || 1))
-const discount   = computed(()=> 0)
-const taxes      = computed(()=> 0)
-const serviceFee = computed(()=> 0)
-const total      = computed(()=> baseFare.value - discount.value + taxes.value + serviceFee.value)
+const total = computed(() => Number(route.query.totalPrice) || 0);
+const baseFare = computed(() => Number(route.query.totalPrice) || 0);
 
 /* 다음 페이지로 이동 */
 function onContinue(){

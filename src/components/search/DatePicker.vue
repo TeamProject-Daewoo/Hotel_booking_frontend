@@ -93,6 +93,8 @@ const selectDate = (day) => {
     checkOutDate.value = clickedDate;
     emit('range-selected', { start: checkInDate.value, end: checkOutDate.value });
   }
+
+  
 };
 
 // 날짜에 적용할 CSS 클래스를 동적으로 반환하는 함수
