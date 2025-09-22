@@ -7,10 +7,17 @@ import { useAuthStore } from './api/auth';
 import api from './api/axios';
 import { useWishlistStore } from './store/wishlistStore';
 import { useHistoryStore } from './store/recentHistoryStore';
+import AlertModal from './components/mypage/AlertModal.vue';
+import { useUiStore } from './store/commonUiStore';
+import { storeToRefs } from 'pinia';
 
 const authStore = useAuthStore();
 const route = useRoute(); // 현재 라우트 정보를 가져옵니다.
 const historyStore = useHistoryStore();
+const uiStore = useUiStore();
+
+const { isModalVisible, modalTitle, modalMessage } = storeToRefs(uiStore);
+const { closeModal } = uiStore;
 
 const headerStyle = computed(() => ({
   height: route.path === '/' ? '0px' : '80px'
@@ -50,6 +57,12 @@ onMounted(async () => {
     <footer class="footer-container">
       <Footer/>
     </footer>
+    <AlertModal
+      v-if="isModalVisible"
+      :title="modalTitle"
+      :message="modalMessage"
+      @close="closeModal" 
+    />
   </div>
 </template>
 

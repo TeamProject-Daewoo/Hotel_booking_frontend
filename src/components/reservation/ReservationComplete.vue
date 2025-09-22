@@ -38,6 +38,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
+import { useUiStore } from '@/store/commonUiStore';
 
 const route = useRoute();
 const router = useRouter();
@@ -53,7 +54,8 @@ onMounted(async () => {
     reservation.value = response.data;
   } catch (error) {
     console.error("완료된 예약 정보를 불러오는 데 실패했습니다.", error);
-    alert("예약 정보를 불러오는 데 실패했습니다.");
+    const uiStore = useUiStore();
+    uiStore.openModal('예약 실패', '예약 정보를 불러오는 데 실패했습니다.');
   }
 });
 

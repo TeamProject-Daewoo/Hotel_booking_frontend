@@ -29,6 +29,7 @@ import SearchSuggestions from './SearchSuggestions.vue';
 import { storeToRefs } from 'pinia';
 import router from '@/router';
 import { useRoute } from 'vue-router';
+import { useUiStore } from '@/store/commonUiStore';
 
 const searchStore = useSearchStore();
 const historyStore = useHistoryStore();
@@ -103,7 +104,8 @@ const finalizeSearch = () => {
     inputRef.value?.blur();
   }
   else {
-    alert('키워드를 입력해주세요!')
+    const uiStore = useUiStore();
+    uiStore.openModal('검색 실패', '호텔명 또는 지역명을 입력해주세요');
   }
 };
 

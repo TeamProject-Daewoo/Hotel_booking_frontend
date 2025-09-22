@@ -8,6 +8,7 @@
 import { computed, ref, onMounted } from 'vue'
 import api from '@/api/axios'
 import { useSearchStore } from '@/api/searchRequestStore'
+import { useUiStore } from '@/store/commonUiStore';
 
 const searchStore = useSearchStore()
 const searchCards = searchStore.result?.data?.searchCards || [];
@@ -41,7 +42,8 @@ function loadKakaoSdk () {
 // 지도를 초기화하고 모든 마커를 표시하는 함수
 function initMap() {
   if (!searchCards || searchCards.length === 0) {
-    alert('지도에 표시할 데이터가 없습니다.');
+    const uiStore = useUiStore();
+    uiStore('지도에 표시할 데이터가 없습니다.', '');
     return;
   }
 

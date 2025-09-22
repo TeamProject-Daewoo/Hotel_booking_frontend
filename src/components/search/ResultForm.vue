@@ -125,6 +125,8 @@ import { useAuthStore } from '@/api/auth';
 import router from '@/router';
 import { useHistoryStore } from '@/store/recentHistoryStore';
 import LoadMapButton from './LoadMapButton.vue';
+import AlertModal from '../mypage/AlertModal.vue';
+import { useUiStore } from '@/store/commonUiStore';
 
 const searchStore = useSearchStore();
 const wishlistStore = useWishlistStore();
@@ -141,12 +143,10 @@ const dateDiff = computed(() => {
 
 const likeToggle = (event, hotelId) => {
   if (!authStore.isLoggedIn) {
-    if(confirm('로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?')) {
       router.push({ 
-        name: 'login',
-        query: { redirect: router.currentRoute.value.fullPath } 
+          name: 'login',
+          query: { redirect: router.currentRoute.value.fullPath } 
       });
-    }
     return;
   }
   const target = event.currentTarget.querySelector('i');

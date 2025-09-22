@@ -54,6 +54,7 @@ import { useRouter } from 'vue-router';
 import api from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
 import { useWishlistStore } from '@/store/wishlistStore';
+import { useUiStore } from '@/store/commonUiStore';
 
 const user_name = ref('');
 const password = ref('');
@@ -76,9 +77,10 @@ const preventSpaces = (event) => {
 };
 
 const handleLogin = async () => {
+    const uiStore = useUiStore();
     // 👇 [추가] 로그인 버튼 클릭 시 이메일 형식 검증
     if (!isValidEmail(user_name.value)) {
-        alert('올바른 이메일 형식을 입력해주세요.');
+        uiStore.openModal('이메일 형식 오류!', '올바른 이메일 형식을 입력해주세요.')
         return;
     }
 
@@ -103,7 +105,7 @@ const handleLogin = async () => {
 
     } catch (error) {
         console.error("로그인 실패:", error);
-        alert(error.response?.data || "아이디 또는 비밀번호가 올바르지 않습니다.");
+        uiStore.openModal('로그인 실패', '아이디 또는 비밀번호가 올바르지 않습니다.')
     }
 };
 

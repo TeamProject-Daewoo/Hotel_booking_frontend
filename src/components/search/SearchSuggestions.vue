@@ -163,7 +163,7 @@ const highlightMatch = (suggestion) => {
   border-top: none; 
   border-radius: 0 0 8px 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 900;
+  z-index: 101;
   max-height: 300px;
   overflow-y: auto;
 }

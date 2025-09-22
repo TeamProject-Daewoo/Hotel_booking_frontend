@@ -75,6 +75,7 @@ import { useHistoryStore } from '@/store/recentHistoryStore';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
 import router from '@/router';
+import { useUiStore } from '@/store/commonUiStore';
 
 const searchStore = useSearchStore();
 const historyStore = useHistoryStore();
@@ -139,7 +140,7 @@ function getDaysDifference(date1, date2) {
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
 
-const { keyword } = storeToRefs(searchStore);
+const { inputData } = storeToRefs(searchStore);
 onMounted(() => {
   if (route.query.from === 'main') {
     window.scrollTo({top: 0, behavior: 'smooth'});
@@ -151,13 +152,14 @@ onMounted(() => {
   router.replace({ query: newQuery }); 
 });
 const handleSearch = () => {
-    if(keyword.value !== '') {
-        searchStore.keyword = keyword.value;
+    if(inputData.value.trim() !== '') {
+        searchStore.keyword = inputData.value;
         searchStore.fetchSearchResult();
-        historyStore.addRecentSearch(keyword.value);
+        historyStore.addRecentSearch(inputData.value);
     }
     else {
-        alert('키워드를 입력해주세요!')
+        const uiStore = useUiStore();
+        uiStore.openModal('검색 실패', '호텔명 또는 지역명을 입력해주세요');
     }
 };
 </script>

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import axios from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore';
 
 //백엔드에 넘길 데이터 전역으로 관리
 export const useSearchStore = defineStore('search', () => {
@@ -73,8 +74,9 @@ export const useSearchStore = defineStore('search', () => {
 
   const fetchSearchResult = async () => {
     // console.log(result);
+      const uiStore = useUiStore(); 
       if(keyword.value.trim() == '') {
-        alert('호텔명이나 지역을 입력해주세요');
+        uiStore.openModal('검색 실패', '호텔명 또는 지역명을 입력해주세요');
         return;
       }
       isLoading.value = true;

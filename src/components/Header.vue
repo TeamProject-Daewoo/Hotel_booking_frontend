@@ -3,6 +3,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/api/auth';
 import api from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore';
 
 const router = useRouter();
 const route = useRoute();
@@ -57,7 +58,8 @@ const handleLogout = async () => {
     try {
       authStore.logout();
       await api.post('/api/auth/logout');
-      alert('로그아웃되었습니다.');
+      const uiStore = useUiStore();
+      uiStore.openModal('로그아웃 되었습니다.', '');
       router.push('/');
     } catch (error) {
       console.error('로그아웃 실패:', error);

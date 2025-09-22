@@ -13,6 +13,7 @@ import { ref } from 'vue';
 import SearchModal from './SearchModal.vue';
 import HotelsMap from './HotelsMap.vue';
 import { useSearchStore } from '@/api/searchRequestStore';
+import { useUiStore } from '@/store/commonUiStore';
 
 const searchStore = useSearchStore();
 
@@ -20,7 +21,10 @@ const isModalOpen = ref(false);
 const openModal = () => {
     const searchCards = searchStore.result?.data?.searchCards;
     if(Array.isArray(searchCards) && searchCards.length > 0) isModalOpen.value = true;
-    else alert('검색 정보가 없습니다!');
+    else {
+        const uiStore = useUiStore();
+        uiStore.openModal('검색 정보가 없습니다!', '');
+    }
 };
 const closeModal = () => {
     isModalOpen.value = false;

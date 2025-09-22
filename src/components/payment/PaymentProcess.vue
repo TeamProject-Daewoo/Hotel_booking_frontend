@@ -14,6 +14,7 @@
 </template>
 
 <script setup>
+import { useUiStore } from '@/store/commonUiStore';
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -58,7 +59,8 @@ const requestPayment = async () => {
     });
   } catch (error) {
     console.error("결제 요청 실패:", error);
-    alert("결제 요청에 실패했습니다. 다시 시도해주세요.");
+    const uiStore = useUiStore();
+    uiStore.openModal('결제 실패', '결제 요청에 실패했습니다. 다시 시도해주세요.')
   }
 };
 </script>
