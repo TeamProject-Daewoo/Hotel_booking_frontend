@@ -21,6 +21,8 @@
         :rooms="rooms"
         :fallback-images="[base.firstimage, base.firstimage2]"
         :availability="processedAvailability"
+        :checkIn="localCheckIn" 
+        :checkOut="localCheckOut"
         @bookRoom="onBookRoom"
     />
     <Map :mapx="base.mapx" :mapy="base.mapy" :address="base.addr1" :title="base.title" :price="minPriceText" />
@@ -57,8 +59,18 @@ const reviews = ref([])
 const availabilityData = ref({})
 const isLoading = ref(true);
 
+console.log(id);
 
-function onBookRoom(idx){ router.push({ name: 'room-detail', params: { id: String(id), idx: String(idx ?? 0) } }) }
+
+function onBookRoom(idx){ router.push({ 
+  name: 'room-detail', 
+  params: { id: String(id), idx: String(idx ?? 0) },
+  query: {
+      checkIn: localCheckIn.value,
+      checkOut: localCheckOut.value,
+      totalPrice: idx.price
+    }
+}) }
 function openReviewModal(){ /* 구현부 */ }
 function handleReport(){ /* 구현부 */ }
 
@@ -164,18 +176,18 @@ function goFirstRoom(){
 
 const krw = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 })
 const minPriceText = computed(() => {
-  const nums = []
-  for (const r of rooms.value) {
-    ;['roomoffseasonminfee1','roomoffseasonminfee2','roompeakseasonminfee1','roompeakseasonminfee2']
-        .forEach(k => {
-          const v = Number(r?.[k])
-          if (!Number.isNaN(v) && v > 0) nums.push(v)
-        })
-  }
-  if (nums.length === 0) return ''
-  const min = Math.min(...nums)
-  return krw.format(min) + ' ~'
-})
+  if (!rooms.value || rooms.value.length === 0) return '';
+
+  // 백엔드에서 계산해 준 finalPrice들만 모아서 최소값을 찾음
+  const prices = rooms.value
+    .map(r => r.finalPrice)
+    .filter(p => p != null && p > 0);
+
+  if (prices.length === 0) return '가격 문의';
+  
+  const min = Math.min(...prices);
+  return krw.format(min) + ' ~'; // "₩1,234,567 ~" 형태로 표시
+});
 
 const gallery = computed(() => {
   const imgs = new Set()

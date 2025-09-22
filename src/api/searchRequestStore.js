@@ -143,6 +143,6 @@ const getRoomDetails = (contentId, checkIn, checkOut) => {
     setDateRange,
     checkInDateISO,
     checkOutDateISO,
-    getRoomDetails
+    getRoomDetails,
   };
 });

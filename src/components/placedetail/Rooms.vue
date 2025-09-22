@@ -32,7 +32,7 @@
 
         <div class="room-price">
           <div class="price" :class="{ muted: !bookable(r) }">
-            {{ priceText(r) }}<span v-if="bookable(r)">/박</span>
+            <span v-if="bookable(r)">{{ nights }}박 / </span>{{ priceText(r) }}
           </div>
 
           <div v-if="getRemainingCount(r) === 1" class="warning-text">
@@ -42,7 +42,7 @@
           <button
               class="book-line"
               :disabled="!bookable(r) || getRemainingCount(r) === 0"
-              @click="$emit('bookRoom', i)"
+              @click="$emit('bookRoom', { index: i, price: r.finalPrice } )"
           >
             {{ getRemainingCount(r) === 0 ? '예약 마감' : '예약하기' }}
           </button>
@@ -58,7 +58,9 @@ import { computed } from 'vue'
 const props = defineProps({
   rooms: { type: Array, default: () => [] },
   fallbackImages: { type: Array, default: () => [] },
-  availability: { type: Object, default: () => ({}) }
+  availability: { type: Object, default: () => ({}) },
+  checkIn: { type: String, required: true },
+  checkOut: { type: String, required: true }
 })
 defineEmits(['bookRoom'])
 
@@ -93,30 +95,14 @@ function hasAnyFlags(r){
       .some(k => asBool(r[k]))
 }
 
-function minPositivePrice(r){
-  const candidates = [
-    r.roomoffseasonminfee1, r.roomoffseasonminfee2,
-    r.roompeakseasonminfee1, r.roompeakseasonminfee2
-  ]
-      .map(toNum)
-      .filter(n => n !== null && n > 0)
-
-  return candidates.length ? Math.min(...candidates) : null
-}
-
 function bookable(r) {
-  // finalPrice가 있거나, 또는 기존 방식의 최소 가격이 있으면 예약 가능
-  return (r.finalPrice != null && r.finalPrice > 0) || minPositivePrice(r) !== null;
+  return r.finalPrice != null && r.finalPrice > 0;
 }
 function priceText(r) {
-  // 1. finalPrice가 유효한 값인지 먼저 확인합니다 (0보다 큰 숫자인지).
-  if (r.finalPrice != null && r.finalPrice > 0) {
+  if (bookable(r)) {
     return '₩' + r.finalPrice.toLocaleString();
   }
-  
-  // 2. finalPrice가 없다면, 기존의 최소 가격 계산 로직을 사용합니다.
-  const p = minPositivePrice(r);
-  return p !== null ? '₩' + p.toLocaleString() : '문의';
+  return '문의';
 }
 
 const visibleRooms = computed(() => {
@@ -132,6 +118,31 @@ const getRemainingCount = (room) => {
   }
   return null;
 };
+
+  /* ---------- Date Helpers ---------- */
+  const MS_DAY = 86400000;
+  function parseYMD(iso) {
+    if (!iso) return null;
+    return new Date(iso + 'T00:00:00Z');
+  }
+  
+  /* ---------- View Model ---------- */
+  const label = (iso) => {
+    const d = parseYMD(iso);
+    return d ? d.toLocaleDateString('ko-KR', { weekday: 'short', month: 'long', day: 'numeric' }) : '날짜 정보 없음';
+  };
+
+const nights = computed(() => {
+  if (!props.checkIn || !props.checkOut) return 0;
+
+  const s = parseYMD(props.checkIn);
+  const e = parseYMD(props.checkOut);
+
+  if (!s || !e) return 0;
+
+  const diff = Math.round((e.getTime() - s.getTime()) / MS_DAY);
+  return diff > 0 ? diff : 0;
+});
 </script>
 
 <style scoped>
@@ -145,10 +156,21 @@ const getRemainingCount = (room) => {
 .room-info .meta{font-size:13px;color:#444;margin-bottom:6px;display:flex;gap:16px;flex-wrap:wrap}
 .flags{display:flex;flex-wrap:wrap;gap:6px}
 .flags span{background:#f0f0f0;border-radius:6px;padding:4px 8px;font-size:12px;color:#444}
-.room-price{text-align:right}
-.price{font-size:20px;font-weight:700;color:#f36}
-.price.muted{color:#888}
-.price span{font-size:12px;color:#777;margin-left:4px}
+.room-price {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000; /* 강조를 위해 가격 색상을 빨간색 계열로 변경 */
+}
+.price.muted {
+  color: #a0aec0; /* 예약 불가 시 회색 */
+  text-decoration: line-through;
+}
 .book-line{margin-top:10px;padding:10px 16px;background:#2ecc9a;color:#fff;border:none;border-radius:8px;font-weight:600;transition:background .2s ease;cursor:pointer}
 .book-line:hover{background-color:#3aa38b}
 .book-line:disabled{
