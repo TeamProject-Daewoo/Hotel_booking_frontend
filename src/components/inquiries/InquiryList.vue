@@ -90,6 +90,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.inquiry-list{
+  height: 700px;
+}
+
 .inquiry-item {
   cursor: pointer;
   padding: 10px;
