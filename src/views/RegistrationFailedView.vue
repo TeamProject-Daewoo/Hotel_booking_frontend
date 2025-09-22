@@ -11,7 +11,7 @@
         </div>
         <div class="button-group">
           <router-link to="/login-choice" class="action-button primary">로그인하러 가기</router-link>
-          <button @click="goBack" class="action-button secondary">이전으로</button>
+          <button @click="goBack" class="action-button secondary">메인으로</button>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@
   
   // '이전으로' 버튼 기능
   const goBack = () => {
-    router.back();
+    router.push('/');
   };
   </script>
   

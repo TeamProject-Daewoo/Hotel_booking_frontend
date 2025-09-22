@@ -13,16 +13,10 @@
         <span>{{ base.addr1 || '-' }}</span>
       </div>
     </div>
-    <div class="hero-right">
-      <div class="nightly" :class="{ muted: nightly===0 }">
-        {{ nightlyDisplay }} <small>/night</small>
-      </div>
-    </div>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
 const props = defineProps({
   base: { type:Object, required:true },
   room: { type:Object, required:true },
@@ -34,9 +28,6 @@ function lowestPrice(r){
   const arr=[r.roomoffseasonminfee1,r.roomoffseasonminfee2,r.roompeakseasonminfee1,r.roompeakseasonminfee2].map(asNum).filter(n=>n>0)
   return arr.length ? Math.min(...arr) : 0
 }
-
-const nightly = computed(()=> lowestPrice(props.room))
-const nightlyDisplay = computed(()=> nightly.value ? '₩'+nightly.value.toLocaleString() : '문의')
 </script>
 
 <style scoped>

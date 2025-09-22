@@ -27,6 +27,7 @@
   import { onMounted } from 'vue';
 
   const KAKAO_JAVASCRIPT_KEY = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
+  const VITE_HOMPAGE_MAIN = import.meta.env.VITE_HOMPAGE_MAIN;
   
   // 카카오 SDK 초기화
   const initializeKakaoSdk = () => {
@@ -48,7 +49,7 @@
     }
     
     window.Kakao.Auth.authorize({
-      redirectUri: `${import.meta.env.VITE_API_URL_FRONT}/kakao-callback`,
+      redirectUri: `${VITE_HOMPAGE_MAIN}/kakao-callback`,
     });
   };
   </script>

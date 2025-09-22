@@ -127,6 +127,7 @@ const setDate = (payload) => {
     searchStore.checkOutDate = payload.end;
     checkInDateView.value = formatDate(payload.start);
     checkOutDateView.value = formatDate(payload.end);
+    searchStore.setDateRange(payload.start, payload.end);
     closeModal();
 }
 function getDaysDifference(date1, date2) {
