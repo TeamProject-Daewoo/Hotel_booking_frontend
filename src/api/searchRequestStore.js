@@ -73,7 +73,7 @@ export const useSearchStore = defineStore('search', () => {
 
   const fetchSearchResult = async () => {
     // console.log(result);
-      if(inputData.value == '') {
+      if(keyword.value.trim() == '') {
         alert('호텔명이나 지역을 입력해주세요');
         return;
       }
@@ -84,7 +84,6 @@ export const useSearchStore = defineStore('search', () => {
       } catch (e) {
           error.value = '데이터를 불러오는 데 실패했습니다.';
           console.error(e);
-          
       } finally {
           isLoading.value = false;
       }

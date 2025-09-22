@@ -161,10 +161,10 @@ const likeToggle = (event, hotelId) => {
 }
 
 const selectOption = (option) => {
-    searchStore.order = option;
-    if(searchStore.inputData != '')
-      searchStore.fetchSearchResult();
-    closeModal();
+  searchStore.order = option;
+  if(searchStore.keyword.trim() != '')
+    searchStore.fetchSearchResult();
+  closeModal();
 }
 
 const emptyImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23E5E7EB'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='30' fill='%239CA3AF' dominant-baseline='middle' text-anchor='middle'%3E제공되지 않는 이미지입니다.%3C/text%3E%3C/svg%3E"
@@ -188,7 +188,7 @@ const closeModal = () => {
 
 const selectCategory = (category) => {
     searchStore.category = category;
-    if(searchStore.inputData != '')
+    if(searchStore.keyword != '')
       searchStore.fetchSearchResult();
 };
 

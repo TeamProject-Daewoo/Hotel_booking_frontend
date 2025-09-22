@@ -3,7 +3,7 @@
     <input
       type="text"
       ref="inputRef"
-      :value="keyword"
+      :value="inputData"
       @input="handleInput"
       @focus="handleFocus"
       @blur="hideSuggestions"
@@ -36,11 +36,11 @@ const route = useRoute();
 
 const isInputFocused = ref(false);
 const inputRef = ref(null);
-const { keyword } = storeToRefs(searchStore);
+const { inputData } = storeToRefs(searchStore);
 
 const searchKeyword = computed(() => {
   // 문자열 끝에 있는 완성되지 않은 한글 자음/모음을 찾아서 반환
-  return keyword.value.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, '');
+  return inputData.value.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, '');
 });
 onMounted(() => {
   if (route.query.from === 'search') {
@@ -60,7 +60,6 @@ const callSuggestionAPI = async (newKeyword) => {
   }
   try {
     const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/recommend?keyword=${newKeyword}`);
-
     searchStore.suggestions.value = response.data;
   } catch (error) {
     console.error("API 호출 실패:", error);
@@ -68,7 +67,7 @@ const callSuggestionAPI = async (newKeyword) => {
   }
 };
 const debouncedFetch = _.debounce(callSuggestionAPI, 100);
-watch(keyword, (newKeyword) => {
+watch(inputData, (newKeyword) => {
   if(newKeyword.length > 1) newKeyword = newKeyword.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, '')
   debouncedFetch(newKeyword);
 });
@@ -80,30 +79,36 @@ const handleInput = (event) => {
   // 정규식에 해당하는 문자를 빈 문자열('')로 대체하여 제거
   const sanitizedValue = value.replace(regex, '').trim();
   searchStore.inputData = sanitizedValue;
-  keyword.value = sanitizedValue;
+  inputData.value = sanitizedValue;
+  // console.log(searchStore.keyword)
   debouncedFetch(sanitizedValue);
 };
 
 const handleFocus = () => {
   isInputFocused.value = true;
-  if (keyword.value && keyword.value.trim() !== '') {
-    debouncedFetch(keyword.value);
+  if (inputData.value && inputData.value.trim() !== '') {
+    debouncedFetch(inputData.value);
   }
 };
 
 //검색 확정
 const finalizeSearch = () => {
-  searchStore.inputData = searchStore.keyword = keyword.value;
-  // isInputFocused.value = false;
-  historyStore.addRecentSearch(keyword.value);
-  //결과 화면 랜더링
-  searchStore.fetchSearchResult();
+  if(inputData.value.trim() !== '') {
+    searchStore.keyword = inputData.value;
+    // isInputFocused.value = false;
+    historyStore.addRecentSearch(inputData.value);
+    //결과 화면 랜더링
+    searchStore.fetchSearchResult();
 
-  inputRef.value?.blur();
+    inputRef.value?.blur();
+  }
+  else {
+    alert('키워드를 입력해주세요!')
+  }
 };
 
 const selectSuggestion = (suggestion) => {
-  keyword.value = suggestion;
+  inputData.value = suggestion;
   finalizeSearch();
 };
 

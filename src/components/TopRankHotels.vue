@@ -67,7 +67,6 @@ const fetchTopRank = async () => {
     try {    
         const response = await api.get(`${import.meta.env.VITE_API_URL}/api/topRank`);
         topRank.value = response.data;
-        console.log(topRank.value)
     } catch(e) {
         console.log("api를 가져오는데 실패했습니다.")
     }
