@@ -1,5 +1,8 @@
 <template>
-  <div class="detail-page">
+  <div v-if="isLoading" class="loading">
+    <p>숙소 정보를 불러오는 중입니다...</p>
+  </div>
+  <div v-else-if="base.contentid" class="detail-page">
     <Hero
         :rooms="rooms"
         :base="base"
@@ -8,32 +11,28 @@
         @book="goFirstRoom"
     />
     <Gallery :images="gallery" />
-
     <Overview :rooms="rooms" :base="base" :building="building" />
+    <DateRangePicker 
+      v-model:checkIn="localCheckIn" 
+      v-model:checkOut="localCheckOut"
+      :building="building"
+    />
     <Rooms
         :rooms="rooms"
         :fallback-images="[base.firstimage, base.firstimage2]"
         :availability="processedAvailability"
         @bookRoom="onBookRoom"
     />
-    <Map
-        :mapx="base.mapx"
-        :mapy="base.mapy"
-        :address="base.addr1"
-        :title="base.title"
-        :price="minPriceText"
-    />
-    <Reviews
-        :reviews="reviews"
-        :pageSize="5"
-        @write-review="openReviewModal"
-        @report="handleReport"
-    />
+    <Map :mapx="base.mapx" :mapy="base.mapy" :address="base.addr1" :title="base.title" :price="minPriceText" />
+    <Reviews :reviews="reviews" :pageSize="5" @write-review="openReviewModal" @report="handleReport" />
+  </div>
+  <div v-else class="loading">
+    <p>숙소 정보를 찾을 수 없습니다.</p>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 import { useSearchStore } from '@/api/searchRequestStore' // Pinia 스토어 임포트
@@ -44,30 +43,20 @@ import Overview from '@/components/placedetail/Overview.vue'
 import Rooms    from '@/components/placedetail/Rooms.vue'
 import Map      from '@/components/placedetail/Map.vue'
 import Reviews  from '@/components/placedetail/Reviews.vue'
-import { useHistoryStore } from '@/store/recentHistoryStore'
+import DateRangePicker from '@/components/placedetail/DateRangePicker.vue';
 
 const route = useRoute()
 const router = useRouter()
 const id = route.params.id
 const searchStore = useSearchStore() // Pinia 스토어 사용
-const historyStore = useHistoryStore();
 
 const base = ref({})
 const building = ref({})
 const rooms = ref([])
 const reviews = ref([])
 const availabilityData = ref({})
+const isLoading = ref(true);
 
-// Date 객체를 YYYY-MM-DD 형식의 문자열로 변환하는 함수
-const toISO = (date) => date.toISOString().slice(0, 10);
-
-// 스토어에서 날짜 정보를 가져옴
-const startDate = computed(() => toISO(searchStore.checkInDate));
-const endDate = computed(() => toISO(searchStore.checkOutDate));
-
-const formattedDateRange = computed(() => {
-  return `${startDate.value} ~ ${endDate.value}`;
-});
 
 function onBookRoom(idx){ router.push({ name: 'room-detail', params: { id: String(id), idx: String(idx ?? 0) } }) }
 function openReviewModal(){ /* 구현부 */ }
@@ -79,21 +68,6 @@ function normalizeBase(b){
     ...b,
     firstimage: stripAngle(b?.firstimage),
     firstimage2: stripAngle(b?.firstimage2),
-  }
-}
-
-async function fetchAvailability() {
-  if (!id) return;
-  try {
-    const response = await api.post('/api/reservations/availability', {
-      contentId: id,
-      startDate: startDate.value, // 스토어의 날짜 사용
-      endDate: endDate.value      // 스토어의 날짜 사용
-    });
-    availabilityData.value = response.data.availability;
-  } catch (error) {
-    console.error("객실 잔여 수량 조회 실패:", error);
-    availabilityData.value = {};
   }
 }
 
@@ -116,39 +90,72 @@ const processedAvailability = computed(() => {
   return result;
 });
 
-onMounted(async () => {
-  //메인에서 상세 이동 시 스크롤 위로
-  if (route.query.from === 'main') {
-    window.scrollTo({top: 0, behavior: 'smooth'});
-     const newQuery = { ...route.query };
-    delete newQuery.from;
-    router.replace({ query: newQuery }); 
-  }
+const localCheckIn = ref(searchStore.checkInDateISO);
+const localCheckOut = ref(searchStore.checkOutDateISO);
+
+// 1. 페이지 최초 로딩 시 한 번만 호출할 함수 (날짜와 무관한 정보)
+async function fetchStaticDetails() {
   try {
-    const [b, d, i, r] = await Promise.allSettled([
+    const [baseRes, introRes, reviewsRes] = await Promise.all([
       api.get(`/accommodations/${id}`),
-      api.get(`/tour/detail/db/content/${id}`),
       api.get(`/tour/intro/db/${id}`),
       api.get(`/api/reviews/hotel/${id}`)
-    ])
-    if (b.status === 'fulfilled') {
-      base.value = normalizeBase(b.value.data)
-      //방문 목록에 추가
-      historyStore.addViewHistory(b.value.data);
-      // console.log(historyStore.recentlyViewed)
-    }
-    if (d.status === 'fulfilled') {
-      rooms.value = Array.isArray(d.value.data) ? d.value.data : []
-    }
-    if (i.status === 'fulfilled') building.value = i.value.data || {}
-    if (r.status === 'fulfilled') reviews.value = r.value.data
+    ]);
+    base.value = normalizeBase(baseRes.data);
+    building.value = introRes.data || {};
+    reviews.value = reviewsRes.data;
+  } catch (e) {
+    console.error('숙소 기본 정보 조회 실패:', e);
+  }
+}
 
-    await fetchAvailability();
+// 2. 객실 잔여 수량
+async function fetchAvailability(checkIn, checkOut) {
+  try {
+    const response = await api.post('/api/reservations/availability', {
+      contentId: id,
+      startDate: checkIn,
+      endDate: checkOut
+    });
+    availabilityData.value = response.data.availability || {};
+  } catch (error) {
+    console.error("객실 잔여 수량 조회 실패:", error);
+    availabilityData.value = {};
+  }
+}
+
+async function fetchDynamicDetails(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return;
+  try {
+    // 객실 정보와 가격을 새로운 날짜 기준으로 다시 조회
+    const roomsRes = await api.get(`/tour/detail/db/content/${id}`, {
+      params: { checkIn, checkOut }
+    });
+    rooms.value = Array.isArray(roomsRes.data) ? roomsRes.data : [];
+
+    // (선택) 객실 잔여 수량도 다시 조회
+    await fetchAvailability(checkIn, checkOut);
 
   } catch (e) {
-    console.error('PlaceDetailView fetch error:', e)
+    console.error('객실 동적 정보 조회 실패:', e);
   }
-})
+}
+
+onMounted(async () => {
+  isLoading.value = true;
+  // 두 종류의 데이터를 병렬로 함께 호출
+  await Promise.all([
+    fetchStaticDetails(),
+    fetchDynamicDetails(localCheckIn.value, localCheckOut.value)
+  ]);
+  isLoading.value = false;
+});
+
+// 날짜가 변경될 때마다 객실 정보만 다시 조회
+watch([localCheckIn, localCheckOut], (newDates) => {
+  const [newCheckIn, newCheckOut] = newDates;
+  fetchDynamicDetails(newCheckIn, newCheckOut);
+});
 
 function goFirstRoom(){
   if (!rooms.value.length) return

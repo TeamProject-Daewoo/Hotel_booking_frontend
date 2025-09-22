@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from '@/api/axios';
 
 //백엔드에 넘길 데이터 전역으로 관리
@@ -90,6 +90,35 @@ export const useSearchStore = defineStore('search', () => {
       }
   };
 
+  //상세보기에 전달될 입실 퇴실 날짜
+  function setDateRange(newCheckIn, newCheckOut) {
+    checkInDate.value = newCheckIn;
+    checkOutDate.value = newCheckOut;
+  }
+
+  function formatDateToLocalISO(date) {
+  return date.toLocaleDateString("sv-SE"); // "YYYY-MM-DD" 형식
+}
+
+  const checkInDateISO = computed({
+  get: () => formatDateToLocalISO(checkInDate.value),
+  set: (val) => { if (val) checkInDate.value = new Date(val); }
+});
+
+const checkOutDateISO = computed({
+  get: () => formatDateToLocalISO(checkOutDate.value),
+  set: (val) => { if (val) checkOutDate.value = new Date(val); }
+});
+
+const getRoomDetails = (contentId, checkIn, checkOut) => {
+  return axios.get(`/tour/detail/db/content/${contentId}`, {
+    params: {
+      checkIn: checkIn,
+      checkOut: checkOut
+    }
+  });
+};
+
   //요소 접근
   return {
     minPrice,
@@ -110,6 +139,10 @@ export const useSearchStore = defineStore('search', () => {
     isLoading,
     error,
     fetchSearchResult,
-    getRequestPayload
+    getRequestPayload,
+    setDateRange,
+    checkInDateISO,
+    checkOutDateISO,
+    getRoomDetails
   };
 });

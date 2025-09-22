@@ -7,8 +7,8 @@
     <div class="grid">
       <div class="left-col">
         <DatePicker
-          v-model:checkIn="checkIn"
-          v-model:checkOut="checkOut"
+          v-model:checkIn="checkOutDateISO"
+          v-model:checkOut="checkOutDateISO"
           :building="building"
         />
         <PaymentOptions v-model="payMode" />

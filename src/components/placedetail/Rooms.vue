@@ -103,10 +103,20 @@ function minPositivePrice(r){
 
   return candidates.length ? Math.min(...candidates) : null
 }
-function bookable(r){ return minPositivePrice(r) !== null }
-function priceText(r){
-  const p = minPositivePrice(r)
-  return p !== null ? '₩' + p.toLocaleString() : '문의'
+
+function bookable(r) {
+  // finalPrice가 있거나, 또는 기존 방식의 최소 가격이 있으면 예약 가능
+  return (r.finalPrice != null && r.finalPrice > 0) || minPositivePrice(r) !== null;
+}
+function priceText(r) {
+  // 1. finalPrice가 유효한 값인지 먼저 확인합니다 (0보다 큰 숫자인지).
+  if (r.finalPrice != null && r.finalPrice > 0) {
+    return '₩' + r.finalPrice.toLocaleString();
+  }
+  
+  // 2. finalPrice가 없다면, 기존의 최소 가격 계산 로직을 사용합니다.
+  const p = minPositivePrice(r);
+  return p !== null ? '₩' + p.toLocaleString() : '문의';
 }
 
 const visibleRooms = computed(() => {
