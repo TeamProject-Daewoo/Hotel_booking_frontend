@@ -44,12 +44,14 @@ function goToLookup() {
   router.push('/lookup-booking');
 }
 
+  const VITE_HOMPAGE_MAIN = import.meta.env.VITE_HOMPAGE_MAIN;
+
 const handleLogout = async () => {
   const loginType = authStore.loginType;
 
   if (loginType === 'KAKAO') {
     const KAKAO_RESTAPI_KEY = import.meta.env.VITE_KAKAO_RESTAPI_KEY;
-    const KAKAO_LOGOUT_REDIRECT_URI = `${import.meta.env.VITE_API_URL_FRONT}/logout-callback`;
+    const KAKAO_LOGOUT_REDIRECT_URI = `${VITE_HOMPAGE_MAIN}/logout-callback`;
     window.location.href = `https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_RESTAPI_KEY}&logout_redirect_uri=${KAKAO_LOGOUT_REDIRECT_URI}`;
   } else {
     try {
