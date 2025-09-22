@@ -66,11 +66,13 @@
                             }">
                         </i>
                     </button>
-                    <button v-if="data.roomCount === 0" class="view-btn" style="color:white; background-color:lightcoral;">
-                        예약 마감
-                    </button>
-                    <button v-else class="view-btn" @click="goToDetail(data.contentId)">
-                        예약 하기
+                    <button
+                      class="view-btn"
+                      :class="statusClass(data.status)"
+                      :disabled="!isClickable(data.status)"
+                      @click="goToDetail(data.contentId)"
+                    >
+                      {{ data.status }}
                     </button>
                 </div>
             </div>
@@ -171,6 +173,17 @@ const emptyImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 const goToDetail = (hotelId) => {
   router.push(`/place/${hotelId}`);
 };
+
+const isClickable = (status) => {
+  return status === '예약 가능' || status === '마감 임박';
+}
+
+const statusClass = (status) => {
+      if (status === '예약 가능') return 'status-available';
+      if (status === '마감 임박') return 'status-inquiry';
+      if (status === '예약 마감') return 'status-sold-out';
+      return 'status-default';
+    }
 
 const sortOptions = [
     '인기 순',
@@ -482,5 +495,34 @@ function getDaysDifference(date1, date2) {
   color: white;
   font-size: 16pt;
   cursor: pointer;
+}
+.status-available {
+  background-color: #4bd86c; /* 초록색: 예약 가능 */
+}
+.status-available:hover {
+  background-color: #3cb957;
+}
+
+.status-inquiry {
+  background-color: #ffc107; /* 노란색: 문의 필요 */
+  color: black;
+}
+.status-inquiry:hover {
+  background-color: #e0a800;
+}
+
+.status-sold-out {
+  background-color: #dc3545; /* 빨간색: 예약 마감 */
+}
+.status-sold-out:hover {
+  background-color: #c82333;
+}
+
+/* 기타 상태 */
+.status-default {
+  background-color: #6c757d; /* 회색: 기본 */
+}
+.status-default:hover {
+  background-color: #5a6268;
 }
 </style>
