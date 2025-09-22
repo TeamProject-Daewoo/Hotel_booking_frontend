@@ -9,6 +9,7 @@
       <button :class="{ active: selectedCategory === 'event' }" @click="selectedCategory = 'event'; fetchNoticesPaged(0)">이벤트</button>
 
       <input type="text" v-model="searchTerm" placeholder="제목" @input="fetchNoticesPaged(0)" />
+       
     </div>
 
     <ul class="notice-items">
@@ -83,9 +84,21 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toISOString().split('T')[0];
 };
 
-// 공지사항 상세 페이지 이동
-const goDetail = (id) => {
-  router.push({ name: 'NoticeDetail', params: { id } });
+const goDetail = async (id) => {
+  try {
+    // 상세 데이터 조회 API 호출 (예: /api/notices/{id})
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/${id}`);
+    // 정상적으로 데이터 있으면 상세 페이지로 이동
+    router.push({ name: 'NoticeDetail', params: { id } });
+  } catch (error) {
+    // 404나 기타 에러면 삭제된 글로 간주하고 알림 띄우기
+    if (error.response && error.response.status === 404) {
+      alert('이 게시물은 삭제되었습니다.');
+    } else {
+      console.error('공지사항 상세 조회 실패:', error);
+      alert('공지사항 상세 조회 중 오류가 발생했습니다.');
+    }
+  }
 };
 
 // 공지사항 페이징 API 호출
@@ -120,6 +133,7 @@ const goPrev = () => {
   }
 };
 
+
 // 최초 데이터 로드
 fetchNoticesPaged(0);
 
@@ -130,6 +144,7 @@ watch([selectedCategory, searchTerm], () => {
 </script>
 
 <style scoped>
+
 .notice-list {
   max-width: 900px;
   margin: 40px auto;
