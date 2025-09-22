@@ -46,6 +46,7 @@ import Rooms    from '@/components/placedetail/Rooms.vue'
 import Map      from '@/components/placedetail/Map.vue'
 import Reviews  from '@/components/placedetail/Reviews.vue'
 import DateRangePicker from '@/components/placedetail/DateRangePicker.vue';
+import { useHistoryStore } from '@/store/recentHistoryStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -116,6 +117,9 @@ async function fetchStaticDetails() {
     base.value = normalizeBase(baseRes.data);
     building.value = introRes.data || {};
     reviews.value = reviewsRes.data;
+    // ** 방문 히스토리 추가 **
+    const historyStore = useHistoryStore();
+    historyStore.addViewHistory(baseRes.data);
   } catch (e) {
     console.error('숙소 기본 정보 조회 실패:', e);
   }

@@ -39,7 +39,7 @@ export const useWishlistStore = defineStore('wishlist', {
           this.delete(hotelId);
         } else {
           await axios.post(`${import.meta.env.VITE_API_URL}/api/mypage/savewish`, {"hotelId":hotelId});
-          this.wishlistIds.add(hotelId); 
+          this.wishlistIds.add(hotelId);
         }
       } catch (error) {
         console.error('찜하기 상태 변경에 실패했습니다.', error);

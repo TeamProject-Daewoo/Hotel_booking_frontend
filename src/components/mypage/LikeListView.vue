@@ -1,8 +1,8 @@
 <template>
   <div class="view-container">
     <h1 class="view-title">찜 목록</h1>
-    <div v-if="likes.length > 0" class="like-grid">
-      <div v-for="like in likes" :key="like.id" class="like-card">
+    <div v-if="wishlistItems.length > 0" class="like-grid">
+      <div v-for="like in wishlistItems" :key="like.id" class="like-card">
         <div class="like-delete-btn"><i @click="deleteWishlist(like.contentId)" class="fa-solid fa-xmark"></i></div>
         <img :src="like.imageUrl" alt="숙소 이미지" class="hotel-image">
         <div class="card-content">
@@ -27,10 +27,14 @@
 <script setup>
 import { onMounted, computed } from 'vue';
 import { useWishlistStore } from '@/store/wishlistStore';
+import { storeToRefs } from 'pinia';
 
 const wishlistStore = useWishlistStore();
 
-const likes = computed(() => wishlistStore.wishlistItems);
+onMounted(() => {
+  wishlistStore.fetchWishlist();
+})
+const { wishlistItems } = storeToRefs(wishlistStore);
 const deleteWishlist = async (contentId) => {
   await wishlistStore.delete(contentId);
 }

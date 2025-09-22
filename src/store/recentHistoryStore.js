@@ -33,6 +33,7 @@ export const useHistoryStore = defineStore('history', {
         loadViewHistory() {
             const storedHistory = JSON.parse(localStorage.getItem(VIEW_KEY) || '[]');
             this.recentlyViewed = storedHistory;
+            console.log(storedHistory)
         },
         addViewHistory(hotel) {
            const updatedHistory = [hotel, ...this.recentlyViewed.filter(item => item.contentid !== hotel.contentid)].slice(0, 6);

@@ -99,7 +99,7 @@
               class="history-card"
               @click="goToDetail(hotel.contentid)"
             >
-             <div class="card-delete-btn" @click="historyStore.deleteRecentView(hotel.contentid)">
+             <div class="card-delete-btn" @click.stop="historyStore.deleteRecentView(hotel.contentid)">
                 <i class="fa-solid fa-xmark" style="color: white; text-shadow: 2px 2px 2px black; "></i>
               </div>
               <img :src="hotel.firstimage || emptyImage" alt="이미지" class="card-image">
@@ -397,19 +397,15 @@ function getDaysDifference(date1, date2) {
 
 .view-btn {
   display: block;
+  font-weight: bold;
+  color: white;
   width: 85%;
   padding: 12px;
   text-align: center;
-  background-color: #5acab2;
-  color: black;
   border: none;
   border-radius: 5px;
   transition: background 0.2s ease;
   text-decoration: none;
-}
-
-.view-btn:hover {
-  background-color: #3aa38b;
 }
 
 .like-btn {
@@ -497,18 +493,17 @@ function getDaysDifference(date1, date2) {
   cursor: pointer;
 }
 .status-available {
-  background-color: #4bd86c; /* 초록색: 예약 가능 */
+  background-color: #36ac52; /* 초록색: 예약 가능 */
 }
 .status-available:hover {
-  background-color: #3cb957;
+  background-color: #2d8d41;
 }
 
 .status-inquiry {
-  background-color: #ffc107; /* 노란색: 문의 필요 */
-  color: black;
+  background-color: #ff7207; /* 노란색: 마감 임박 */
 }
 .status-inquiry:hover {
-  background-color: #e0a800;
+  background-color: #d35c01;
 }
 
 .status-sold-out {
