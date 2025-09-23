@@ -21,8 +21,6 @@
       await api.post('/api/auth/logout'); // 우리 서버에 요청하여 Refresh Token 쿠키 삭제
 
       await nextTick();
-
-      alert('로그아웃되었습니다.');
     } catch (error) {
       console.error('최종 로그아웃 처리 실패:', error);
     } finally {

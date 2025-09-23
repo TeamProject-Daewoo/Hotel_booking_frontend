@@ -27,6 +27,16 @@ const headerStyle = computed(() => ({
 onMounted(async () => {
   historyStore.loadRecentSearches();
   historyStore.loadViewHistory();
+
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('/logout-callback')) {
+    console.log('로그아웃 콜백 경로이므로 자동 로그인을 건너뜁니다.');
+    const uiStore = useUiStore();
+      uiStore.openModal('로그아웃 되었습니다.', '');
+    authStore.setInitialized(); // 초기화는 완료된 것으로 처리
+    return; // 함수 종료
+  }
+
   if (!authStore.isInitialized) {
     try {
       const response = await api.post('/api/auth/refresh');

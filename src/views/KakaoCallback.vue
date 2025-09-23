@@ -39,7 +39,6 @@ const handleKakaoBackendLogin = async (code) => {
     console.log("카카오 콜백", response.data.accessToken)
     authStore.setToken(response.data.accessToken);
     console.log('저장완료')
-    alert('카카오 계정으로 로그인되었습니다.');
     router.push('/'); // 로그인 성공 후 메인 페이지로 이동
 
   } catch (error) {
