@@ -62,16 +62,6 @@
           <button class="icon-btn" aria-label="공유하기" @click="onShare">
             <i class="fa-solid fa-share-nodes"></i>
           </button>
-
-          <!-- 예약 버튼 -->
-          <button
-            class="book-btn"
-            :class="{ disabled: !canBook }"
-            :disabled="!canBook"
-            @click="$emit('book')"
-          >
-            예약하기
-          </button>
         </div>
       </div>
     </header>
