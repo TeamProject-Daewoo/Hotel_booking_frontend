@@ -25,6 +25,9 @@
 
 <script setup>
 import { onMounted } from 'vue';
+import { useUiStore } from '@/store/commonUiStore';
+
+const uiStore = useUiStore();
 
 const KAKAO_JAVASCRIPT_KEY = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
   const VITE_HOMPAGE_MAIN = import.meta.env.VITE_HOMPAGE_MAIN;
@@ -45,7 +48,7 @@ onMounted(() => {
 // 2. 카카오 로그인 실행 함수
 const handleKakaoLogin = () => {
   if (!window.Kakao) {
-    alert("카카오 SDK가 로드되지 않았습니다.");
+    uiStore.openModal("카카오 SDK가 로드되지 않았습니다.");
     return;
   }
   

@@ -155,6 +155,9 @@
 import { reactive, ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/axios";
+import { useUiStore } from '@/store/commonUiStore';
+
+const uiStore = useUiStore();
 
 const router = useRouter();
 const formData = reactive({
@@ -235,7 +238,7 @@ const sendButtonText = computed(() => {
 const sendVerificationCode = async () => {
   // 이메일 형식 검증 로직 추가
   if (!isValidEmail(formData.username)) {
-    alert("올바른 이메일 형식을 입력해주세요.");
+    uiStore.openModal("올바른 이메일 형식을 입력해주세요.");
     return;
   }
 
@@ -322,7 +325,7 @@ const formattedTime = computed(() => {
 
 const handleRegister = async () => {
   if (!isFormValid.value) {
-    alert("입력 양식을 모두 올바르게 채워주세요.");
+    uiStore.openModal("입력 양식을 모두 올바르게 채워주세요.");
     return;
   }
 
@@ -333,7 +336,7 @@ const handleRegister = async () => {
       name: formData.name,
       phoneNumber: formData.phoneNumber,
       role: formData.role, });
-    alert('회원가입이 완료되었습니다.');
+      uiStore.openModal('회원가입이 완료되었습니다.');
     router.push('/');
 
   } catch (error) {
@@ -347,7 +350,7 @@ const handleRegister = async () => {
     } else {
       // 그 외 다른 에러는 기존처럼 처리
       console.error('회원가입 실패:', error);
-      alert(error.response?.data || '회원가입 중 오류가 발생했습니다.');
+      uiStore.openModal(error.response?.data || '회원가입 중 오류가 발생했습니다.');
     }
   }
 };

@@ -38,6 +38,9 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import apiClient from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore';
+
+const uiStore = useUiStore();
 
 const route = useRoute();
 const reservation = ref(null);
@@ -49,7 +52,7 @@ const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 onMounted(async () => {
   const reservationId = route.params.reservationId;
   if (!reservationId) {
-    alert("예약 ID가 올바르지 않습니다.");
+    uiStore.openModal("예약 ID가 올바르지 않습니다.");
     return;
   }
 
@@ -59,7 +62,7 @@ onMounted(async () => {
     await initializeWidgets();
   } catch (error) {
     console.error("예약 정보를 불러오는 데 실패했습니다.", error);
-    alert("예약 정보를 불러올 수 없습니다.");
+    uiStore.openModal("예약 정보를 불러올 수 없습니다.");
   }
 });
 
@@ -92,7 +95,7 @@ const initializeWidgets = async () => {
 
 const requestPayment = async () => {
   if (!widgets.value || !reservation.value) {
-    alert("결제 정보를 초기화하는 중입니다. 잠시 후 다시 시도해주세요.");
+    uiStore.openModal("결제 정보를 초기화하는 중입니다. 잠시 후 다시 시도해주세요.");
     return;
   }
 
@@ -107,7 +110,7 @@ const requestPayment = async () => {
     });
   } catch (error) {
     console.error("결제 요청에 실패했습니다.", error);
-    alert("결제 요청 중 오류가 발생했습니다.");
+    uiStore.openModal("결제 요청 중 오류가 발생했습니다.");
   }
 };
 </script>

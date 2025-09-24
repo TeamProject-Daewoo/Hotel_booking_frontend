@@ -27,6 +27,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore';
 
 // 새로 만든 자식 컴포넌트들을 import 합니다.
 import ReservationTitle from '@/components/reservation/ReservationTitle.vue';
@@ -36,6 +37,7 @@ import FinalPrice from '@/components/reservation/FinalPrice.vue';
 
 const route = useRoute();
 const router = useRouter();
+const uiStore = useUiStore();
 
 // 데이터 로직과 결제 함수는 그대로 부모 컴포넌트에 둡니다.
 const hotelName = ref('');
@@ -99,7 +101,7 @@ const proceedToPayment = async () => {
 
   } catch (error) {
     console.error('예약 처리 중 오류 발생:', error);
-    alert(error.response?.data?.message || '예약 처리 중 오류가 발생했습니다.');
+    uiStore.openModal(error.response?.data?.message || '예약 처리 중 오류가 발생했습니다.');
   }
 };
 </script>

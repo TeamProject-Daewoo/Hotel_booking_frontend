@@ -125,8 +125,6 @@ import { useAuthStore } from '@/api/auth';
 import router from '@/router';
 import { useHistoryStore } from '@/store/recentHistoryStore';
 import LoadMapButton from './LoadMapButton.vue';
-import AlertModal from '../mypage/AlertModal.vue';
-import { useUiStore } from '@/store/commonUiStore';
 
 const searchStore = useSearchStore();
 const wishlistStore = useWishlistStore();

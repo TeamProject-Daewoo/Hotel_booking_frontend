@@ -9,7 +9,9 @@ import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/api/auth';
 import api from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore';
 
+const uiStore = useUiStore();
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
@@ -19,7 +21,7 @@ onMounted(() => {
   const authorizationCode = route.query.code;
   
   if (!authorizationCode) {
-    alert('카카오 로그인에 실패했습니다. (인증 코드 없음)');
+    uiStore.openModal('카카오 로그인에 실패했습니다. (인증 코드 없음)');
     router.push('/loginview');
     return;
   }

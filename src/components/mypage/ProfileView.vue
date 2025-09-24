@@ -62,9 +62,11 @@ import { ref, watch } from 'vue'; // onMounted 대신 watch 사용
 import { useRouter } from 'vue-router';
 import apiClient from '@/api/axios.js';
 import { useAuthStore } from '@/api/auth.js';
+import { useUiStore } from '@/store/commonUiStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const uiStore = useUiStore();
 
 const isEditing = ref(false);
 const profile = ref(null);
@@ -148,7 +150,7 @@ const handleLogout = async () => {
   try {
     await apiClient.post('/api/auth/logout');
     authStore.logout();
-    alert('로그아웃되었습니다.');
+    uiStore.openModal('로그아웃되었습니다.');
     router.push('/');
   } catch (error) {
     console.error('로그아웃 실패:', error);
