@@ -21,7 +21,7 @@ onMounted(() => {
   const authorizationCode = route.query.code;
   
   if (!authorizationCode) {
-    uiStore.openModal('카카오 로그인에 실패했습니다. (인증 코드 없음)');
+    uiStore.openModal('카카오 로그인에 실패했습니다.');
     router.push('/loginview');
     return;
   }
@@ -52,7 +52,7 @@ const handleKakaoBackendLogin = async (code) => {
     } else {
       // 그 외 다른 에러
       console.error('카카오 로그인 실패:', error);
-      alert('로그인 처리 중 오류가 발생했습니다.');
+      uiStore.openModal('로그인 처리 중 오류가 발생했습니다.');
       router.push('/loginview');
     }
   }
