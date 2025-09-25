@@ -43,7 +43,9 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore';
 
+const uiStore = useUiStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -80,11 +82,11 @@ const submitReview = async () => {
     await api.post('/api/mypage/reviews', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
-    alert('리뷰가 성공적으로 제출되었습니다.');
+    uiStore.openModal('리뷰가 성공적으로 제출되었습니다.');
     router.push('/mypage');
   } catch (error) {
     console.error('리뷰 제출 실패:', error);
-    alert(error.response?.data?.message || '리뷰 제출 중 오류가 발생했습니다.');
+    uiStore.openModal(error.response?.data?.message || '리뷰 제출 중 오류가 발생했습니다.');
   }
 };
 

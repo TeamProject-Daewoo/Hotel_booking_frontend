@@ -45,6 +45,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore';
 
 import Breadcrumb     from '@/components/roomdetail/Breadcrumb.vue';
 import RoomHero       from '@/components/roomdetail/RoomHero.vue';
@@ -57,6 +58,7 @@ import { useSearchStore } from '@/api/searchRequestStore';
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore();
+const uiStore = useUiStore();
 
 const id   = route.params.id
 const idx  = Number(route.params.idx)
@@ -137,11 +139,11 @@ const baseFare = computed(() => Number(route.query.totalPrice) || 0);
 function onContinue(){
   // ✅ 예약자 입력 검증
   if (!guestName.value.trim()) {
-    alert("예약자 이름을 입력해주세요.")
+    uiStore.openModal("예약자 이름을 입력해주세요.")
     return
   }
   if (phone.value.replace(/\D/g,'').length < 10) {
-    alert("전화번호를 올바르게 입력해주세요.")
+    uiStore.openModal("전화번호를 올바르게 입력해주세요.")
     return
   }
 

@@ -46,8 +46,12 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { useUiStore } from '@/store/commonUiStore';
+
+
 
 const router = useRouter();
+const uiStore = useUiStore();
 
 const notices = ref([]);
 const selectedCategory = ref('');
@@ -93,10 +97,10 @@ const goDetail = async (id) => {
   } catch (error) {
     // 404나 기타 에러면 삭제된 글로 간주하고 알림 띄우기
     if (error.response && error.response.status === 404) {
-      alert('이 게시물은 삭제되었습니다.');
+      uiStore.openModal('이 게시물은 삭제되었습니다.');
     } else {
       console.error('공지사항 상세 조회 실패:', error);
-      alert('공지사항 상세 조회 중 오류가 발생했습니다.');
+      uiStore.openModal('공지사항 상세 조회 중 오류가 발생했습니다.');
     }
   }
 };
