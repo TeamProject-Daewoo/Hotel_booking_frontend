@@ -42,7 +42,7 @@
           <button
               class="book-line"
               :disabled="!bookable(r) || getRemainingCount(r) === 0"
-              @click="$emit('bookRoom', { index: i, price: r.finalPrice } )"
+              @click="$emit('bookRoom', r)"
           >
             {{ getRemainingCount(r) === 0 ? '예약 마감' : '예약하기' }}
           </button>

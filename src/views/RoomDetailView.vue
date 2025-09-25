@@ -1,35 +1,43 @@
 <template>
-  <div class="booking-page" v-if="ready">
-    <Breadcrumb :id="id" :title="base.title" />
-
-    <RoomHero :base="base" :room="room" :building="building" />
-
+  <div class="booking-page" v-if="reservation">
+    <Breadcrumb :id="reservation.hotel.contentid" :title="reservation.hotel.title" />
     <div class="grid">
       <div class="left-col">
-        <DateDisplay 
-          :checkIn="checkIn"
-          :checkOut="checkOut"
-        />
+        <div class="info-section">
+          <h2>예약 정보 확인</h2>
+          <div class="info-item">
+            <span class="label">예약자 이름</span>
+            <span class="value">{{ reservation.customerName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">연락처</span>
+            <span class="value">{{ reservation.phone }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">체크인</span>
+            <span class="value">{{ formatDate(reservation.checkInDate) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">체크아웃</span>
+            <span class="value">{{ formatDate(reservation.checkOutDate) }}</span>
+          </div>
+        </div>
         <PaymentOptions v-model="payMode" />
-        <Userinfo 
-          v-model:name="guestName"
-          v-model:phone="phone"
-          @continue="onContinue" 
-        />
+
+        <button @click="goToPayment" class="reservation-button">
+          결제하기
+        </button>
       </div>
 
       <aside class="right-col">
         <SummaryCard
-          :base="base"
-          :room="room"
-          :checkIn="checkIn"
-          :checkOut="checkOut"
-          :nights="nights"
-          :fare="baseFare"
-          :discount="discount"
-          :taxes="taxes"
-          :serviceFee="serviceFee"
-          :total="total"
+            :base="reservation.hotel"
+            :room="reservation.room"
+            :checkIn="reservation.checkInDate"
+            :checkOut="reservation.checkOutDate"
+            :nights="nights"
+            :fare="reservation.basePrice"
+            :total="reservation.totalPrice"
         />
       </aside>
     </div>
@@ -37,208 +45,89 @@
 
   <div v-else class="loading-container">
     <div class="spinner"></div>
-    <p>객실 정보를 불러오는 중입니다...</p>
+    <p>예약 정보를 불러오는 중입니다...</p>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
-import { useUiStore } from '@/store/commonUiStore';
 
-import Breadcrumb     from '@/components/roomdetail/Breadcrumb.vue';
-import RoomHero       from '@/components/roomdetail/RoomHero.vue';
-import DateDisplay from '@/components/roomdetail/DateDisplay.vue';
+import Breadcrumb from '@/components/roomdetail/Breadcrumb.vue';
+import RoomHero from '@/components/roomdetail/RoomHero.vue'; // RoomHero는 여전히 사용 가능
 import PaymentOptions from '@/components/roomdetail/PaymentOptions.vue';
-import Userinfo       from '@/components/roomdetail/Userinfo.vue';
-import SummaryCard    from '@/components/roomdetail/SummaryCard.vue';
-import { useSearchStore } from '@/api/searchRequestStore';
+import SummaryCard from '@/components/roomdetail/SummaryCard.vue';
 
-const route = useRoute()
-const router = useRouter()
-const searchStore = useSearchStore();
-const uiStore = useUiStore();
+const route = useRoute();
+const router = useRouter();
 
-const id   = route.params.id
-const idx  = Number(route.params.idx)
+const reservation = ref(null);
+const payMode = ref('full');
 
-const base     = ref({})
-const building = ref({})
-const rooms    = ref([])
-const room     = ref({})
-const ready    = ref(false)
-
-/* 날짜 설정 */
-const checkIn = ref('');
-const checkOut = ref('');
-checkIn.value = route.query.checkIn;
-checkOut.value = route.query.checkOut;
-console.log(checkIn.value, checkOut.value)
-const nights   = computed(()=>{
-  const s = new Date(checkIn.value), e = new Date(checkOut.value)
-  const diff = Math.round((e - s) / 86400000)
-  return diff > 0 ? diff : 0
-})
 
 onMounted(async () => {
+  const reservationId = route.query.reservationId;
+  if (!reservationId) {
+    alert("잘못된 접근입니다.");
+    router.push('/');
+    return;
+  }
+
   try {
-    const [b, dRes, i] = await Promise.allSettled([
-      api.get(`/accommodations/${id}`),
-      api.get(`/tour/detail/db/content/${id}`, 
-      {
-        params: 
-          {
-              checkIn: checkIn.value,
-              checkOut: checkOut.value
-          }
-      }),
-      api.get(`/tour/intro/db/${id}`)
-    ])
-    if (b.status==='fulfilled') base.value = normalizeBase(b.value.data || {})
-    if (dRes.status==='fulfilled') rooms.value = Array.isArray(dRes.value.data) ? dRes.value.data : []
-    if (i.status==='fulfilled') building.value = i.value.data || {}
-
-
-    // ✅ idx 범위 체크 후 적용
-    const validIdx = idx >= 0 && idx < rooms.value.length ? idx : 0
-    room.value = rooms.value[validIdx] || {}
-  } finally { ready.value = true }
-})
-
-/* helpers */
-function stripAngle(u){ return String(u||'').replace(/^<|>$/g,'') }
-function normalizeBase(b){ return {...b, firstimage:stripAngle(b.firstimage), firstimage2:stripAngle(b.firstimage2)} }
-function asNum(v){ return Number(String(v||'0').replace(/[^\d]/g,'')) || 0 }
-
-/* 결제/예약자 입력 */
-const payMode   = ref('full')   // 'full' | 'partial'
-const guestName = ref('')
-const phone     = ref('')
-
-/* ✅ 전화번호 자동 포맷 (3-4-4) */
-function formatPhone(value){
-  const digits = value.replace(/\D/g, '')
-  if (digits.length <= 3) return digits
-  if (digits.length <= 7) return digits.slice(0,3) + '-' + digits.slice(3)
-  return digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7,11)
-}
-watch(phone, (val) => {
-  if (val === undefined || val === null) return
-  const formatted = formatPhone(val)
-  if (val !== formatted) {
-    phone.value = formatted
+    const response = await api.get(`/api/reservations/${reservationId}`);
+    reservation.value = response.data;
+  } catch (error) {
+    console.error("예약 정보를 불러오는 데 실패했습니다.", error);
+    alert("예약 정보를 불러오는 데 실패했습니다.");
+    router.push('/');
   }
-})
+});
 
-/* 요금 계산 */
-const total = computed(() => Number(route.query.totalPrice) || 0);
-const baseFare = computed(() => Number(route.query.totalPrice) || 0);
+const nights = computed(() => {
+  if (!reservation.value) return 0;
+  const s = new Date(reservation.value.checkInDate);
+  const e = new Date(reservation.value.checkOutDate);
+  const diff = Math.round((e - s) / (1000 * 60 * 60 * 24));
+  return diff > 0 ? diff : 0;
+});
 
-/* 다음 페이지로 이동 */
-function onContinue(){
-  // ✅ 예약자 입력 검증
-  if (!guestName.value.trim()) {
-    uiStore.openModal("예약자 이름을 입력해주세요.")
-    return
-  }
-  if (phone.value.replace(/\D/g,'').length < 10) {
-    uiStore.openModal("전화번호를 올바르게 입력해주세요.")
-    return
-  }
+// 날짜 포맷팅을 위한 간단한 헬퍼 함수
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
+  return new Date(dateString).toLocaleString('ko-KR', options);
+};
 
-  const phoneDigits = phone.value.replace(/\D/g,'') // 서버에는 숫자만 전달
 
+const goToPayment = () => {
+  if (!reservation.value) return;
   router.push({
-    name: 'reserv', // 또는 'payment'
-    query: {
-      contentid: id,
-      roomcode: room.value.id,
-      hotelName: base.value.title,
-      roomType: room.value.roomtitle,
-      checkInDate: checkIn.value,
-      checkOutDate: checkOut.value,
-      nights: String(nights.value),
-      numAdults: String(room.value.roombasecount ?? 2),
-      numChildren: '0',
-      totalPrice: String(total.value ?? 0),
-
-      // ✅ 예약자/결제 정보 추가
-      guestName: guestName.value,
-      phone: phoneDigits,
-      payMode: payMode.value
-    }
+    name: 'Payment',
+    params: { reservationId: reservation.value.reservationId }
   });
-}
+};
+
 </script>
 
 <style scoped>
-.booking-page {
-  max-width: 1120px;
-  margin: 24px auto;
-  padding: 0 16px;
-  font-family: "Noto Sans KR", system-ui, Arial;
-}
-.loading {
-  padding: 64px 0;
-  text-align: center;
-  color: #6b7280;
-}
-.grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 18px;
-  margin-top: 18px;
-  align-items: start;
-}
-.left-col, .right-col { min-width: 0; }
-.left-col {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  align-items: stretch;
-}
-.left-col > * {
-  width: auto;
-  box-sizing: border-box;
-}
-.right-col {
-  position: sticky;
-  top: 80px;  /* ✅ 헤더 높이에 맞게 */
-  height: max-content;
-  align-self: start;
-  margin-top: 0;
-}
-@media (max-width: 960px) {
-  .grid { grid-template-columns: 1fr }
-  .right-col { position: static }
-}
+/* 기존 스타일과 함께 정보 표시를 위한 스타일 추가 */
+.booking-page { max-width: 1120px; margin: 24px auto; padding: 0 16px; }
+.grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-top: 18px; align-items: start; }
+.left-col { display: flex; flex-direction: column; gap: 18px; }
+.right-col { position: sticky; top: 80px; }
+@media (max-width: 960px) { .grid { grid-template-columns: 1fr } .right-col { position: static } }
 
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 70vh;
-  color: #6b7280;
-}
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 5px solid #f3f4f6;
-  border-bottom-color: #4f46e5;
-  border-radius: 50%;
-  display: inline-block;
-  box-sizing: border-box;
-  animation: rotation 1s linear infinite;
-  margin-bottom: 16px;
-}
-@keyframes rotation {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-.loading-container p {
-  font-size: 1rem;
-  font-weight: 500;
-}
+.info-section { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
+.info-section h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
+.info-item { display: flex; justify-content: space-between; font-size: 1rem; margin-bottom: 12px; }
+.info-item .label { color: #6b7280; }
+.info-item .value { font-weight: 500; }
+
+.reservation-button { width: 100%; padding: 15px; background-color: #4f46e5; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+.reservation-button:hover { background-color: #4338ca; }
+
+.loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
+.spinner { width: 48px; height: 48px; border: 5px solid #f3f4f6; border-bottom-color: #4f46e5; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-bottom: 16px; }
+@keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
