@@ -119,18 +119,18 @@ const getRemainingCount = (room) => {
   return null;
 };
 
-  /* ---------- Date Helpers ---------- */
-  const MS_DAY = 86400000;
-  function parseYMD(iso) {
-    if (!iso) return null;
-    return new Date(iso + 'T00:00:00Z');
-  }
-  
-  /* ---------- View Model ---------- */
-  const label = (iso) => {
-    const d = parseYMD(iso);
-    return d ? d.toLocaleDateString('ko-KR', { weekday: 'short', month: 'long', day: 'numeric' }) : '날짜 정보 없음';
-  };
+/* ---------- Date Helpers ---------- */
+const MS_DAY = 86400000;
+function parseYMD(iso) {
+  if (!iso) return null;
+  return new Date(iso + 'T00:00:00Z');
+}
+
+/* ---------- View Model ---------- */
+const label = (iso) => {
+  const d = parseYMD(iso);
+  return d ? d.toLocaleDateString('ko-KR', { weekday: 'short', month: 'long', day: 'numeric' }) : '날짜 정보 없음';
+};
 
 const nights = computed(() => {
   if (!props.checkIn || !props.checkOut) return 0;
