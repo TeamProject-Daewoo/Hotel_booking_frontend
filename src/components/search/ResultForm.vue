@@ -24,10 +24,10 @@
                 >{{ option }}<span v-if="searchStore.order === option"><i class="fa-solid fa-check"></i></span></li>
             </ul>
         </SearchModal>
-        <div v-if="searchStore.result.data.searchCards.length === 0" class="result-card">
+        <div v-if="searchStore.result.data.searchCards.length === 0 && !searchStore.isLoading" class="result-card">
             <h3>검색결과가 없습니다!</h3>
         </div>
-        <div class="result-card" v-for="data in searchStore.result.data.searchCards" :key="data.id">
+        <div class="result-card" v-for="data in searchStore.result.data.searchCards" :key="data.id" v-if="!searchStore.isLoading">
             <div class="image-container">
                 <img :src="data.image || emptyImage">
             </div>
@@ -73,6 +73,11 @@
                     </button>
                 </div>
             </div>
+        </div>
+        <div v-else>
+          <div class="result-card">
+            <h3>검색 결과를 불러오는 중입니다...</h3>
+          </div>
         </div>
         <LoadMapButton/>
     </div>

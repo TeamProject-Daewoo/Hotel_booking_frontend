@@ -171,6 +171,8 @@ h1 {
 
 .input-group {
   margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .input-group label {

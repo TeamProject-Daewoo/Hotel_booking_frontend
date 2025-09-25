@@ -208,7 +208,8 @@ const toggleFilter = (num) => {
 
 function clickRatingButton(value) {
     searchStore.rating = value;
-    searchStore.fetchSearchResult();
+    if(searchStore.result != null)
+        searchStore.fetchSearchResult();
 }
 
 const isMinPriceEditing = ref(false);
