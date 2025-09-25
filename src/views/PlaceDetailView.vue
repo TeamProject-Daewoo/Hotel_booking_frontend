@@ -107,6 +107,8 @@ const localCheckIn = ref(searchStore.checkInDateISO);
 const localCheckOut = ref(searchStore.checkOutDateISO);
 
 async function fetchStaticDetails() {
+  const a = api.get(`/tour/intro/db/${id}`);
+  console.log(a);
   try {
     const [baseRes, introRes, reviewsRes] = await Promise.all([
       api.get(`/accommodations/${id}`),

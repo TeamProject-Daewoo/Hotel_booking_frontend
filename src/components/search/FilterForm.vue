@@ -1,7 +1,7 @@
 <template>
     <div class="filter-main-container">
         <div class="filter-title">
-            <h2>Filters</h2>
+            <h2>필터</h2>
         </div>
         <div class="filter-item">
             <div class="filter-section-header">
@@ -14,34 +14,40 @@
             <div v-show="isFilterOpen[0]" class="price-range-container" style="width: 100%;">
                 <div @change="handleSearch" ref="slider"></div>
                 <div class="price-label">
-                    <div class="price-input-wrapper">
-                        <p v-if="!isMinPriceEditing" @click="editPrice('min')">
-                        {{ searchStore.minPrice.toLocaleString() }}원
-                        </p>
-                        <input
-                        v-else
-                        ref="minPriceInput"
-                        v-model.number="editedMinPrice"
-                        type="number"
-                        @keyup.enter="updatePrice('min')"
-                        @blur="updatePrice('min')"
-                        class="price-input"
-                        />
+                    <div class="input-group" @click="focusInputPrice(minPriceInput)">
+                        <label for="min-price">최소</label>
+                        <div class="price-input-wrapper">
+                            <input
+                            id="min-price"
+                            ref="minPriceInput"
+                            :value="formattedMinPrice"
+                            type="text"
+                            @input="onMinInput"
+                            @keyup.enter="updatePrice('min')"
+                            @blur="updatePrice('min')"
+                            class="price-input"
+                            />
+                        </div>
                     </div>
 
-                    <div class="price-input-wrapper">
-                        <p v-if="!isMaxPriceEditing" @click="editPrice('max')">
-                        {{ searchStore.maxPrice.toLocaleString() }}원
-                        </p>
-                        <input
-                        v-else
-                        ref="maxPriceInput"
-                        v-model.number="editedMaxPrice"
-                        type="number"
-                        @keyup.enter="updatePrice('max')"
-                        @blur="updatePrice('max')"
-                        class="price-input"
-                        />
+                    <div class="separator">~</div>
+
+                    <div class="price-label">
+                        <div class="input-group" @click="focusInputPrice(maxPriceInput)">
+                            <label for="max-price">최대</label>
+                            <div class="price-input-wrapper">
+                                <input
+                                id="max-price"
+                                ref="maxPriceInput"
+                                :value="formattedMaxPrice"
+                                type="text"
+                                @input="onMaxInput"
+                                @keyup.enter="updatePrice('max')"
+                                @blur="updatePrice('max')"
+                                class="price-input"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,11 +60,11 @@
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
             </div>
-            <div v-show="isFilterOpen[1]" class="price-range-container">
-                <button v-for="value in ratingCounts" :key="value" 
+            <div v-show="isFilterOpen[1]" class="rating-container">
+                <button v-for="value in ratingCounts" :key="value"
                     @click="clickRatingButton(searchStore.rating === value ? 0 : value)"
                     :class="{ 'active-rating': searchStore.rating === value }">
-                    {{ value }}+
+                    <i class="fa-solid fa-star"></i> {{ value }}+
                 </button>
             </div>
         </div>
@@ -70,7 +76,7 @@
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
             </div>
-            <div v-show="isFilterOpen[3]" class="price-range-container">
+            <div v-show="isFilterOpen[3]" class="amenities-container">
                 <div v-for="(value, key) in searchStore.amenities" :key="key">
                     <input :id="key" type="checkbox" :value="key" @change="handleSearch" v-model="searchStore.amenities[key]" style="zoom:1.2;">
                     <label :for=key>{{ key }}</label>
@@ -85,7 +91,7 @@
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
             </div>
-            <div v-show="isFilterOpen[2]" class="price-range-container">
+            <div v-show="isFilterOpen[2]" class="amenities-container">
                 <div v-for="(value, key) in searchStore.freebies" :key="key">
                     <input :id=key type="checkbox" :value="key" @change="handleSearch" v-model="searchStore.freebies[key]" style="zoom:1.2;">
                     <label :for=key>{{ key }}</label>
@@ -96,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, watch, nextTick, computed } from 'vue';
 import noUiSlider from "nouislider";
 import "nouislider/dist/nouislider.css";
 import { useSearchStore } from '@/api/searchRequestStore';
@@ -109,11 +115,65 @@ let sliderInstance = null;
 const minPriceSlider = ref(null);
 const ratingCounts = [2, 2.5, 3, 3.5, 4, 4.5]
 
+const currentMinPrice = ref(0);
+const currentMaxPrice = ref(0);
 //백엔드에 api 호출
 const handleSearch = () => {
+    editedMinPrice.value = currentMinPrice.value;
+    editedMaxPrice.value = currentMaxPrice.value;
     if(searchStore.result != null)
         searchStore.fetchSearchResult();
 };
+
+const focusInputPrice = (input) => {
+  if (input) {
+    input.focus();
+  }
+};
+
+//소수점 단위로 끊어서 반환 @input
+const formattedMinPrice = computed(() => {
+  return editedMinPrice.value?.toLocaleString('ko-KR') ?? '';
+});
+
+const onMinInput = (event) => {
+  const { value, selectionStart } = event.target;
+  const originalLength = value.length;
+
+  const pureNumber = Number(value.replace(/[^0-9]/g, ''));
+  editedMinPrice.value = pureNumber;
+
+  nextTick(() => {
+    const newFormattedValue = formattedMinPrice.value;
+    const lengthDifference = newFormattedValue.length - originalLength;
+    const newCursorPosition = selectionStart + lengthDifference;
+    minPriceInput.value.setSelectionRange(newCursorPosition, newCursorPosition);
+    minPriceInput.value.value = newFormattedValue;
+  });
+};
+
+//소수점 단위로 끊어서 반환 @input
+const formattedMaxPrice = computed(() => {
+  return editedMaxPrice.value?.toLocaleString('ko-KR') ?? '';
+});
+
+const onMaxInput = (event) => {
+  const { value, selectionStart } = event.target;
+  const originalLength = value.length;
+
+  const pureNumber = Number(value.replace(/[^0-9]/g, ''));
+  editedMaxPrice.value = pureNumber;
+
+  nextTick(() => {
+    const newFormattedValue = formattedMaxPrice.value;
+    const lengthDifference = newFormattedValue.length - originalLength;
+    const newCursorPosition = selectionStart + lengthDifference;
+
+    maxPriceInput.value.setSelectionRange(newCursorPosition, newCursorPosition);
+    maxPriceInput.value.value = newFormattedValue;
+  });
+};
+
 
 onMounted(() => {
     sliderInstance = noUiSlider.create(slider.value, {
@@ -125,18 +185,20 @@ onMounted(() => {
         },
         step: 1000,
     });
+
+    // update 이벤트로 값 반영
+    slider.value.noUiSlider.on("update", (values) => {
+        currentMinPrice.value = Number(Math.round(values[0]));
+        currentMaxPrice.value = Number(Math.round(values[1]));
+    });
     //onchange 등록
     slider.value.noUiSlider.on('change', (values) => {
-      searchStore.minPrice = parseInt(values[0]);
+      searchStore.minPrice = Number(parseInt(values[0]));
+      searchStore.maxPrice = Number(parseInt(values[1]));
       handleSearch();
     });
-  
 
-  // update 이벤트로 값 반영
-  slider.value.noUiSlider.on("update", (values) => {
-    searchStore.minPrice = Math.round(values[0]);
-    searchStore.maxPrice = Math.round(values[1]);
-  });
+  
 });
 
 // 토글 버튼 클릭 시
@@ -146,50 +208,38 @@ const toggleFilter = (num) => {
 
 function clickRatingButton(value) {
     searchStore.rating = value;
-    searchStore.fetchSearchResult();
+    if(searchStore.result != null)
+        searchStore.fetchSearchResult();
 }
 
 const isMinPriceEditing = ref(false);
 const isMaxPriceEditing = ref(false);
 
+const minPrice = 0;
+const maxPrice = 500000;
 // 편집 중인 값을 임시로 저장하는 변수
 const editedMinPrice = ref(0);
-const editedMaxPrice = ref(0);
+const editedMaxPrice = ref(400000);
 
 const minPriceInput = ref(null);
 const maxPriceInput = ref(null);
 
-// 편집 모드로 전환하는 함수
-const editPrice = async (type) => {
-  if (type === 'min') {
-    isMinPriceEditing.value = true;
-    editedMinPrice.value = searchStore.minPrice; // 현재 스토어 값으로 초기화
-    // DOM 업데이트가 끝난 후 input에 포커스
-    await nextTick();
-    minPriceInput.value?.focus();
-  } else {
-    isMaxPriceEditing.value = true;
-    editedMaxPrice.value = searchStore.maxPrice;
-    await nextTick();
-    maxPriceInput.value?.focus();
-  }
-};
 const updatePrice = (type) => {
   if (type === 'min') {
-    // 간단한 유효성 검사 (최소값이 최대값보다 클 수 없음)
     if (editedMinPrice.value > searchStore.maxPrice) {
       editedMinPrice.value = searchStore.maxPrice;
     }
     searchStore.minPrice = editedMinPrice.value;
     isMinPriceEditing.value = false;
   } else {
-    // 최대값이 최소값보다 작을 수 없음
     if (editedMaxPrice.value < searchStore.minPrice) {
       editedMaxPrice.value = searchStore.minPrice;
     }
     searchStore.maxPrice = editedMaxPrice.value;
     isMaxPriceEditing.value = false;
   }
+  editedMinPrice.value = Math.max(editedMinPrice.value, minPrice);
+  editedMaxPrice.value = Math.min(editedMaxPrice.value, maxPrice);
 };
 watch(
   () => [searchStore.minPrice, searchStore.maxPrice],
@@ -305,6 +355,16 @@ watch(
     align-items: center;
 }
 
+.rating-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.amenities-container {
+    display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
 /* 토글 버튼 스타일 */
 .toggle-button {
     background: none;
@@ -319,6 +379,29 @@ watch(
 .toggle-button span {
     display: block;
 }
+
+.input-group {
+  display: flex;
+  justify-content: left;
+  width: 100px;
+  text-align: left;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-top: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.input-group label {
+  font-size: 14px;
+  color: #838383;
+  margin-bottom: 5px; /* 라벨과 입력창 사이의 간격 */
+}
+.separator {
+  font-size: 20px;
+  color: #888;
+  margin-top: 30px; /* 입력창 높이와 맞추기 위한 여백 */
+}
 .price-label {
     display: flex;
     justify-content: space-between;
@@ -332,19 +415,22 @@ watch(
     margin-top: 5px;
 }
 .price-input-wrapper {
-  cursor: pointer;
+  position: relative;
+  display: flex;
 }
+
 .price-input {
   height: 100%;
-  width: 100%;
-  border: none;
+  text-align: left;
   outline: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  width: 75px;
-  text-align: center;
-  bottom: 0;
-  font-size: inherit;
+  width: 100px;
+  border: none;
+  font-size: 16px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.price-input::before {
+    content: "원";
 }
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {

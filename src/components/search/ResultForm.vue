@@ -6,7 +6,7 @@
                     :class="{ 'active': category === searchStore.category }"
                     @click="selectCategory(category)">
                 {{ category }}
-                <span>{{ count }} places</span>
+                <span>{{ count }}개의 장소</span>
             </button>
         </div>
         <div class="order-container">
@@ -24,10 +24,10 @@
                 >{{ option }}<span v-if="searchStore.order === option"><i class="fa-solid fa-check"></i></span></li>
             </ul>
         </SearchModal>
-        <div v-if="searchStore.result.data.searchCards.length === 0" class="result-card">
+        <div v-if="searchStore.result.data.searchCards.length === 0 && !searchStore.isLoading" class="result-card">
             <h3>검색결과가 없습니다!</h3>
         </div>
-        <div class="result-card" v-for="data in searchStore.result.data.searchCards" :key="data.id">
+        <div class="result-card" v-for="data in searchStore.result.data.searchCards" :key="data.id" v-if="!searchStore.isLoading">
             <div class="image-container">
                 <img :src="data.image || emptyImage">
             </div>
@@ -49,12 +49,10 @@
                           <b v-else-if="data.rating > 3.5" style="color:limegreen">괜찮은</b>
                           <b v-else style="color: orange;">무난한</b>
                           
-                          {{ data.totalReviews }} reviews
+                          {{ data.totalReviews }}개의 리뷰
                         </p>
-                    </div>
-                    <div class="price-view">
-                        <p>starting from</p>
-                        <p>{{ ((parseInt(data.price)*dateDiff)/10000).toLocaleString() }}만원<span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
+                        <p class="price-text">{{ ((parseInt(data.price)*dateDiff)/10000).toLocaleString() }}만원~
+                        <span style="font-size: 15pt;">/{{ dateDiff }}박</span></p>
                     </div>
                 </div>
                 <div class="btn-container">
@@ -69,13 +67,17 @@
                     <button
                       class="view-btn"
                       :class="statusClass(data.status)"
-                      :disabled="!isClickable(data.status)"
                       @click="goToDetail(data.contentId)"
                     >
                       {{ data.status }}
                     </button>
                 </div>
             </div>
+        </div>
+        <div v-else>
+          <div class="result-card">
+            <h3>검색 결과를 불러오는 중입니다...</h3>
+          </div>
         </div>
         <LoadMapButton/>
     </div>
@@ -172,9 +174,6 @@ const goToDetail = (hotelId) => {
   router.push(`/place/${hotelId}`);
 };
 
-const isClickable = (status) => {
-  return status === '예약 가능' || status === '마감 임박';
-}
 
 const statusClass = (status) => {
       if (status === '예약 가능') return 'status-available';
@@ -336,11 +335,12 @@ function getDaysDifference(date1, date2) {
 }
 
 .image-container {
-  width: 500px; 
+  width: 350px; 
   height: 350px;
   object-fit: cover;
   overflow: hidden;
   border-bottom: 1px solid #e0e0e0;
+  /* flex-shrink: 0; */
 }
 .image-container img {
   width: 100%;
@@ -350,16 +350,15 @@ function getDaysDifference(date1, date2) {
 }
 .infor-container {
   background-color: white;
-  width: 65%;
+  width: 500px;
   height: 350px;
   padding: 10px 20px;
   box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
 }
 .text-container {
-  width: 100%;
   height: 250px;
-  display: flex;
-  justify-content: space-between;
   border-bottom: 1px solid #e0e0e0;
   overflow: hidden;
 }
@@ -368,20 +367,22 @@ function getDaysDifference(date1, date2) {
   height: 200px;
   text-align: left;
 }
-.price-view {
-  margin: 20px 20px;
-  width: 200px;
-  height: 200px;
+.infor-view h2 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.infor-view p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.price-text {
   text-align: right;
-}
-.price-view p {
-  margin: 0px 0px;
-}
-
-.price-view p:nth-of-type(2) {
   color: #f89489;
   font-weight: bold;
   font-size: 30px;
+  margin: 20px 20px;
 }
 
 .btn-container {
@@ -404,6 +405,7 @@ function getDaysDifference(date1, date2) {
   border-radius: 5px;
   transition: background 0.2s ease;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .like-btn {

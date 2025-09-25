@@ -28,12 +28,15 @@ export const useHistoryStore = defineStore('history', {
             this.recentSearches = this.recentSearches.filter(item => item !== keyword);
             localStorage.setItem(RECENT_KEY, JSON.stringify(this.recentSearches));
         },
+        deleteAllRecentSearch() {
+            this.recentSearches = [];
+            localStorage.removeItem(RECENT_KEY);
+        },
 
         //최근 본 호텔
         loadViewHistory() {
             const storedHistory = JSON.parse(localStorage.getItem(VIEW_KEY) || '[]');
             this.recentlyViewed = storedHistory;
-            console.log(storedHistory)
         },
         addViewHistory(hotel) {
            const updatedHistory = [hotel, ...this.recentlyViewed.filter(item => item.contentid !== hotel.contentid)].slice(0, 6);
