@@ -11,7 +11,7 @@
                     <span v-else><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
             </div>
-            <div v-show="isFilterOpen[0]" class="price-range-container" style="width: 100%;">
+            <div v-show="isFilterOpen[0]" class="slider-wrapper" style="width: 100%;">
                 <div @change="handleSearch" ref="slider"></div>
                 <div class="price-label">
                     <div class="input-group" @click="focusInputPrice(minPriceInput)">
@@ -255,7 +255,7 @@ watch(
 );
 </script>
 
-<style>
+<style scoped>
 /* 필터 컨테이너 전체 스타일 */
 .filter-main-container {
     border-radius: 8px;
@@ -361,7 +361,7 @@ watch(
   gap: 8px;
 }
 .amenities-container {
-    display: grid;
+  display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
@@ -441,7 +441,7 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-.noUi-target {
+.slider-wrapper ::v-deep(.noUi-target) {
   border: none;
   box-shadow: none;
   width: 95%;
@@ -451,24 +451,24 @@ input[type=number] {
   margin: 0 auto;
 }
 
-.noUi-connect {
+.slider-wrapper ::v-deep(.noUi-connect) {
     background: black;
     height: 4px;
     border: none;
 }
-.noUi-connects {
+.slider-wrapper ::v-deep(.noUi-connects) {
     width: 100%;
 }
-.noUi-horizontal .noUi-handle,
-.noUi-vertical .noUi-handle {
+.slider-wrapper ::v-deep(.noUi-horizontal .noUi-handle),
+.slider-wrapper ::v-deep(.noUi-vertical .noUi-handle) {
     width: 20px;
     height: 20px;
     border-radius: 50px;
     background: #6fcf97; 
     cursor: grab;
 }
-.noUi-handle::before,
-.noUi-handle::after {
+.slider-wrapper ::v-deep(.noUi-handle::before),
+.slider-wrapper ::v-deep(.noUi-handle::after) {
   display: none;
 }
 </style>
