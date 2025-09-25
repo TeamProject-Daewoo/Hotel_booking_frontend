@@ -69,7 +69,7 @@ const callSuggestionAPI = async (newKeyword) => {
 };
 const debouncedFetch = _.debounce(callSuggestionAPI, 100);
 watch(inputData, (newKeyword) => {
-  if(newKeyword.length > 1) newKeyword = newKeyword.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, '')
+  // if(newKeyword.length > 1) newKeyword = newKeyword.replace(/[ㄱ-ㅎㅏ-ㅣ]$/, '')
   debouncedFetch(newKeyword);
 });
 

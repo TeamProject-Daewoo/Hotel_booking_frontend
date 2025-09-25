@@ -1,4 +1,11 @@
 <script setup>
+import { useSearchStore } from '@/api/searchRequestStore';
+import { onBeforeRouteLeave } from 'vue-router';
+
+onBeforeRouteLeave((to, from) => {
+  const searchStore = useSearchStore();
+  searchStore.$reset();
+});
 </script>
 <template>
     <div class="search-container">

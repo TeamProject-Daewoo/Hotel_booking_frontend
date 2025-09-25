@@ -23,11 +23,13 @@ import ResultForm from '@/components/search/ResultForm.vue';
 
 <style scoped>
 .search-form-container {
+    width: 1100px;
+    margin: 0 auto;
     padding: 2rem;
     font-family: 'Arial', sans-serif;
     color: #333;
     padding: 50px 75px;
-    background-color: #FAFBFC
+    background-color: #FAFBFC;
 }
 
 .search-container {

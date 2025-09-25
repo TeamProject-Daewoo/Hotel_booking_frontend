@@ -10,7 +10,7 @@
           <p class="hotel-address">{{ like.address }}</p>
           <div class="rating-info">
             <span class="star filled">★</span>
-            <span class="rating-score">{{ like.rating }}</span>
+            <span class="rating-score">{{ like.rating.toFixed(1) }}</span>
             <span class="review-count">({{ like.reviewCount }})</span>
           </div>
           <button class="book-button" @click="$router.push({ name: 'place-detail', params: { id: like.contentId }})">예약하기</button>

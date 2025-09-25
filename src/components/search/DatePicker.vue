@@ -1,21 +1,24 @@
 <template>
-  <div class="date-picker">
-    <div class="calendar-header">
-      <button @click="prevMonth" :disabled="currentYear <= startYear && currentMonth <= startMonth" class="nav-button"><i class="fa-solid fa-chevron-left"></i></button>
-      <h2>{{ currentYear }}년 {{ currentMonth + 1 }}월</h2>
-      <button @click="nextMonth" :disabled="currentYear >= maxYear && currentMonth >= maxMonth" class="nav-button"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <div class="calendar-grid">
-      <div v-for="day in daysOfWeek" :key="day" class="day-of-week">{{ day }}</div>
-      <div v-for="blank in startDayOfWeek" :key="'blank-' + blank" class="blank-day"></div>
-      <div
-        v-for="day in daysInMonth"
-        :key="day"
-        :class="['calendar-day', getDateClasses(day)]"
-        @click="selectDate(day)"
-      >
-        {{ day }}
+  <div class="date-container">
+    <div class="date-picker">
+      <div class="calendar-header">
+        <button @click="prevMonth" class="nav-button"><i class="fa-solid fa-chevron-left"></i></button>
+        <h2>{{ currentYear }}년 {{ currentMonth + 1 }}월</h2>
+        <button @click="nextMonth" class="nav-button"><i class="fa-solid fa-chevron-right"></i></button>
       </div>
+      <div class="calendar-grid">
+        <div v-for="day in daysOfWeek" :key="day" class="day-of-week">{{ day }}</div>
+        <div
+          v-for="(dayObj, index) in calendarDays"
+          :key="index"
+          class="day-cell"
+          :class="dayObj.classes"
+          @click="selectDate(dayObj)"
+        >
+          {{ dayObj.day }}
+        </div>
+      </div>
+      <button class="confirm-btn" @click="confirmDate">확인</button>
     </div>
   </div>
 </template>
@@ -25,103 +28,119 @@ import { ref, computed } from 'vue';
 
 const emit = defineEmits(['range-selected']);
 
+const props = defineProps({
+  initialCheckIn: { type: Date, default: null },
+  initialCheckOut: { type: Date, default: null }
+});
+
 const today = new Date();
 const currentMonth = ref(today.getMonth());
 const currentYear = ref(today.getFullYear());
-
-// 두 개의 날짜 상태 관리
-const props = defineProps({
-  initialCheckIn: {
-    type: Date,
-    default: null
-  },
-  initialCheckOut: {
-    type: Date,
-    default: null
-  }
-});
 const checkInDate = ref(props.initialCheckIn);
 const checkOutDate = ref(props.initialCheckOut);
-
 const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
-const daysInMonth = computed(() => new Date(currentYear.value, currentMonth.value + 1, 0).getDate());
-const startDayOfWeek = computed(() => new Date(currentYear.value, currentMonth.value, 1).getDay());
+// --- 날짜 범위 제한 설정 ---
+const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+const maxDate = new Date(todayWithoutTime);
+maxDate.setMonth(maxDate.getMonth() + 3);
 
-const startMonth = today.getMonth();
-const startYear = today.getFullYear();
-const maxDate = new Date();
-maxDate.setMonth(maxDate.getMonth() + 6);
-const maxMonth = maxDate.getMonth();
-const maxYear = maxDate.getFullYear();
+// --- 핵심: 달력 데이터 생성 computed 속성 ---
+const calendarDays = computed(() => {
+  const year = currentYear.value;
+  const month = currentMonth.value;
+  const days = [];
+
+  const firstDayOfMonth = new Date(year, month, 1);
+  const prevMonthLastDate = new Date(year, month, 0).getDate();
+  const startDayIndex = firstDayOfMonth.getDay();
+  const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+
+  const checkInTime = checkInDate.value ? new Date(checkInDate.value.getFullYear(), checkInDate.value.getMonth(), checkInDate.value.getDate()).getTime() : null;
+  const checkOutTime = checkOutDate.value ? new Date(checkOutDate.value.getFullYear(), checkOutDate.value.getMonth(), checkOutDate.value.getDate()).getTime() : null;
+
+  // 1. 이전 달 날짜 채우기
+  for (let i = startDayIndex; i > 0; i--) {
+    const day = prevMonthLastDate - i + 1;
+    const date = new Date(year, month - 1, day);
+    days.push({ day:'', date, isCurrentMonth: false, classes: { 'is-other-month': true, 'is-disabled': true } });
+  }
+
+  // 2. 현재 달 채우기
+  for (let day = 1; day <= lastDateOfMonth; day++) {
+    const date = new Date(year, month, day);
+    const isSelectable = date >= todayWithoutTime && date <= maxDate;
+
+    const dateTime = date.getTime();
+    const classes = {
+      'is-current-month': true,
+      'is-disabled': !isSelectable,
+      'is-check-in': checkInTime === dateTime,
+      'is-check-out': checkOutTime === dateTime,
+      'is-in-range': checkInTime && checkOutTime && dateTime > checkInTime && dateTime < checkOutTime,
+    };
+
+    days.push({ day, date, isCurrentMonth: true, isSelectable, classes });
+  }
+
+  // 3. 다음 달 날짜 채우기
+  const remainingDays = 42 - days.length;
+  for (let day = 1; day <= remainingDays; day++) {
+    const date = new Date(year, month + 1, day);
+    const isSelectable = date >= todayWithoutTime && date <= maxDate;
+    
+    // 다음 달 날짜에 대해서도 현재 달과 똑같이 isSelectable과 모든 classes를 계산합니다.
+    const dateTime = date.getTime();
+    const classes = {
+      'is-other-month': true,
+      'is-disabled': !isSelectable,
+      'is-check-in': checkInTime === dateTime,
+      'is-check-out': checkOutTime === dateTime,
+      'is-in-range': checkInTime && checkOutTime && dateTime > checkInTime && dateTime < checkOutTime,
+    };
+
+    days.push({ day, date, isCurrentMonth: false, isSelectable, classes });
+  }
+  
+  return days;
+});
 
 const prevMonth = () => {
-  if (currentYear.value <= startYear && currentMonth.value <= startMonth) return;
-  currentMonth.value = currentMonth.value === 0 ? 11 : currentMonth.value - 1;
-  if (currentMonth.value === 11) currentYear.value--;
+  const newMonth = new Date(currentYear.value, currentMonth.value - 1, 1);
+  if (newMonth < new Date(today.getFullYear(), today.getMonth(), 1)) return;
+  currentMonth.value = newMonth.getMonth();
+  currentYear.value = newMonth.getFullYear();
 };
 
 const nextMonth = () => {
-  if (currentYear.value >= maxYear && currentMonth.value >= maxMonth) return;
-  currentMonth.value = currentMonth.value === 11 ? 0 : currentMonth.value + 1;
-  if (currentMonth.value === 0) currentYear.value++;
+  const newMonth = new Date(currentYear.value, currentMonth.value + 1, 1);
+  if (newMonth > maxDate) return;
+  currentMonth.value = newMonth.getMonth();
+  currentYear.value = newMonth.getFullYear();
 };
 
-const isSelectable = (day) => {
-  const date = new Date(currentYear.value, currentMonth.value, day);
-  const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  return date >= todayWithoutTime;
-};
+const selectDate = (dayObject) => {
+  if (!dayObject.isSelectable) return;
+  const selectedDate = dayObject.date;
 
-// 날짜 클릭 시 실행되는 메인 로직
-const selectDate = (day) => {
-  if (!isSelectable(day)) return;
-
-  const clickedDate = new Date(currentYear.value, currentMonth.value, day);
-
-  // 1. 체크인 날짜가 없거나, 이미 체크인/체크아웃이 모두 선택된 경우 -> 새로 체크인 날짜 선택
-  if (!checkInDate.value || checkOutDate.value) {
-    checkInDate.value = clickedDate;
+  if (!checkInDate.value || (checkInDate.value && checkOutDate.value)) {
+    checkInDate.value = selectedDate;
     checkOutDate.value = null;
-  } 
-  // 2. 체크인 날짜보다 이전 날짜를 클릭한 경우 -> 새로 체크인 날짜 선택
-  else if (clickedDate <= checkInDate.value) {
-    checkInDate.value = clickedDate;
+  } else if (selectedDate.getTime() <= checkInDate.value.getTime()) {
+    checkInDate.value = selectedDate;
+  } else {
+    checkOutDate.value = selectedDate;
   }
-  // 3. 체크인 날짜만 있는 상태에서 이후 날짜를 클릭한 경우 -> 체크아웃 날짜로 선택
-  else {
-    checkOutDate.value = clickedDate;
-    emit('range-selected', { start: checkInDate.value, end: checkOutDate.value });
-  }
-
-  
 };
 
-// 날짜에 적용할 CSS 클래스를 동적으로 반환하는 함수
-const getDateClasses = (day) => {
-  const date = new Date(currentYear.value, currentMonth.value, day);
-  const classes = { 'is-disabled': !isSelectable(day) };
-
-  if (!checkInDate.value) return classes;
-
-  const checkInTime = new Date(checkInDate.value.getFullYear(), checkInDate.value.getMonth(), checkInDate.value.getDate()).getTime();
-  const dateTime = date.getTime();
-
-  if (checkInTime === dateTime) {
-    classes['is-check-in'] = true;
+const confirmDate = () => {
+  
+  if(checkOutDate.value == null) {
+    const d = new Date(checkInDate.value);
+    d.setDate(d.getDate()+1);
+    checkOutDate.value = d;
   }
-
-  if (checkOutDate.value) {
-    const checkOutTime = new Date(checkOutDate.value.getFullYear(), checkOutDate.value.getMonth(), checkOutDate.value.getDate()).getTime();
-    if (checkOutTime === dateTime) {
-      classes['is-check-out'] = true;
-    }
-    if (dateTime > checkInTime && dateTime < checkOutTime) {
-      classes['is-in-range'] = true;
-    }
-  }
-
-  return classes;
+  emit('range-selected', { start: checkInDate.value, end: checkOutDate.value });
 };
 </script>
 
@@ -168,10 +187,17 @@ const getDateClasses = (day) => {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  max-height: 400px;
+  height: 400px;
   gap: 5px;
   text-align: center;
   width: 100%;
-  flex-grow: 1;
+}
+.day-cell {
+  padding: 0.5rem;
+  cursor: pointer;
+  text-align: center;
 }
 
 .day-of-week,
@@ -192,8 +218,11 @@ const getDateClasses = (day) => {
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
   width: 100%;
-  height: 60px;
-  border-radius: 4px; /* 기본적으로 약간의 둥근 모서리 */
+  border-radius: 4px;
+}
+.is-other-month {
+  opacity: 0.4;
+  color: #aaa;
 }
 
 .calendar-day:hover:not(.is-disabled) {
@@ -204,6 +233,19 @@ const getDateClasses = (day) => {
   color: #ccc;
   cursor: not-allowed;
   text-decoration: line-through;
+}
+.confirm-btn {
+  background-color: #4CAF50;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  height: 50px;
+  padding: 10px;
+  margin-top: 50px;
+  margin: 10px;
+}
+.confirm-btn:hover {
+  background-color: #3e9541;
 }
 
 /* --- 범위 선택 스타일 --- */
@@ -221,17 +263,17 @@ const getDateClasses = (day) => {
 }
 
 .is-check-in {
-  border-top-left-radius: 50%;
-  border-bottom-left-radius: 50%;
+  border-top-left-radius: 50px;
+  border-bottom-left-radius: 50px;
 }
 
 .is-check-out {
-  border-top-right-radius: 50%;
-  border-bottom-right-radius: 50%;
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
 }
 
 /* 시작일과 종료일이 같은 경우 둥글게 */
 .is-check-in.is-check-out {
-    border-radius: 50%;
+    border-radius: 50px;
 }
 </style>
