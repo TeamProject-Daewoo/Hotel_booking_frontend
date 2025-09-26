@@ -33,6 +33,12 @@
   <div v-else class="loading-container">
     <p>숙소 정보를 찾을 수 없습니다.</p>
   </div>
+
+  <GuestReservationModal
+      v-if="showGuestModal"
+      @close="showGuestModal = false"
+      @confirm="proceedWithGuestReservation"
+  />
 </template>
 
 <script setup>
@@ -49,11 +55,16 @@ import Rooms    from '@/components/placedetail/Rooms.vue'
 import Map      from '@/components/placedetail/Map.vue'
 import Reviews  from '@/components/placedetail/Reviews.vue'
 import DateRangePicker from '@/components/placedetail/DateRangePicker.vue';
+import GuestReservationModal from '@/components/placedetail/GuestReservationModal.vue';
+import { useAuthStore } from '@/api/auth';
+import { useUiStore } from '@/store/commonUiStore';
 
 const route = useRoute()
 const router = useRouter()
 const id = route.params.id
 const searchStore = useSearchStore()
+const authStore = useAuthStore();
+const uiStore = useUiStore();
 
 const base = ref({})
 const building = ref({})
@@ -61,17 +72,16 @@ const rooms = ref([])
 const reviews = ref([])
 const availabilityData = ref({})
 const isLoading = ref(true);
+const showGuestModal = ref(false);
+const selectedRoom = ref(null);
 
-function onBookRoom(roomInfo){
-  router.push({
-    name: 'room-detail',
-    params: { id: String(id), idx: String(roomInfo.idx) },
-    query: {
-      checkIn: localCheckIn.value,
-      checkOut: localCheckOut.value,
-      totalPrice: roomInfo.price
-    }
-  })
+function onBookRoom(room) {
+  selectedRoom.value = room; // 클릭된 방 정보를 저장
+  if (authStore.isLoggedIn) {
+    proceedWithMemberReservation();
+  } else {
+    showGuestModal.value = true;
+  }
 }
 function openReviewModal(){ /* 구현부 */ }
 function handleReport(){ /* 구현부 */ }
@@ -102,6 +112,67 @@ const processedAvailability = computed(() => {
   });
   return result;
 });
+
+const processReservation = async (reservationData) => {
+  try {
+    // 1. API를 호출하여 DB에 예약을 저장합니다.
+    const response = await api.post('/api/reservations', reservationData);
+    const newReservationId = response.data.reservationId;
+
+    // 2. 응답받은 reservationId를 가지고 RoomDetailView로 이동합니다.
+    const room = selectedRoom.value;
+    const roomIndex = rooms.value.findIndex(r => r.id === room.id);
+
+    router.push({
+      name: 'room-detail',
+      params: { id: id, idx: roomIndex },
+      query: {
+        // RoomDetailView가 예약 정보를 다시 불러올 수 있도록 reservationId를 전달합니다.
+        reservationId: newReservationId
+      }
+    });
+  } catch (error) {
+    console.error('예약 생성 실패:', error);
+    uiStore.openModal('예약 처리 중 오류가 발생했습니다.');
+  }
+};
+
+const proceedWithMemberReservation = () => {
+  const room = selectedRoom.value;
+  const reservationData = {
+    contentid: id,
+    roomcode: String(room.id),
+    checkInDate: localCheckIn.value,
+    checkOutDate: localCheckOut.value,
+    numAdults: Number(room.roombasecount ?? 2),
+    numChildren: 0,
+    totalPrice: room.finalPrice,
+    basePrice: room.finalPrice,
+    discountPrice: 0,
+    guestName: authStore.userName,
+    phone: authStore.phoneNumber || ''
+  };
+  processReservation(reservationData);
+};
+
+const proceedWithGuestReservation = (guestInfo) => {
+  showGuestModal.value = false;
+  const room = selectedRoom.value;
+  const reservationData = {
+    contentid: id,
+    roomcode: String(room.id),
+    checkInDate: localCheckIn.value,
+    checkOutDate: localCheckOut.value,
+    numAdults: Number(room.roombasecount ?? 2),
+    numChildren: 0,
+    totalPrice: room.finalPrice,
+    basePrice: room.finalPrice,
+    discountPrice: 0,
+    guestName: guestInfo.guestName,
+    phone: guestInfo.phone.replace(/\D/g, '')
+  };
+  processReservation(reservationData);
+};
 
 const localCheckIn = ref(searchStore.checkInDateISO);
 const localCheckOut = ref(searchStore.checkOutDateISO);
