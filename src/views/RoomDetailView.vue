@@ -111,7 +111,6 @@ const goToPayment = () => {
 </script>
 
 <style scoped>
-/* 기존 스타일과 함께 정보 표시를 위한 스타일 추가 */
 .booking-page { max-width: 1120px; margin: 24px auto; padding: 0 16px; }
 .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-top: 18px; align-items: start; }
 .left-col { display: flex; flex-direction: column; gap: 18px; }
@@ -124,8 +123,8 @@ const goToPayment = () => {
 .info-item .label { color: #6b7280; }
 .info-item .value { font-weight: 500; }
 
-.reservation-button { width: 100%; padding: 15px; background-color: #4f46e5; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-.reservation-button:hover { background-color: #4338ca; }
+.reservation-button { width: 100%; padding: 15px; background-color: #2ecc9a; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+.reservation-button:hover { background-color: #2ecc9a; }
 
 .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
 .spinner { width: 48px; height: 48px; border: 5px solid #f3f4f6; border-bottom-color: #4f46e5; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-bottom: 16px; }
