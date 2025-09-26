@@ -22,7 +22,12 @@
             <span class="value">{{ formatDate(reservation.checkOutDate) }}</span>
           </div>
         </div>
+        <Coupon @update:selectedCoupon="(coupon) => { selectedCoupon = coupon }" />
+
         <PaymentOptions v-model="payMode" />
+        <button @click="applyCoupon" class="apply-coupon-button">
+  쿠폰 적용하기
+</button>
 
         <button @click="goToPayment" class="reservation-button">
           결제하기
@@ -31,14 +36,15 @@
 
       <aside class="right-col">
         <SummaryCard
-            :base="reservation.hotel"
-            :room="reservation.room"
-            :checkIn="reservation.checkInDate"
-            :checkOut="reservation.checkOutDate"
-            :nights="nights"
-            :fare="reservation.basePrice"
-            :total="reservation.totalPrice"
-        />
+  :base="reservation.hotel"
+  :room="reservation.room"
+  :checkIn="reservation.checkInDate"
+  :checkOut="reservation.checkOutDate"
+  :nights="nights"
+  :fare="reservation.basePrice"
+  :total="discountedTotalPrice"
+/>
+
       </aside>
     </div>
   </div>
@@ -58,12 +64,36 @@ import Breadcrumb from '@/components/roomdetail/Breadcrumb.vue';
 import RoomHero from '@/components/roomdetail/RoomHero.vue'; // RoomHero는 여전히 사용 가능
 import PaymentOptions from '@/components/roomdetail/PaymentOptions.vue';
 import SummaryCard from '@/components/roomdetail/SummaryCard.vue';
+import Coupon from '@/components/coupon/Coupon.vue'
 
 const route = useRoute();
 const router = useRouter();
 
 const reservation = ref(null);
 const payMode = ref('full');
+
+const selectedCoupon = ref(null);
+
+// 할인된 가격 계산 - 여기 추가
+const discountedTotalPrice = computed(() => {
+  if (!reservation.value) return 0;
+  if (!selectedCoupon.value) return reservation.value.totalPrice;
+
+  const total = reservation.value.totalPrice;
+  const coupon = selectedCoupon.value.coupon;
+
+  if (!coupon) return total;
+
+  const percentage = coupon.discountPercent;
+
+  // 할인 방식 판단: 퍼센트가 0보다 크면 퍼센트 할인, 아니면 정액 할인
+  if (percentage > 0) {
+    return Math.max(total * (1 - percentage / 100), 0);
+  } else {
+    const discountAmount = coupon.discountAmount || 0; // 혹은 coupon.discountValue
+    return Math.max(total - discountAmount, 0);
+  }
+});
 
 
 onMounted(async () => {
@@ -101,12 +131,37 @@ const formatDate = (dateString) => {
 
 
 const goToPayment = () => {
+console.log('예약 객체:', reservation.value);
+  console.log('예약 ID:', reservation.value?.reservationId);
   if (!reservation.value) return;
   router.push({
     name: 'Payment',
     params: { reservationId: reservation.value.reservationId }
   });
 };
+
+const applyCoupon = async () => {
+  if (!selectedCoupon.value || !selectedCoupon.value.coupon?.id) {
+    alert("❗️ 쿠폰이 선택되지 않았습니다.");
+    console.warn("🎯 selectedCoupon 상태:", selectedCoupon.value);
+    return;
+  }
+
+  const couponId = selectedCoupon.value.coupon.id;
+  const reservationId = reservation.value.reservationId;
+
+  console.log("🎯 적용할 쿠폰 ID:", couponId);
+
+  try {
+    const response = await api.get(`/api/reservations/${reservationId}/apply-coupon/${couponId}`);
+    reservation.value = response.data;
+    alert("✅ 쿠폰이 성공적으로 적용되었습니다.");
+  } catch (error) {
+    console.error("❌ 쿠폰 적용 실패:", error);
+    alert("❌ 쿠폰 적용 중 오류가 발생했습니다.");
+  }
+};
+
 
 </script>
 
@@ -129,4 +184,16 @@ const goToPayment = () => {
 .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
 .spinner { width: 48px; height: 48px; border: 5px solid #f3f4f6; border-bottom-color: #4f46e5; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-bottom: 16px; }
 @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.apply-coupon-button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.apply-coupon-button:hover {
+  background-color: #0056b3;
+}
 </style>
