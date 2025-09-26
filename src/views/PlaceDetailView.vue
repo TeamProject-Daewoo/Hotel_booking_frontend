@@ -150,7 +150,7 @@ const proceedWithMemberReservation = () => {
     basePrice: room.finalPrice,
     discountPrice: 0,
     guestName: authStore.userName,
-    phone: authStore.user?.phoneNumber || ''
+    phone: authStore.phoneNumber || ''
   };
   processReservation(reservationData);
 };
