@@ -2,7 +2,10 @@
   <div class="search-wrapper">
       <div class="suggestions-container">
         <div v-if="!searchStore.inputData">
-          <h5 class="suggestions-heading">최근 검색어</h5>
+          <div class="suggestions-title">
+            <h5 class="suggestions-heading">최근 검색어</h5>
+            <button class="suggestions-reset" @mousedown.stop="deleteAllHistory">초기화</button>
+          </div>
           <div v-if="historyStore.recentSearches.length > 0" class="recent-searches-horizontal">
             <div class="tags-container">
               <span
@@ -65,6 +68,9 @@ const shouldShow = computed(() => {
 const deleteHistory = (item) => {
   historyStore.deleteRecentSearch(item);
 };
+const deleteAllHistory = () => {
+  historyStore.deleteAllRecentSearch();
+}
 
 const highlightMatch = (suggestion) => {
   const keywordToHighlight = props.keyword;
@@ -178,6 +184,33 @@ const highlightMatch = (suggestion) => {
 }
 .box::-webkit-scrollbar{
   display:none;
+}
+
+.suggestions-title {
+  display: flex;
+  justify-content: space-between;
+}
+.suggestions-reset {
+  background-color: #ffffff; 
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;  
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+/* 마우스를 올렸을 때의 스타일 */
+.suggestions-reset:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.suggestions-reset:focus-visible {
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
 }
 
 /* 추천 검색어 목록 ul 태그 초기화 */

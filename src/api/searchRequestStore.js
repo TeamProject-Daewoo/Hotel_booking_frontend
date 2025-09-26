@@ -3,147 +3,112 @@ import { ref, computed } from 'vue';
 import axios from '@/api/axios';
 import { useUiStore } from '@/store/commonUiStore';
 
-//백엔드에 넘길 데이터 전역으로 관리
-export const useSearchStore = defineStore('search', () => {
-  
-  //InputForm
-  const inputData = ref('');    //현재 입력된 정보
-  const keyword = ref('');      //최종 확정 키워드
-  const suggestions = ref([]);
-  const d = new Date();
-  const checkInDate = ref(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-  const checkOutDate = ref(new Date(d.setDate(d.getDate()+1)));
-  const roomCount = ref(1);
-  const guestCount = ref(2);
+function formatDateToLocalISO(date) {
+  if (!(date instanceof Date) || isNaN(date)) {
+    return null;
+  }
+  return date.toLocaleDateString("sv-SE");
+}
 
-  // FilterForm
-  const minPrice = ref(0);
-  const maxPrice = ref(400000);
-  const rating = ref(0);
-  const amenities = ref({
-    "주차가능":false,       //parkinglodging
-    "수영장": false,        //subfacility, 
-    "세미나": false,        //subfacility, seminar
-    "스포츠시설": false,    //subfacility, sports
-    "바베큐": false,        //subfacility, barbecue
-    "캠프파이어": false,    //subfacility, campfire
-    "휴게시설": false,      //subfacility
-    "사우나": false,        //subfacility, sauna
-    "피트니스": false,      //subfacility, fitness
-    "계곡": false,          //subfacility
-    "대중탕": false         //publicbath
-  });
-  const freebies = ref({
-    "욕실": false,          // roombathfacility
-    "욕조": false,          // roombath
-    "세면도구제공": false,  // roomtoiletries
-    "홈시어터": false,      // roomhometheater
-    "에어컨": false,        // roomaircondition
-    "Tv": false,            // roomtv
-    "Pc": false,            // roompc
-    "Wifi": false,          // roominternet
-    "냉장고": false,        // roomrefrigerator
-    "취사가능": false,      // roomcook
-  });
-  //ResultForm
-  const order = ref('인기 순');
-  const category = ref('All');
+export const useSearchStore = defineStore('search', {
 
-  //객체 호출 함수
-  const getRequestPayload = () => {
+  state: () => {
+    const d = new Date();
+    const checkInDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const checkOutDate = new Date(new Date().setDate(d.getDate() + 1));
+
+    //백엔드에 넘길 데이터 전역으로 관리
     return {
-      keyword: keyword.value,
-      checkInDate: checkInDate.value,
-      checkOutDate: checkOutDate.value,
-      roomCount: roomCount.value,
-      guestCount: guestCount.value,
-      minPrice: minPrice.value,
-      maxPrice: maxPrice.value,
-      rating: rating.value,
-      freebies: freebies.value,
-      amenities: amenities.value,
-      order: order.value,
-      category: category.value
+      // InputForm
+      inputData: '',
+      keyword: '',
+      suggestions: [],
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
+      guestCount: 2,
+
+      // FilterForm
+      minPrice: 0,
+      maxPrice: 400000,
+      rating: 0,
+      amenities: { "주차가능": false, "수영장": false, "세미나": false, "스포츠시설": false, "바베큐": false, "캠프파이어": false, "휴게시설": false, "사우나": false, "피트니스": false, "계곡": false, "대중탕": false },
+      freebies: { "욕실": false, "욕조": false, "세면도구제공": false, "홈시어터": false, "에어컨": false, "Tv": false, "Pc": false, "Wifi": false, "냉장고": false, "취사가능": false },
+
+      // ResultForm
+      order: '인기 순',
+      category: '모두',
+      result: null,
+      isLoading: false,
+      error: null,
     };
-  };
+  },
 
-  const result = ref(null);
-  const isLoading = ref(false);
-  const error = ref(null);
-  const search_post_url = `${import.meta.env.VITE_API_URL}/api/search`;
+  getters: {
+    // 요청에 필요한 전체 데이터를 객체로 반환
+    getRequestPayload: (state) => ({
+      keyword: state.keyword,
+      checkInDate: state.checkInDate,
+      checkOutDate: state.checkOutDate,
+      guestCount: state.guestCount,
+      minPrice: state.minPrice,
+      maxPrice: state.maxPrice,
+      rating: state.rating,
+      freebies: state.freebies,
+      amenities: state.amenities,
+      order: state.order,
+      category: state.category
+    }),
 
-  const fetchSearchResult = async () => {
-    // console.log(result);
-      const uiStore = useUiStore(); 
-      if(keyword.value.trim() == '') {
+    // 날짜를 "YYYY-MM-DD" 형식의 문자열로 변환
+    checkInDateISO: (state) => formatDateToLocalISO(state.checkInDate),
+    checkOutDateISO: (state) => formatDateToLocalISO(state.checkOutDate),
+  },
+
+  actions: {
+    async fetchSearchResult() {
+      const uiStore = useUiStore();
+      if (this.keyword.trim() === '') {
         uiStore.openModal('검색 실패', '호텔명 또는 지역명을 입력해주세요');
         return;
       }
-      isLoading.value = true;
-      error.value = null;
+
+      this.isLoading = true;
+      this.error = null;
+      const search_post_url = `${import.meta.env.VITE_API_URL}/api/search`;
+      
       try {
-          result.value = await axios.post(search_post_url, getRequestPayload());
+        // getters로 만든 getRequestPayload를 사용합니다.
+        this.result = await axios.post(search_post_url, this.getRequestPayload);
       } catch (e) {
-          error.value = '데이터를 불러오는 데 실패했습니다.';
-          console.error(e);
+        this.error = '데이터를 불러오는 데 실패했습니다.';
+        console.error(e);
       } finally {
-          isLoading.value = false;
+        this.isLoading = false;
       }
-  };
+    },
 
-  //상세보기에 전달될 입실 퇴실 날짜
-  function setDateRange(newCheckIn, newCheckOut) {
-    checkInDate.value = newCheckIn;
-    checkOutDate.value = newCheckOut;
-  }
+    // 입실/퇴실 날짜 설정
+    setDateRange(newCheckIn, newCheckOut) {
+      this.checkInDate = newCheckIn;
+      this.checkOutDate = newCheckOut;
+    },
 
-  function formatDateToLocalISO(date) {
-  return date.toLocaleDateString("sv-SE"); // "YYYY-MM-DD" 형식
-}
+    // "YYYY-MM-DD" 형식의 문자열을 받아 Date 객체로 변환하여 state 업데이트
+    setCheckInDateFromISO(val) {
+      if (val) this.checkInDate = new Date(val);
+    },
+    setCheckOutDateFromISO(val) {
+      if (val) this.checkOutDate = new Date(val);
+    },
 
-  const checkInDateISO = computed({
-  get: () => formatDateToLocalISO(checkInDate.value),
-  set: (val) => { if (val) checkInDate.value = new Date(val); }
-});
-
-const checkOutDateISO = computed({
-  get: () => formatDateToLocalISO(checkOutDate.value),
-  set: (val) => { if (val) checkOutDate.value = new Date(val); }
-});
-
-const getRoomDetails = (contentId, checkIn, checkOut) => {
-  return axios.get(`/tour/detail/db/content/${contentId}`, {
-    params: {
-      checkIn: checkIn,
-      checkOut: checkOut
-    }
-  });
-};
-
-  //요소 접근
-  return {
-    minPrice,
-    maxPrice,
-    rating,
-    freebies,
-    amenities,
-    inputData,
-    keyword,
-    suggestions,
-    checkInDate,
-    checkOutDate,
-    roomCount,
-    guestCount,
-    order,
-    category,
-    result,
-    isLoading,
-    error,
-    fetchSearchResult,
-    getRequestPayload,
-    setDateRange,
-    checkInDateISO,
-    checkOutDateISO,
-    getRoomDetails,
-  };
+    // 상세 정보 가져오기
+    getRoomDetails(contentId, checkIn, checkOut) {
+      return axios.get(`/tour/detail/db/content/${contentId}`, {
+        params: {
+          checkIn: checkIn,
+          checkOut: checkOut
+        }
+      });
+    },
+  },
 });

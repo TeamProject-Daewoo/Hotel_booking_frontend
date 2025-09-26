@@ -1,7 +1,7 @@
 <template>
     <div class="search-main-container">
         <div class="field-container" id="distinationForm">
-            <label for="destination">Enter Destination</label>
+            <label for="destination">목적지</label>
             <div class="destination-input-form">
                 <span><i class="fa-solid fa-hotel"></i>&nbsp;</span>
                 <span><KeyWordForm/></span>
@@ -9,18 +9,18 @@
         </div>
 
         <div class="field-container" id="dateForm">
-            <label for="checkIn">Date</label>
+            <label for="checkIn">날짜</label>
             <button class="search-input input-gap" id="checkIn" @click="openModal('datePicker')">
                 <span>{{ checkInDateView }} ~ {{ checkOutDateView }} · {{ getDaysDifference(searchStore.checkInDate, searchStore.checkOutDate) }}박</span>
                 <span><i class="fa-solid fa-calendar-days"></i></span>
             </button>
         </div>
         <div class="field-container" id="guestSelectForm">
-            <label for="guestSelect">Rooms & Guests</label>
-            <button class="search-input input-gap" id="guestSelect" @click="openModal('guests')">
-                <span><i class="fa-solid fa-user"></i>&nbsp;{{ searchStore.roomCount }} room, {{ searchStore.guestCount }} guests</span>
-                <span><i class="fa-solid fa-chevron-down"></i></span>
-            </button>
+            <label for="guestSelect">인원 수</label>
+            <div class="destination-input-form" id="guestSelect">
+                <span><i class="fa-solid fa-user"></i>&nbsp;</span>
+                <span><GuestSelectForm/></span>
+            </div>
         </div>
         <div class="search-button-container">
             <button class="search-button" @click="handleSearch"><i class="fa-solid fa-magnifying-glass search-icon"></i></button>
@@ -33,32 +33,6 @@
                     :initialCheckOut="searchStore.checkOutDate"
                     @range-selected="setDate"
                 />
-            </div>
-            <div v-if="modalType === 'guests'" class="guests-form-container">
-                <h2>인원 및 객실 개수</h2>
-                <div class="guest-item">
-                    <span>객실 수</span>
-                    <div class="counter-box">
-                        <button 
-                            @click="tempRoomCount--"
-                            :disabled="tempRoomCount <= 1"
-                        >-</button>
-                        <span>{{ tempRoomCount }}</span>
-                        <button @click="roomCountUp">+</button>
-                    </div>
-                </div>
-                <div class="guest-item">
-                    <span>인원 수</span>
-                    <div class="counter-box">
-                        <button 
-                            @click="guestCountDown"
-                            :disabled="tempGuestCount <= 1"
-                        >-</button>
-                        <span>{{ tempGuestCount }}</span>
-                        <button @click="tempGuestCount++">+</button>
-                    </div>
-                </div>
-                <button class="guest-submit-btn" @click="save">적용하기 (객실: {{ tempRoomCount }}, 인원: {{ tempGuestCount }})</button>
             </div>
         </SearchModal>
     </div>
@@ -76,6 +50,7 @@ import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
 import router from '@/router';
 import { useUiStore } from '@/store/commonUiStore';
+import GuestSelectForm from './GuestSelectForm.vue';
 
 const searchStore = useSearchStore();
 const historyStore = useHistoryStore();
@@ -84,7 +59,6 @@ const route = useRoute();
 const isModalOpen = ref(false);
 const modalType = ref('');
 
-const tempRoomCount = ref(1);
 const tempGuestCount = ref(1);
 
 // 날짜 포맷 함수
@@ -100,18 +74,14 @@ const checkInDateView = ref(formatDate(searchStore.checkInDate));
 const checkOutDateView = ref(formatDate(searchStore.checkOutDate));
 
 const guestCountDown = () => {
-    tempRoomCount.value = Math.min(--tempGuestCount.value, tempRoomCount.value);
+    --tempGuestCount.value;
 }
-const roomCountUp = () => {
-    tempGuestCount.value = Math.max(tempGuestCount.value, ++tempRoomCount.value);
-} 
 
 const openModal = (type) => {
     modalType.value = type;
     isModalOpen.value = true;
     if(type === 'guests') {
         tempGuestCount.value = searchStore.guestCount;
-        tempRoomCount.value = searchStore.roomCount;
     }
 };
 
@@ -120,7 +90,6 @@ const closeModal = () => {
 };
 const save = () => {
     searchStore.guestCount = tempGuestCount.value;
-    searchStore.roomCount = tempRoomCount.value;
     closeModal();
 };
 const setDate = (payload) => {
@@ -231,6 +200,10 @@ const handleSearch = () => {
 }
 #guestSelectForm {
     width: 25%;
+}
+#guestSelect {
+    margin: 0 auto;
+    
 }
 .search-input {
     height: 100%;

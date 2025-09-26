@@ -122,16 +122,19 @@
           </div>
 
           <div class="options">
-            <div class="remember-me">
-              <input type="checkbox" id="agree" v-model="formData.agree" />
-              <label for="agree">동의하기</label>
-            </div>
-          </div>
+  <div class="remember-me">
+    <input type="checkbox" id="agree" v-model="formData.agree" />
+    <label for="agree">
+      <a href="#" @click.prevent="openTermsModal" class="terms-link">이용약관</a>에 동의합니다.
+    </label>
+  </div>
+</div>
 
           <button type="submit" class="auth-button" :disabled="!isFormValid">
             계정 생성
           </button>
         </form>
+        <TermsModal :isOpen="isTermsModalOpen" @close="closeTermsModal" />
 
         <div class="switch-auth">
           <p>
@@ -155,6 +158,10 @@
 import { reactive, ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/axios";
+import { useUiStore } from '@/store/commonUiStore';
+import TermsModal from '@/components/mypage/TermsModal.vue';
+
+const uiStore = useUiStore();
 
 const router = useRouter();
 const formData = reactive({
@@ -173,6 +180,8 @@ const isEmailVerified = ref(false);
 const verificationMessage = ref("");
 const verificationMessageType = ref("info"); // 'info', 'success', 'error'
 const registrationError = ref(null);
+const timeLeft = ref(300); // 예: 5분 = 300초
+const timerId = ref(null);
 
 const handleCodeInput = (event) => {
   // 입력값에서 숫자 이외의 문자를 모두 제거합니다.
@@ -184,6 +193,15 @@ const preventSpaces = (event) => {
   if (event.key === ' ') {
     event.preventDefault();
   }
+};
+
+const isTermsModalOpen = ref(false); // 👈 모달의 열림/닫힘 상태를 관리
+
+const openTermsModal = () => {
+  isTermsModalOpen.value = true;
+};
+const closeTermsModal = () => {
+  isTermsModalOpen.value = false;
 };
 
 watch(
@@ -235,7 +253,7 @@ const sendButtonText = computed(() => {
 const sendVerificationCode = async () => {
   // 이메일 형식 검증 로직 추가
   if (!isValidEmail(formData.username)) {
-    alert("올바른 이메일 형식을 입력해주세요.");
+    uiStore.openModal("올바른 이메일 형식을 입력해주세요.");
     return;
   }
 
@@ -292,25 +310,27 @@ const verifyCode = async () => {
   }
 };
 
-const timeLeft = ref(0); // 남은 시간(초 단위)
-let timerInterval = null;
+const stopTimer = () => {
+  if (timerId.value) {
+    clearInterval(timerId.value);
+    timerId.value = null;
+  }
+};
 
-// 타이머 시작 함수
+// 타이머를 시작하는 함수
 const startTimer = () => {
-  timeLeft.value = 5 * 60; // 5분 = 300초
+  // 이미 실행 중인 타이머가 있다면 중복 실행 방지
+  if (timerId.value) return;
 
-  if (timerInterval) clearInterval(timerInterval);
-
-  timerInterval = setInterval(() => {
+  timerId.value = setInterval(() => {
     if (timeLeft.value > 0) {
       timeLeft.value--;
     } else {
-      clearInterval(timerInterval);
-      isCodeSent.value = false; // 시간이 끝나면 다시 발송 가능하게
-      verificationMessage.value = "인증 시간이 만료되었습니다. 다시 시도해주세요.";
-      verificationMessageType.value = "error";
+      // 👇 timeLeft가 0이 되면 타이머를 멈춥니다.
+      stopTimer();
+      console.log("타이머가 종료되었습니다.");
     }
-  }, 1000);
+  }, 1000); // 1초마다 실행
 };
 
 // mm:ss 형식으로 변환하는 computed
@@ -320,9 +340,11 @@ const formattedTime = computed(() => {
   return `${String(minutes).padStart(1, "0")}:${String(seconds).padStart(2, "0")}`;
 });
 
+
+
 const handleRegister = async () => {
   if (!isFormValid.value) {
-    alert("입력 양식을 모두 올바르게 채워주세요.");
+    uiStore.openModal("입력 양식을 모두 올바르게 채워주세요.");
     return;
   }
 
@@ -333,7 +355,7 @@ const handleRegister = async () => {
       name: formData.name,
       phoneNumber: formData.phoneNumber,
       role: formData.role, });
-    alert('회원가입이 완료되었습니다.');
+      uiStore.openModal('회원가입이 완료되었습니다.');
     router.push('/');
 
   } catch (error) {
@@ -347,7 +369,7 @@ const handleRegister = async () => {
     } else {
       // 그 외 다른 에러는 기존처럼 처리
       console.error('회원가입 실패:', error);
-      alert(error.response?.data || '회원가입 중 오류가 발생했습니다.');
+      uiStore.openModal(error.response?.data || '회원가입 중 오류가 발생했습니다.');
     }
   }
 };
@@ -515,5 +537,11 @@ h1 {
 }
 .dot.active {
   background-color: #fff;
+}
+
+.terms-link {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
 }
 </style>

@@ -30,10 +30,12 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '@/api/auth';
+import { useUiStore } from '@/store/commonUiStore';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const uiStore = useUiStore();
 
 const inquiry = ref(null);
 
@@ -57,7 +59,7 @@ const fetchInquiry = async () => {
     );
     inquiry.value = res.data;
   } catch (error) {
-    alert('문의 상세를 불러오는 중 오류가 발생했습니다.');
+    uiStore.openModal('문의 상세를 불러오는 중 오류가 발생했습니다.');
     router.push('/inquiries');
   }
 };
