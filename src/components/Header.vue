@@ -32,6 +32,9 @@ const headerClass = computed(() => {
 function goHome() {
   router.push('/');
 }
+function goCoupon() {
+  router.push('/coupon'); // 쿠폰 페이지 경로에 맞게 변경하세요
+}
 
 function goRegister() {
   router.push('/register-choice');
@@ -78,6 +81,7 @@ const handleLogout = async () => {
       <div class="user-actions">
         <template v-if="authStore.loggedInUser">
           <span @click="goMypage" class="user-greeting">안녕하세요, {{ authStore.userName }}님</span>
+          <button class="coupon" @click="goCoupon">쿠폰함</button>
           <button class="logout" @click="handleLogout">로그아웃</button>
         </template>
 
