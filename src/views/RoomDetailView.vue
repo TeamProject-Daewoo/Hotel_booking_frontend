@@ -24,10 +24,10 @@
         </div>
         <Coupon @update:selectedCoupon="(coupon) => { selectedCoupon = coupon }" />
 
-        <PaymentOptions v-model="payMode" />
-        <button @click="applyCoupon" class="apply-coupon-button">
-  쿠폰 적용하기
+      <button @click="toggleCoupon" class="apply-coupon-button">
+  {{ selectedCoupon?.isUsed ? '쿠폰 적용 취소' : '쿠폰 적용하기' }}
 </button>
+
 
         <button @click="goToPayment" class="reservation-button">
           결제하기
@@ -136,31 +136,40 @@ console.log('예약 객체:', reservation.value);
   if (!reservation.value) return;
   router.push({
     name: 'Payment',
-    params: { reservationId: reservation.value.reservationId }
+    params: { reservationId: reservation.value.reservationId },
+    query: { userCouponId: selectedCoupon.value?.id ?? null } 
   });
 };
 
-const applyCoupon = async () => {
-  if (!selectedCoupon.value || !selectedCoupon.value.coupon?.id) {
+
+const toggleCoupon = async () => {
+  if (!selectedCoupon.value || !selectedCoupon.value.id) {
     alert("❗️ 쿠폰이 선택되지 않았습니다.");
-    console.warn("🎯 selectedCoupon 상태:", selectedCoupon.value);
     return;
   }
 
-  const couponId = selectedCoupon.value.coupon.id;
-  const reservationId = reservation.value.reservationId;
-
-  console.log("🎯 적용할 쿠폰 ID:", couponId);
+  const userCouponId = selectedCoupon.value.id;
 
   try {
-    const response = await api.get(`/api/reservations/${reservationId}/apply-coupon/${couponId}`);
-    reservation.value = response.data;
-    alert("✅ 쿠폰이 성공적으로 적용되었습니다.");
+    if (!selectedCoupon.value.isUsed) {
+      // 쿠폰 적용
+      await api.patch(`/api/coupons/user/${userCouponId}/use`);
+      selectedCoupon.value.isUsed = true;
+      selectedCoupon.value.usedAt = new Date().toISOString();
+      alert("✅ 쿠폰이 적용되었습니다.");
+    } else {
+      // 쿠폰 취소
+      await api.patch(`/api/coupons/user/${userCouponId}/cancel`);
+      selectedCoupon.value.isUsed = false;
+      selectedCoupon.value.usedAt = null;
+      alert("❌ 쿠폰 적용이 취소되었습니다.");
+    }
   } catch (error) {
-    console.error("❌ 쿠폰 적용 실패:", error);
-    alert("❌ 쿠폰 적용 중 오류가 발생했습니다.");
+    console.error("쿠폰 처리 실패:", error);
+    alert("❌ 쿠폰 처리 중 오류가 발생했습니다.");
   }
 };
+
 
 
 </script>
