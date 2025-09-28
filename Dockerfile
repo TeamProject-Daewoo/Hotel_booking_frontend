@@ -1,5 +1,5 @@
 # 1단계: 빌드 환경 (Node.js)
-FROM node:18-alpine as builder
+FROM node:18 as builder
 
 WORKDIR /app
 COPY package*.json ./
