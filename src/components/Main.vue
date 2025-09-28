@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Search from './search/Search.vue';
 import RecommendedHotels from './RecommendedHotels.vue';
 import TopRankHotels from './TopRankHotels.vue';
+import FloatingMenu from './FloatingMenu.vue';
 
 const imageUrls = ref([
   'https://cdn.pixabay.com/photo/2021/12/11/07/59/hotel-6862159_1280.jpg',
@@ -94,6 +95,7 @@ onUnmounted(() => {
 
   <RecommendedHotels />
   <TopRankHotels />
+  <FloatingMenu />
 </template>
 
 <style>
