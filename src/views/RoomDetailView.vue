@@ -37,6 +37,7 @@
             :totalPrice="finalPriceAfterCoupon"
             :disabled="!selectedCoupon"
             @apply-points="applyPoints"
+            @cancel-points="handlePointsCancel"
         />
 
         <button @click="goToPayment" class="reservation-button">
@@ -54,6 +55,7 @@
             :fare="reservation.basePrice"
             :couponDiscount="couponDiscountAmount"
             :pointDiscount="appliedPoints"
+            :discount="couponDiscountAmount + appliedPoints"
             :total="finalPrice"
         />
       </aside>
@@ -64,6 +66,12 @@
     <div class="spinner"></div>
     <p>예약 정보를 불러오는 중입니다...</p>
   </div>
+
+  <PointAlertModal
+      :visible="showPointModal"
+      :message="pointModalMessage"
+      @close="showPointModal = false"
+  />
 </template>
 
 <script setup>
@@ -76,6 +84,7 @@ import Breadcrumb from '@/components/roomdetail/Breadcrumb.vue';
 import PointUsage from '@/components/point/PointUsage.vue';
 import SummaryCard from '@/components/roomdetail/SummaryCard.vue';
 import Coupon from '@/components/coupon/Coupon.vue'
+import PointAlertModal from '@/components/point/PointAlertModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -84,6 +93,9 @@ const reservation = ref(null);
 const selectedCoupon = ref(null);
 const pointsToUse = ref(0);
 const appliedPoints = ref(0);
+
+const showPointModal = ref(false);
+const pointModalMessage = ref('');
 
 // 쿠폰 할인 금액 계산
 const couponDiscountAmount = computed(() => {
@@ -171,7 +183,6 @@ onMounted(async () => {
     reservation.value = response.data;
   } catch (error) {
     console.error("예약 정보를 불러오는 데 실패했습니다.", error);
-    alert("예약 정보를 불러오는 데 실패했습니다.");
     router.push('/');
   }
 });
@@ -234,33 +245,41 @@ const goToPayment = async () => {
     });
   } catch (error) {
     console.error("예약 정보 업데이트 실패:", error);
-    alert("결제 정보 업데이트에 실패했습니다.");
+    pointModalMessage.value = "결제 정보 업데이트에 실패했습니다.";
+    showPointModal.value = true;
   }
+};
+
+const handlePointsCancel = () => {
+  pointsToUse.value = 0;
+  appliedPoints.value = 0;
 };
 
 const applyPoints = async () => {
   if (!pointsToUse.value || pointsToUse.value <= 0) {
-    alert("사용할 포인트를 입력해주세요.");
+    pointModalMessage.value = "사용할 포인트를 입력해주세요.";
+    showPointModal.value = true;
     return;
   }
 
   // 쿠폰이 선택되지 않았을 때
-  if (!selectedCoupon.value) {
-    alert("쿠폰을 먼저 선택해주세요.");
-    pointsToUse.value = 0;
-    return;
-  }
+  // if (!selectedCoupon.value) {
+  //   alert("쿠폰을 먼저 선택해주세요.");
+  //   pointsToUse.value = 0;
+  //   return;
+  // }
 
   // 포인트가 쿠폰 적용 후 가격보다 큰 경우
   if (pointsToUse.value > finalPriceAfterCoupon.value) {
-    alert(`최대 ${finalPriceAfterCoupon.value.toLocaleString()}원까지 사용 가능합니다.`);
+    pointModalMessage.value = `최대 ${finalPriceAfterCoupon.value.toLocaleString()}원까지 사용 가능합니다.`;
     pointsToUse.value = finalPriceAfterCoupon.value;
+    showPointModal.value = true;
     return;
   }
 
   appliedPoints.value = pointsToUse.value;
-  alert("✅ 포인트가 적용되었습니다.");
-};
+  pointModalMessage.value = "✅ 포인트가 적용되었습니다.";
+  showPointModal.value = true;};
 </script>
 
 <style scoped>
