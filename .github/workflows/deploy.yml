@@ -51,5 +51,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
-          repository: TeamProject-Daewoo/Hotel_booking_frontend
+          repository: TeamProject-Daewoo/Hotel_booking_backend
           event-type: deploy-trigger
