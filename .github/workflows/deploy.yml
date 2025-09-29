@@ -24,6 +24,19 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Create .env.production file
+        run: |
+          echo "VITE_API_URL=" >> .env.production
+          echo "VITE_BACK_ADMIN_URL=" >> .env.production
+          echo "VITE_API_URL_ADMIN=" >> .env.production
+          echo "VITE_HOMPAGE_MAIN=" >> .env.production
+          echo "VITE_BUS_URL=" >> .env.production
+          # 민감한 정보는 GitHub Secrets에서 가져오기
+          echo "VITE_KAKAO_JAVASCRIPT_KEY=${{ secrets.VITE_KAKAO_JAVASCRIPT_KEY }}" >> .env.production
+          echo "VITE_KAKAO_RESTAPI_KEY=${{ secrets.VITE_KAKAO_RESTAPI_KEY }}" >> .env.production
+          echo "VITE_KAKAO_MAP_APPKEY=${{ secrets.VITE_KAKAO_MAP_APPKEY }}" >> .env.production
+
+
       # 3. Docker 이미지 빌드 및 ECR에 Push
       - name: Build and push frontend image
         env:
