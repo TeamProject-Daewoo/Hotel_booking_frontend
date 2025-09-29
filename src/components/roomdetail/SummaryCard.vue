@@ -28,21 +28,38 @@
 
     <!-- 가격 요약 -->
     <div class="rows">
+      <!-- 기본 금액 -->
       <div class="row">
-        <span>Base Fare</span><b>{{ currency(fare) }}</b>
+        <span>기본금액</span><b>{{ currency(fare) }}</b>
       </div>
-      <div class="row" v-if="discount>0">
-        <span>Discount</span><b>-{{ currency(discount) }}</b>
+
+      <!-- 총 할인 금액 -->
+      <div class="row" v-if="discount > 0">
+        <span>총 할인가</span><b>-{{ currency(discount) }}</b>
       </div>
-      <div class="row" v-if="taxes>0">
-        <span>Taxes</span><b>{{ currency(taxes) }}</b>
+
+      <!-- 할인 상세 내역 -->
+      <div class="rows details" v-if="discount > 0">
+        <div class="row" v-if="couponDiscount > 0">
+          <span>ㄴ쿠폰</span><b>{{ currency(couponDiscount) }}</b>
+        </div>
+        <div class="row" v-if="pointDiscount > 0">
+          <span>ㄴ포인트</span><b>{{ currency(pointDiscount) }}</b>
+        </div>
+        <div class="row" v-if="taxes > 0">
+          <span>ㄴ수수료</span><b>{{ currency(taxes) }}</b>
+        </div>
+        <div class="row" v-if="serviceFee > 0">
+          <span>ㄴService Fee</span><b>{{ currency(serviceFee) }}</b>
+        </div>
       </div>
-      <div class="row" v-if="serviceFee>0">
-        <span>Service Fee</span><b>{{ currency(serviceFee) }}</b>
-      </div>
+
+      <!-- 구분선 -->
       <div class="divider"></div>
+
+      <!-- 총 결제 금액 -->
       <div class="row total">
-        <span>Total</span><b>{{ currency(total) }}</b>
+        <span>총 결제금액</span><b>{{ currency((total < 0 ? 0 : total)) }}</b>
       </div>
     </div>
   </section>
@@ -63,7 +80,9 @@ defineProps({
   discount: Number,
   taxes: Number,
   serviceFee: Number,
-  total: Number
+  total: Number,
+  couponDiscount: Number,
+  pointDiscount: Number
 })
 </script>
 
@@ -98,20 +117,52 @@ defineProps({
   font-size:12px;
 }
 
-.rows { margin-top:6px; }
-.row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin:8px 0;
+.rows {
+  font-family: "Noto Sans KR", sans-serif;
+  color: #333;
 }
-.row b {
-  font-feature-settings:"tnum";
-  font-variant-numeric:tabular-nums;
+
+.rows .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
 }
+
+.rows .row span {
+  font-weight: 500;
+}
+
+.rows .row b {
+  font-weight: 600;
+}
+
+.rows.details {
+  margin-left: 10px;            /* 전체 들여쓰기 */
+  border-left: 2px solid #eee;  /* 옆에 라인으로 구분 */
+  padding-left: 10px;
+  margin-top: 4px;
+}
+
+.rows.details .row span,
+.rows.details .row b {
+  font-size: 0.9em;     /* 좀 더 작게 */
+  color: #666;          /* 고급진 회색 */
+}
+
 .divider {
-  border-top:1px solid #e5e7eb;
-  margin:8px 0;
+  border-top: 1px dashed #ccc;  /* 점선으로 구분 */
+  margin: 12px 0;
 }
-.row.total { font-weight:800; }
+
+.row.total {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #222;
+}
+
+.row.total span {
+  font-weight: 700;
+}
+
 </style>

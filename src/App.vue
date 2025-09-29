@@ -10,6 +10,7 @@ import { useHistoryStore } from './store/recentHistoryStore';
 import AlertModal from './components/mypage/AlertModal.vue';
 import { useUiStore } from './store/commonUiStore';
 import { storeToRefs } from 'pinia';
+import FloatingMenu from "@/components/FloatingMenu.vue";
 
 const authStore = useAuthStore();
 const route = useRoute(); // 현재 라우트 정보를 가져옵니다.
@@ -73,6 +74,7 @@ onMounted(async () => {
       :message="modalMessage"
       @close="closeModal" 
     />
+    <FloatingMenu />
   </div>
 </template>
 
