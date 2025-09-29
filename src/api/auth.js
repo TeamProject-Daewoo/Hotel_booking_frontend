@@ -1,5 +1,6 @@
 import { useWishlistStore } from '@/store/wishlistStore';
 import { defineStore } from 'pinia';
+import api from '@/api/axios';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -66,6 +67,21 @@ export const useAuthStore = defineStore('auth', {
     },
     setInitialized() {
       this.isInitialized = true;
+    },
+    async fetchAndUpdatePoints() {
+      if (!this.isLoggedIn) return; // 로그인 상태가 아니면 실행하지 않음
+
+      try {
+        // 서버에 현재 사용자 프로필 정보를 요청합니다.
+        const response = await api.get('/api/mypage/profile');
+        const userProfile = response.data;
+
+        if (userProfile && typeof userProfile.point !== 'undefined') {
+          this.points = userProfile.point; // 스토어의 points 값을 최신화합니다.
+        }
+      } catch (error) {
+        console.error('포인트 정보를 가져오는 데 실패했습니다:', error);
+      }
     },
   },
 });

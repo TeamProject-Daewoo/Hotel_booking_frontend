@@ -63,7 +63,10 @@
         </div>
 
         <div v-if="booking.status === 'PAID' && !booking.hasReview" class="card-footer">
-          <button @click="goToReview(booking)" class="review-button">리뷰 작성하기</button>
+          <div class="review-action-group">
+            <span class="point-badge">지금 리뷰 작성하면 ✨ 500P 적립!</span>
+            <button @click="goToReview(booking)" class="review-button">리뷰 작성하기</button>
+          </div>
         </div>
 
       </div>
@@ -162,4 +165,21 @@ const formatDate = (dateString) => {
 .card-footer { padding: 1rem 1.5rem; border-top: 1px solid #e5e7eb; background-color: #f9fafb; text-align: right; }
 .review-button { background-color: #10b981; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.375rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
 .review-button:hover { background-color: #059669; }
+.review-action-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.point-badge {
+  background-color: #fefce8; /* 연한 노란색 배경 */
+  color: #ca8a04; /* 금색 계열 텍스트 */
+  padding: 6px 12px;
+  border-radius: 20px; /* 둥근 모양 */
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
 </style>

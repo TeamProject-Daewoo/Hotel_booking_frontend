@@ -40,28 +40,32 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import api from '@/api/axios';
-import { useAuthStore } from '@/api/auth';
+import { useAuthStore } from '@/api/auth.js';
 
 const authStore = useAuthStore();
-const currentPoint = ref(authStore.points || 0);
 const pointList = ref([]);
 const filter = ref('all');
 
+const currentPoint = computed(() => authStore.points);
+
 onMounted(async () => {
   try {
-    // DB PK(user_name)와 맞는 값으로 API 호출
-    const usernameForApi = authStore.userName || authStore.userName;
-    const res = await api.get(`/api/reservations/user/${usernameForApi}`);
-    pointList.value = res.data; // 이미 사용 포인트만 리턴되도록 백엔드에서 처리됨
+    await authStore.fetchAndUpdatePoints();
+
+    const res = await api.get('/api/mypage/bookings');
+    pointList.value = res.data.filter(booking => booking.usedPoints > 0);
+
   } catch (error) {
     console.error('포인트 내역 불러오기 실패', error);
   }
 });
 
-// 필터 적용
+// 필터 적용 (기존 코드와 동일)
 const filteredList = computed(() => {
   if (filter.value === 'all') return pointList.value;
-  return pointList.value.filter(p => p.type === filter.value);
+  // 'type' 필드가 백엔드 응답에 없으므로, 모든 내역을 'used'로 간주합니다.
+  if (filter.value === 'used') return pointList.value;
+  return []; // '적립', '소멸'은 현재 데이터에 없으므로 빈 배열 반환
 });
 </script>
 
