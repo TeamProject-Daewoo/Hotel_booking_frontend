@@ -95,7 +95,6 @@ onUnmounted(() => {
 
   <RecommendedHotels />
   <TopRankHotels />
-  <FloatingMenu />
 </template>
 
 <style>
