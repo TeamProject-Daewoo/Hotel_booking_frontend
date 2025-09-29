@@ -18,6 +18,7 @@ import ReviewListView from '../components/mypage/ReviewListView.vue';
 import LikeListView from '../components/mypage/LikeListView.vue';
 import PaymentMethodView from '../components/mypage/PaymentMethodView.vue';
 import SettingsView from '../components/mypage/SettingsView.vue';
+import PointSummary from "@/components/mypage/PointSummary.vue";
 
 const currentPage = ref('profile');
 
@@ -26,6 +27,7 @@ const views = {
   bookings: BookingListView,
   reviews: ReviewListView,
   likes: LikeListView,
+  points: PointSummary,
   'payment-methods': PaymentMethodView,
   settings: SettingsView,
 };

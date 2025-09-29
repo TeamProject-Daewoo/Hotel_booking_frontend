@@ -1,8 +1,6 @@
 <template>
   <div class="coupon-select-container">
-    <button @click="showCouponList = !showCouponList">
-      {{ selectedCouponId ? '쿠폰 변경하기' : '쿠폰 선택' }}
-    </button>
+   
 
     <!-- 선택된 쿠폰 정보 -->
     <div v-if="selectedCoupon" class="selected-coupon-info">
@@ -10,6 +8,11 @@
       할인: {{ selectedCoupon.coupon.displayDiscount }}<br/>
       만료일: {{ selectedCoupon.expireAt?.slice(0, 10) || '정보 없음' }}
     </div>
+
+    <button @click="handleCouponButtonClick">
+  {{ selectedCouponId ? '쿠폰 선택 취소' : '쿠폰 선택' }}
+</button>
+
 
     <!-- 쿠폰 목록 -->
     <div v-if="showCouponList" class="coupon-list-container">
@@ -66,12 +69,56 @@ const fetchUserCoupons = async () => {
   }
 };
 
-const selectCoupon = (coupon) => {
+const selectCoupon = async (coupon) => {
   console.log("✅ 선택된 쿠폰 객체 확인:", coupon);
-  selectedCouponId.value = coupon.id;       // ✅ DB id 사용
-  emit('update:selectedCoupon', coupon);    // ✅ DB id 포함 쿠폰 객체 전달
+
+  // 1️⃣ 기존 UI 처리 그대로
+  selectedCouponId.value = coupon.id;       
+  emit('update:selectedCoupon', coupon);    
   showCouponList.value = false;
+
+  // 2️⃣ 선택 즉시 서버에 사용 처리
+  try {
+    if (!coupon.isUsed) {
+      await adminApi.patch(`/api/coupons/user/${coupon.id}/use`);
+      coupon.isUsed = true;
+      coupon.usedAt = new Date().toISOString();
+      
+    }
+  } catch (error) {
+    console.error("쿠폰 사용 처리 실패:", error);
+    alert("❌ 쿠폰 처리 중 오류가 발생했습니다.");
+  }
 };
+
+const handleCouponButtonClick = async () => {
+  if (selectedCouponId.value) {
+    try {
+      // 서버 취소 요청
+      await adminApi.patch(`/api/coupons/user/${selectedCouponId.value}/cancel`);
+      
+      // 로컬 myCouponsPage.content 업데이트
+      const couponIndex = myCouponsPage.value.content.findIndex(c => c.id === selectedCouponId.value);
+      if (couponIndex !== -1) {
+        myCouponsPage.value.content[couponIndex].isUsed = false;
+        myCouponsPage.value.content[couponIndex].usedAt = null;
+      }
+
+      // 선택 초기화
+      selectedCouponId.value = null;
+      emit('update:selectedCoupon', null);
+
+    } catch (error) {
+      console.error("쿠폰 취소 실패:", error);
+      alert("❌ 쿠폰 취소 중 오류가 발생했습니다.");
+      return;
+    }
+  }
+
+  showCouponList.value = !showCouponList.value;
+};
+
+
 
 onMounted(fetchUserCoupons);
 </script>

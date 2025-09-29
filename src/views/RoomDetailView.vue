@@ -1,6 +1,10 @@
 <template>
   <div class="booking-page" v-if="reservation">
-    <Breadcrumb :id="reservation.hotel.contentid" :title="reservation.hotel.title" />
+    <Breadcrumb
+        v-if="reservation?.hotel"
+        :id="reservation.hotel.contentid"
+        :title="reservation.hotel.title"
+    />
     <div class="grid">
       <div class="left-col">
         <div class="info-section">
@@ -22,12 +26,19 @@
             <span class="value">{{ formatDate(reservation.checkOutDate) }}</span>
           </div>
         </div>
-        <Coupon @update:selectedCoupon="(coupon) => { selectedCoupon = coupon }" />
 
-        <PaymentOptions v-model="payMode" />
-        <button @click="applyCoupon" class="apply-coupon-button">
-  쿠폰 적용하기
-</button>
+        <Coupon
+            @update:selectedCoupon="handleCouponSelection"
+            :currentCoupon="selectedCoupon"
+        />
+
+        <PointUsage
+            v-model="pointsToUse"
+            :totalPrice="finalPriceAfterCoupon"
+            :disabled="!selectedCoupon"
+            @apply-points="applyPoints"
+            @cancel-points="handlePointsCancel"
+        />
 
         <button @click="goToPayment" class="reservation-button">
           결제하기
@@ -36,15 +47,17 @@
 
       <aside class="right-col">
         <SummaryCard
-  :base="reservation.hotel"
-  :room="reservation.room"
-  :checkIn="reservation.checkInDate"
-  :checkOut="reservation.checkOutDate"
-  :nights="nights"
-  :fare="reservation.basePrice"
-  :total="discountedTotalPrice"
-/>
-
+            :base="reservation.hotel"
+            :room="reservation.room"
+            :checkIn="reservation.checkInDate"
+            :checkOut="reservation.checkOutDate"
+            :nights="nights"
+            :fare="reservation.basePrice"
+            :couponDiscount="couponDiscountAmount"
+            :pointDiscount="appliedPoints"
+            :discount="couponDiscountAmount + appliedPoints"
+            :total="finalPrice"
+        />
       </aside>
     </div>
   </div>
@@ -53,48 +66,109 @@
     <div class="spinner"></div>
     <p>예약 정보를 불러오는 중입니다...</p>
   </div>
+
+  <PointAlertModal
+      :visible="showPointModal"
+      :message="pointModalMessage"
+      @close="showPointModal = false"
+  />
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { onBeforeRouteLeave } from 'vue-router';
 import api from '@/api/axios';
 
 import Breadcrumb from '@/components/roomdetail/Breadcrumb.vue';
-import RoomHero from '@/components/roomdetail/RoomHero.vue'; // RoomHero는 여전히 사용 가능
-import PaymentOptions from '@/components/roomdetail/PaymentOptions.vue';
+import PointUsage from '@/components/point/PointUsage.vue';
 import SummaryCard from '@/components/roomdetail/SummaryCard.vue';
 import Coupon from '@/components/coupon/Coupon.vue'
+import PointAlertModal from '@/components/point/PointAlertModal.vue';
 
 const route = useRoute();
 const router = useRouter();
 
 const reservation = ref(null);
-const payMode = ref('full');
-
 const selectedCoupon = ref(null);
+const pointsToUse = ref(0);
+const appliedPoints = ref(0);
 
-// 할인된 가격 계산 - 여기 추가
-const discountedTotalPrice = computed(() => {
-  if (!reservation.value) return 0;
-  if (!selectedCoupon.value) return reservation.value.totalPrice;
+const showPointModal = ref(false);
+const pointModalMessage = ref('');
 
-  const total = reservation.value.totalPrice;
+// 쿠폰 할인 금액 계산
+const couponDiscountAmount = computed(() => {
+  if (!reservation.value || !selectedCoupon.value) return 0;
+
+  const basePrice = reservation.value.basePrice;
   const coupon = selectedCoupon.value.coupon;
 
-  if (!coupon) return total;
+  if (!coupon) return 0;
 
-  const percentage = coupon.discountPercent;
-
-  // 할인 방식 판단: 퍼센트가 0보다 크면 퍼센트 할인, 아니면 정액 할인
-  if (percentage > 0) {
-    return Math.max(total * (1 - percentage / 100), 0);
+  if (coupon.discountPercent > 0) {
+    return Math.floor(basePrice * coupon.discountPercent / 100);
   } else {
-    const discountAmount = coupon.discountAmount || 0; // 혹은 coupon.discountValue
-    return Math.max(total - discountAmount, 0);
+    return coupon.discountAmount || 0;
   }
 });
 
+// 쿠폰 적용 후 가격
+const finalPriceAfterCoupon = computed(() => {
+  if (!reservation.value) return 0;
+  return reservation.value.basePrice - couponDiscountAmount.value;
+});
+
+// 최종 가격 (쿠폰 + 포인트)
+const finalPrice = computed(() => {
+  return finalPriceAfterCoupon.value - appliedPoints.value;
+});
+
+// 쿠폰 선택 핸들러
+const handleCouponSelection = (coupon) => {
+  selectedCoupon.value = coupon;
+  // 쿠폰 변경시 포인트 초기화
+  if (!coupon) {
+    pointsToUse.value = 0;
+    appliedPoints.value = 0;
+  }
+};
+
+// 페이지 떠나기 전 확인 (결제 페이지 이동만 체크)
+onBeforeRouteLeave((to, from, next) => {
+  // 결제 페이지로 가는 경우는 통과
+  if (to.name === 'Payment') {
+    next();
+    return;
+  }
+
+  // 브라우저 뒤로가기나 다른 페이지로 이동 시 확인
+  const answer = window.confirm('예약을 취소하시겠습니까? 선택한 쿠폰과 포인트 정보가 초기화됩니다.');
+  if (answer) {
+    // 쿠폰 사용 취소 처리
+    if (selectedCoupon.value) {
+      cancelCoupon();
+    }
+    // 예약 삭제 API 호출 (PENDING 상태인 경우)
+    if (reservation.value?.reservationId) {
+      api.delete(`/api/reservations/pending/${reservation.value.reservationId}`).catch(() => {});
+    }
+    next();
+  } else {
+    next(false);
+  }
+});
+
+// 쿠폰 취소 처리
+const cancelCoupon = async () => {
+  if (selectedCoupon.value && selectedCoupon.value.id) {
+    try {
+      await api.patch(`/api/coupons/user/${selectedCoupon.value.id}/cancel`);
+    } catch (error) {
+      console.error("쿠폰 취소 실패:", error);
+    }
+  }
+};
 
 onMounted(async () => {
   const reservationId = route.query.reservationId;
@@ -109,9 +183,28 @@ onMounted(async () => {
     reservation.value = response.data;
   } catch (error) {
     console.error("예약 정보를 불러오는 데 실패했습니다.", error);
-    alert("예약 정보를 불러오는 데 실패했습니다.");
     router.push('/');
   }
+});
+
+// 브라우저 뒤로가기 감지
+window.addEventListener('popstate', handleBrowserBack);
+
+function handleBrowserBack(event) {
+  event.preventDefault();
+  const answer = window.confirm('예약을 취소하시겠습니까? 입력하신 정보가 저장되지 않습니다.');
+  if (answer) {
+    if (selectedCoupon.value) {
+      cancelCoupon();
+    }
+    router.push('/');
+  } else {
+    window.history.pushState(null, '', window.location.href);
+  }
+}
+
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', handleBrowserBack);
 });
 
 const nights = computed(() => {
@@ -122,47 +215,71 @@ const nights = computed(() => {
   return diff > 0 ? diff : 0;
 });
 
-// 날짜 포맷팅을 위한 간단한 헬퍼 함수
 const formatDate = (dateString) => {
   if (!dateString) return '';
   const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
   return new Date(dateString).toLocaleString('ko-KR', options);
 };
 
-
-const goToPayment = () => {
-console.log('예약 객체:', reservation.value);
-  console.log('예약 ID:', reservation.value?.reservationId);
+const goToPayment = async () => {
   if (!reservation.value) return;
-  router.push({
-    name: 'Payment',
-    params: { reservationId: reservation.value.reservationId }
-  });
+
+  try {
+    // 서버에 최종 가격 업데이트 요청
+    const updateData = {
+      reservationId: reservation.value.reservationId,
+      totalPrice: finalPrice.value,
+      discountPrice: couponDiscountAmount.value + appliedPoints.value,
+      userCouponId: selectedCoupon.value?.id || null,
+      usedPoints: appliedPoints.value
+    };
+
+    // 예약 정보 업데이트 API 호출
+    await api.patch(`/api/reservations/${reservation.value.reservationId}/update-price`, updateData);
+
+    // 결제 페이지로 이동
+    router.push({
+      name: 'Payment',
+      params: { reservationId: reservation.value.reservationId },
+      query: { userCouponId: selectedCoupon.value?.id || null }
+    });
+  } catch (error) {
+    console.error("예약 정보 업데이트 실패:", error);
+    pointModalMessage.value = "결제 정보 업데이트에 실패했습니다.";
+    showPointModal.value = true;
+  }
 };
 
-const applyCoupon = async () => {
-  if (!selectedCoupon.value || !selectedCoupon.value.coupon?.id) {
-    alert("❗️ 쿠폰이 선택되지 않았습니다.");
-    console.warn("🎯 selectedCoupon 상태:", selectedCoupon.value);
+const handlePointsCancel = () => {
+  pointsToUse.value = 0;
+  appliedPoints.value = 0;
+};
+
+const applyPoints = async () => {
+  if (!pointsToUse.value || pointsToUse.value <= 0) {
+    pointModalMessage.value = "사용할 포인트를 입력해주세요.";
+    showPointModal.value = true;
     return;
   }
 
-  const couponId = selectedCoupon.value.coupon.id;
-  const reservationId = reservation.value.reservationId;
+  // 쿠폰이 선택되지 않았을 때
+  // if (!selectedCoupon.value) {
+  //   alert("쿠폰을 먼저 선택해주세요.");
+  //   pointsToUse.value = 0;
+  //   return;
+  // }
 
-  console.log("🎯 적용할 쿠폰 ID:", couponId);
-
-  try {
-    const response = await api.get(`/api/reservations/${reservationId}/apply-coupon/${couponId}`);
-    reservation.value = response.data;
-    alert("✅ 쿠폰이 성공적으로 적용되었습니다.");
-  } catch (error) {
-    console.error("❌ 쿠폰 적용 실패:", error);
-    alert("❌ 쿠폰 적용 중 오류가 발생했습니다.");
+  // 포인트가 쿠폰 적용 후 가격보다 큰 경우
+  if (pointsToUse.value > finalPriceAfterCoupon.value) {
+    pointModalMessage.value = `최대 ${finalPriceAfterCoupon.value.toLocaleString()}원까지 사용 가능합니다.`;
+    pointsToUse.value = finalPriceAfterCoupon.value;
+    showPointModal.value = true;
+    return;
   }
-};
 
-
+  appliedPoints.value = pointsToUse.value;
+  pointModalMessage.value = "✅ 포인트가 적용되었습니다.";
+  showPointModal.value = true;};
 </script>
 
 <style scoped>
@@ -184,16 +301,4 @@ const applyCoupon = async () => {
 .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
 .spinner { width: 48px; height: 48px; border: 5px solid #f3f4f6; border-bottom-color: #4f46e5; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-bottom: 16px; }
 @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.apply-coupon-button {
-  margin-top: 10px;
-  padding: 10px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.apply-coupon-button:hover {
-  background-color: #0056b3;
-}
 </style>

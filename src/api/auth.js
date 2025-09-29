@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', {
     loginType: null,
     isInitialized: false,
     phoneNumber: null,
+    points: 0,
   }),
   getters: {
     //로그인 여부 확인
@@ -26,12 +27,14 @@ export const useAuthStore = defineStore('auth', {
       this.userName = payload?.name || null;
       this.loginType = payload?.loginType || null;
       this.phoneNumber = payload?.phoneNumber || null;
+      this.points = payload?.points || null;
     },
     logout() {
       this.accessToken = null;
       this.loggedInUser = null;
       this.userName = null;
       this.phoneNumber = null;
+      this.points = 0;
 
       //찜목록 초기화
       const wishlistStore = useWishlistStore();
