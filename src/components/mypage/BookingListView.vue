@@ -76,10 +76,12 @@
 <script setup>
 import { ref, onMounted, computed, reactive } from 'vue';
 import api from '@/api/axios';
+import { useAuthStore } from '@/api/auth';
 import BookingReceiptModal from './BookingReceiptModal.vue';
 import PastBookingListView from './PastBookingListView.vue';
 import AlertModal from './AlertModal.vue';
 
+const authStore = useAuthStore();
 const allBookings = ref([]);
 const isLoading = ref(true);
 const selectedBooking = ref(null);
@@ -168,6 +170,10 @@ async function handleConfirmCancellation() {
     });
     closeCancelModal();
     openAlertModal('취소 완료', response.data);
+
+    // ✅ 포인트 정보 새로고침
+    await authStore.fetchAndUpdatePoints();
+
     await fetchBookings();
   } catch (error) {
     closeCancelModal();

@@ -3,14 +3,14 @@
     <div class="mypage-layout">
       <SidebarComponent :current-page="currentPage" @navigate="handleNavigation" />
       <div class="content-area">
-        <component :is="currentViewComponent"></component>
+        <component :is="currentViewComponent" :key="currentPage"></component>
       </div>
     </div>
   </main>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import SidebarComponent from '../components/mypage/SidebarComponent.vue';
 import ProfileView from '../components/mypage/ProfileView.vue';
 import BookingListView from '../components/mypage/BookingListView.vue';
@@ -19,7 +19,9 @@ import LikeListView from '../components/mypage/LikeListView.vue';
 import PaymentMethodView from '../components/mypage/PaymentMethodView.vue';
 import SettingsView from '../components/mypage/SettingsView.vue';
 import PointSummary from "@/components/mypage/PointSummary.vue";
+import { useAuthStore } from '@/api/auth.js';
 
+const authStore = useAuthStore();
 const currentPage = ref('profile');
 
 const views = {
@@ -37,6 +39,12 @@ const currentViewComponent = computed(() => views[currentPage.value]);
 const handleNavigation = (page) => {
   currentPage.value = page;
 };
+
+watch(currentPage, (newPage) => {
+  if (newPage === 'points') {
+    authStore.fetchAndUpdatePoints();
+  }
+});
 </script>
 
 <style scoped>

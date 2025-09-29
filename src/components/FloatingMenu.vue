@@ -124,7 +124,8 @@ const scrollToTop = () => {
 
 .tooltip-text {
   visibility: hidden;
-  width: 120px;
+  font-size: 15px;
+  width: 80px;
   background-color: #333;
   color: #fff;
   text-align: center;

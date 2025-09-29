@@ -44,10 +44,12 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
 import { useUiStore } from '@/store/commonUiStore';
+import { useAuthStore } from '@/api/auth.js';
 
 const uiStore = useUiStore();
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const hotelName = ref('');
 const review = reactive({
@@ -82,6 +84,8 @@ const submitReview = async () => {
     await api.post('/api/mypage/reviews', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
+
+    await authStore.fetchAndUpdatePoints();
     uiStore.openModal('리뷰가 성공적으로 제출되었습니다.');
     router.push('/mypage');
   } catch (error) {
