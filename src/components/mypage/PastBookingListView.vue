@@ -64,7 +64,7 @@
 
         <div v-if="booking.status === 'PAID' && !booking.hasReview" class="card-footer">
           <div class="review-action-group">
-            <span class="point-badge">지금 리뷰 작성하면 ✨ 500P 적립!</span>
+            <span class="point-badge">지금 리뷰 작성하면 ✨ 5000P 적립!</span>
             <button @click="goToReview(booking)" class="review-button">리뷰 작성하기</button>
           </div>
         </div>

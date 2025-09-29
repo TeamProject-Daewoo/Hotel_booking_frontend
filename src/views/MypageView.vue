@@ -41,9 +41,7 @@ const handleNavigation = (page) => {
 };
 
 watch(currentPage, (newPage) => {
-  // 사용자가 '포인트 내역' 탭을 클릭하면,
   if (newPage === 'points') {
-    // authStore의 포인트 업데이트 함수를 강제로 호출합니다.
     authStore.fetchAndUpdatePoints();
   }
 });
