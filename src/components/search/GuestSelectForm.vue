@@ -3,6 +3,7 @@
     <input
       type="text"
       id="guest-input"
+      autocomplete="off"
       :value="guestInput" 
       @input="handleInput"
       ref="inputRef"
