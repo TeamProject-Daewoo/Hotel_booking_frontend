@@ -3,6 +3,7 @@
     <input
       type="text"
       ref="inputRef"
+      autocomplete="off"
       :value="inputData"
       @input="handleInput"
       @focus="handleFocus"

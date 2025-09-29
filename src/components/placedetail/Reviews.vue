@@ -52,6 +52,11 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  console.log('current reviews onMounted:', props.reviews)
+})
 
 const props = defineProps({
   reviews: { type: Array, default: () => [] },
