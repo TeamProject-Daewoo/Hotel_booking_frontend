@@ -178,12 +178,12 @@ const localCheckIn = ref(searchStore.checkInDateISO);
 const localCheckOut = ref(searchStore.checkOutDateISO);
 
 async function fetchStaticDetails() {
-  const a = api.get(`/tour/intro/db/${id}`);
+  const a = api.get(`/api/tour/intro/db/${id}`);
   console.log(a);
   try {
     const [baseRes, introRes, reviewsRes] = await Promise.all([
-      api.get(`/accommodations/${id}`),
-      api.get(`/tour/intro/db/${id}`),
+      api.get(`/api/accommodations/${id}`),
+      api.get(`/api/tour/intro/db/${id}`),
       api.get(`/api/reviews/hotel/${id}`)
     ]);
     base.value = normalizeBase(baseRes.data);
@@ -213,7 +213,7 @@ async function fetchAvailability(checkIn, checkOut) {
 async function fetchDynamicDetails(checkIn, checkOut) {
   if (!checkIn || !checkOut) return;
   try {
-    const roomsRes = await api.get(`/tour/detail/db/content/${id}`, {
+    const roomsRes = await api.get(`/api/tour/detail/db/content/${id}`, {
       params: { checkIn, checkOut }
     });
     rooms.value = Array.isArray(roomsRes.data) ? roomsRes.data : [];
