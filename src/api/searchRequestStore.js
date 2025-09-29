@@ -103,7 +103,7 @@ export const useSearchStore = defineStore('search', {
 
     // 상세 정보 가져오기
     getRoomDetails(contentId, checkIn, checkOut) {
-      return axios.get(`/tour/detail/db/content/${contentId}`, {
+      return axios.get(`/api/tour/detail/db/content/${contentId}`, {
         params: {
           checkIn: checkIn,
           checkOut: checkOut
