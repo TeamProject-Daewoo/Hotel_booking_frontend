@@ -177,4 +177,133 @@ onMounted(() => fetchUserCoupons());
   color: #fff;
   border-color: #007bff;
 }
+</style><style scoped>
+.coupon-container {
+  max-width: 650px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #f7f8fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.coupon-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.coupon-form input {
+  flex: 1;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  font-size: 14px;
+}
+
+.coupon-form button {
+  padding: 12px 20px;
+  background: linear-gradient(90deg, #ff6a00, #ff8c00);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.coupon-form button:hover {
+  background: linear-gradient(90deg, #ff8c00, #ffa500);
+}
+
+.coupon-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.coupon-item {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.coupon-item:hover {
+  transform: translateY(-3px);
+}
+
+.coupon-item strong {
+  font-size: 16px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.coupon-item span {
+  display: inline-block;
+  background: #28a745;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.coupon-item .expire {
+  font-size: 12px;
+  color: #666;
+}
+
+.coupon-item .status {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #ff4d4f;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.coupon-item .status.used {
+  background: #6c757d;
+}
+
+.empty-msg {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.pagination {
+  margin-top: 25px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.pagination button.active {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
 </style>
+
