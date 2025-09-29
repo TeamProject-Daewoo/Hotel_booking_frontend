@@ -64,7 +64,6 @@ const fetchUserCoupons = async () => {
     const res = await adminApi.get('/api/coupons/my', { params: { page: 0, size: 100 } });
     myCouponsPage.value = res.data;
   } catch (e) {
-    alert('쿠폰 목록 불러오기 실패');
     console.error(e);
   }
 };
