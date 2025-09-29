@@ -53,10 +53,15 @@
     <BookingReceiptModal v-if="isReceiptModalOpen" :booking="selectedBooking" @close="closeReceiptModal" />
     <PastBookingListView :bookings="pastBookings" />
 
+    <!-- 취소 모달 -->
     <div v-if="isCancelModalOpen" class="modal-overlay" @click.self="closeCancelModal">
       <div class="modal-content">
         <h3>예약 취소 확인</h3>
-        <p>정말로 이 예약을 취소하시겠습니까?<br>환불 규정에 따라 수수료가 발생할 수 있습니다.</p>
+        <p>정말로 이 예약을 취소하시겠습니까?</p>
+        <p>
+          환불 예상 금액: <strong>{{ cancelPreview.refundAmount.toLocaleString() }}원</strong><br>
+          수수료: <strong>{{ cancelPreview.cancelFee.toLocaleString() }}원</strong>
+        </p>
         <div class="modal-actions">
           <button class="btn-secondary" @click="closeCancelModal">유지하기</button>
           <button class="btn-danger" @click="handleConfirmCancellation">취소하기</button>
@@ -65,7 +70,6 @@
     </div>
 
     <AlertModal v-if="alertInfo.isOpen" :title="alertInfo.title" :message="alertInfo.message" @close="closeAlertModal" />
-
   </div>
 </template>
 
@@ -83,6 +87,9 @@ const selectedBooking = ref(null);
 const isReceiptModalOpen = ref(false);
 const isCancelModalOpen = ref(false);
 const bookingToCancel = ref(null);
+
+// 취소 미리보기 금액
+const cancelPreview = ref({ refundAmount: 0, cancelFee: 0 });
 
 const alertInfo = reactive({
   isOpen: false,
@@ -119,14 +126,26 @@ const closeReceiptModal = () => {
   selectedBooking.value = null;
 };
 
-const openCancelModal = (booking) => {
+const openCancelModal = async (booking) => {
   bookingToCancel.value = booking;
+
+  try {
+    const response = await api.post('/api/payment/cancel-preview', {
+      reservationId: booking.reservationId
+    });
+    cancelPreview.value = response.data; // refundAmount, cancelFee
+  } catch (err) {
+    console.error("취소 미리보기 실패", err);
+    cancelPreview.value = { refundAmount: 0, cancelFee: 0 };
+  }
+
   isCancelModalOpen.value = true;
 };
 
 const closeCancelModal = () => {
   isCancelModalOpen.value = false;
   bookingToCancel.value = null;
+  cancelPreview.value = { refundAmount: 0, cancelFee: 0 };
 };
 
 const openAlertModal = (title, message) => {

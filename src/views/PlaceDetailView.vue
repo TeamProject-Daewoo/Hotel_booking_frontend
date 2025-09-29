@@ -27,7 +27,7 @@
         :checkOut="localCheckOut"
         @bookRoom="onBookRoom"
     />
-    <Map :mapx="base.mapx" :mapy="base.mapy" :address="base.addr1" :title="base.title" :price="minPriceText" />
+    <Map :mapx="base.mapx" :mapy="base.mapy" :address="base.addr1" :title="base.title" :price="minPriceText" :reviews="reviews" />
     <Reviews :reviews="reviews" :pageSize="5" @write-review="openReviewModal" @report="handleReport" />
   </div>
   <div v-else class="loading-container">
@@ -182,7 +182,7 @@ async function fetchStaticDetails() {
   console.log(a);
   try {
     const [baseRes, introRes, reviewsRes] = await Promise.all([
-      api.get(`/accommodations/${id}`),
+      api.get(`accommodations/${id}`),
       api.get(`/tour/intro/db/${id}`),
       api.get(`/api/reviews/hotel/${id}`)
     ]);

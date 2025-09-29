@@ -9,8 +9,11 @@
         </div>
 
         <div class="card details-box">
-          <h3 class="card-title">예약 정보</h3>
-          <div class="info-grid">
+  <div class="card-header-with-button">
+    <h3 class="card-title">예약 정보</h3>
+    <ReceiptDownload class="receipt-download-btn" />
+  </div>
+  <div class="info-grid">
             <p><strong>예약 번호</strong></p><p>{{ reservation.reservationId }}</p>
             <p><strong>숙소 이름</strong></p><p>{{ reservation.hotelName }}</p>
             <p><strong>예약자 이름</strong></p><p>{{ reservation.customerName || '정보 없음' }}</p>
@@ -39,6 +42,8 @@ import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
 import { useUiStore } from '@/store/commonUiStore';
+import ReceiptDownload from '@/components/receipt/PdfReceiptViewer.vue';
+
 
 const route = useRoute();
 const router = useRouter();
@@ -192,4 +197,22 @@ const goToBookingDetails = () => {
   padding: 40px;
   color: #868e96;
 }
+
+
+
+.card-header-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-right: 8px; /* 버튼 공간 확보용 */
+}
+
+.receipt-download-btn {
+  margin-left: auto;         /* 왼쪽 요소(제목)와 최대한 거리두기 */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+
 </style>
