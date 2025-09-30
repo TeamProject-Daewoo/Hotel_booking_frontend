@@ -79,7 +79,7 @@ const formatDate = (dateString) => {
 
 <style scoped>
 /* 기존 스타일은 그대로 유지 */
-.view-container { background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
+.view-container { height: 600px;background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
 .view-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; text-align: left; }
 .point-card { background-color: #f3f4f6; padding: 1.5rem; border-radius: 12px; text-align: left; margin-bottom: 2rem; }
 .current-point { font-size: 1.5rem; font-weight: 700; color: #1e40af; margin-bottom: 0.25rem; }
