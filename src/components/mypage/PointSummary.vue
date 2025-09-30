@@ -13,20 +13,28 @@
       <button :class="{ active: filter === 'used' }" @click="filter = 'used'">사용</button>
     </div>
 
-    <div v-if="filteredList.length" class="point-list">
-      <div v-for="item in filteredList" :key="item.id" class="point-item">
-        <div class="point-info">
-          <span class="point-date">{{ formatDate(item.transactionDate) }}</span>
-          <span class="point-hotel">{{ item.description }}</span>
-        </div>
-        <div class="point-amount" :class="item.type.toLowerCase()">
-          {{ item.type === 'EARNED' ? '+' : '-' }} {{ item.points.toLocaleString() }} P
-        </div>
-      </div>
+    <div v-if="loading" class="loading-state">
+      <h2>포인트 내역을 불러오는 중입니다...</h2>
     </div>
 
-    <div v-else class="empty-state">
-      <h2>포인트 내역이 없습니다.</h2>
+    <div v-else-if="filteredList.length === 0" class="empty-state">
+      <h2>선택하신 내역이 없습니다.</h2>
+    </div>
+
+    <div v-else class="point-list">
+      <div v-for="item in filteredList" :key="item.id" class="point-item">
+        <div class="point-info">
+          <!-- [변경] 날짜와 시간을 하나의 div로 감싸 가로 정렬 -->
+          <div class="point-date-time-wrapper">
+            <span class="day-part">{{ formatDate(item.transactionDate) }}</span>
+            <span class="time-part">{{ formatTime(item.transactionDate) }}</span>
+          </div>
+          <span class="point-description">{{ item.hotelName || item.description }}</span>
+        </div>
+        <div class="point-amount" :class="item.type.toLowerCase()">
+          {{ item.points > 0 ? '+' : '' }}{{ item.points.toLocaleString() }} P
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -39,47 +47,54 @@ import { useAuthStore } from '@/api/auth.js';
 const authStore = useAuthStore();
 const pointList = ref([]);
 const filter = ref('all');
+const loading = ref(true);
 
-// 보유 포인트는 authStore와 실시간 연동
 const currentPoint = computed(() => authStore.points);
 
 onMounted(async () => {
   try {
-    // 1. 최신 포인트 정보 가져오기
     await authStore.fetchAndUpdatePoints();
-
-    // 2. 새로운 포인트 내역 API 호출
     const res = await api.get('/api/mypage/points');
     pointList.value = res.data;
-
   } catch (error) {
     console.error('포인트 내역 불러오기 실패', error);
+  } finally {
+    loading.value = false;
   }
 });
 
-// 3. 필터 로직을 새로운 데이터 구조에 맞게 수정
 const filteredList = computed(() => {
   if (filter.value === 'all') {
     return pointList.value;
   }
-  // 'EARNED' 또는 'USED' 타입으로 필터링
   return pointList.value.filter(p => p.type.toLowerCase() === filter.value);
 });
 
-// 4. 날짜 포맷팅 함수 추가
+// 날짜 포맷 함수
 const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
-  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  return `${year}.${month}.${day}`;
+  return `${month}.${day}`;
+};
+
+// 시간 포맷 함수
+const formatTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  let hours = date.getHours();
+  const ampm = hours >= 12 ? '오후' : '오전';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const strHours = String(hours).padStart(2, '0');
+  return `${ampm} ${strHours}:${minutes}`;
 };
 </script>
 
 <style scoped>
-/* 기존 스타일은 그대로 유지 */
-.view-container { height: 600px;background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
+.view-container { min-height: 600px; background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
 .view-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; text-align: left; }
 .point-card { background-color: #f3f4f6; padding: 1.5rem; border-radius: 12px; text-align: left; margin-bottom: 2rem; }
 .current-point { font-size: 1.5rem; font-weight: 700; color: #1e40af; margin-bottom: 0.25rem; }
@@ -90,17 +105,50 @@ const formatDate = (dateString) => {
 .point-filters button:hover { background-color: #e5e7eb; }
 .point-list { display: flex; flex-direction: column; gap: 1rem; }
 .point-item { display: flex; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 8px; background-color: #f9fafb; align-items: center; }
-.point-info { display: flex; flex-direction: column; }
-.point-date { font-size: 0.85rem; color: #6b7280; }
-.point-hotel { font-size: 0.95rem; font-weight: 500; color: #374151; }
-.point-amount { font-weight: 600; font-size: 1rem; }
-.empty-state { text-align: center; color: #6b7280; font-size: 1rem; padding: 3rem 0; }
 
-/* ✨ 적립/사용에 따라 색상을 다르게 표시하기 위한 스타일 추가 */
-.point-amount.earned {
-  color: #1e40af; /* 적립: 파란색 */
+.point-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-grow: 1;
 }
-.point-amount.used {
-  color: #dc2626; /* 사용: 빨간색 */
+
+.point-date-time-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  width: 150px;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  color: #000000;
 }
+
+.point-description {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  text-align: left;
+}
+
+.day-part{
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.time-part{
+  font-size: 0.8rem;
+  color: #3e3e40;
+}
+
+.point-amount {
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 90px;
+  text-align: right;
+}
+
+.empty-state, .loading-state { text-align: center; color: #6b7280; font-size: 1rem; padding: 3rem 0; }
+.point-amount.earned { color: #1e40af; }
+.point-amount.used { color: #dc2626; }
 </style>
+
