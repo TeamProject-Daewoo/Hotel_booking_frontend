@@ -21,14 +21,14 @@
           <textarea id="review-content" v-model="review.content" class="form-textarea" rows="8" placeholder="다른 사람들을 위해 숙소에 대한 솔직한 리뷰를 작성해주세요." required></textarea>
         </div>
 
-        <div class="form-group">
-          <label for="review-photo" class="form-label">사진 첨부 (선택)</label>
-          <label for="review-photo" class="file-upload-button">
-            <i class="fa-solid fa-camera"></i> 파일 선택
-          </label>
-          <input type="file" id="review-photo" @change="handlePhotoUpload" accept="image/*">
-          <p v-if="review.photoName" class="file-name">{{ review.photoName }}</p>
-        </div>
+<!--        <div class="form-group">-->
+<!--          <label for="review-photo" class="form-label">사진 첨부 (선택)</label>-->
+<!--          <label for="review-photo" class="file-upload-button">-->
+<!--            <i class="fa-solid fa-camera"></i> 파일 선택-->
+<!--          </label>-->
+<!--          <input type="file" id="review-photo" @change="handlePhotoUpload" accept="image/*">-->
+<!--          <p v-if="review.photoName" class="file-name">{{ review.photoName }}</p>-->
+<!--        </div>-->
 
         <div class="button-container">
           <button type="button" @click="cancel" class="button-secondary">취소</button>
