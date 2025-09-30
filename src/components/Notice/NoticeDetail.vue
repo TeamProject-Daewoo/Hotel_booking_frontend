@@ -6,7 +6,12 @@
       <span class="date">작성일: {{ formatDate(notice.createdAt) }}</span>
     </div>
     <hr />
-    <div class="content" v-html="notice.content"></div>
+
+<!-- 여기 나중에 수정 필요함   -->
+    <div v-if="notice.content" class="image-wrapper">
+      <img :src="notice.content" alt="공지 이미지" />
+    </div>
+
   </div>
   <div v-else class="loading">
     로딩 중...
