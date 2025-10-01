@@ -70,28 +70,101 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
 .inquiry-detail {
-  max-width: 700px;
-  margin: 40px auto;
-  padding: 20px 30px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fafafa;
-  font-family: "Noto Sans KR", sans-serif;
+  max-width: 800px;
+  min-height: 700px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  font-family: 'Pretendard', sans-serif;
 }
 
 h2 {
-  margin-bottom: 10px;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
 }
 
+/* 카테고리, 상태, 작성일 등 메타 정보 스타일 */
 p {
-  margin: 6px 0;
-  color: #34495e;
+  margin: 0.5rem 0;
+  color: #868e96;
+  font-size: 0.9rem;
 }
 
-a {
-  color: #42b983;
+p > strong {
+  color: #495057;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+/* 본문 내용 스타일 */
+.content-body {
+  margin: 2rem 0;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #343a40;
+  white-space: pre-wrap;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #f1f3f5;
+  margin: 2rem 0;
+}
+
+/* 첨부파일 섹션 */
+.attachment-section {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.attachment-section p {
+  margin-top: 0;
+}
+.attachment-section a {
+  color: #308c84;
+  text-decoration: none;
   word-break: break-all;
+  font-weight: 500;
+}
+.attachment-section a:hover {
+  text-decoration: underline;
+}
+
+/* 답변 섹션 */
+.answer-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #308c84; /* 메인 색상으로 강조 */
+}
+
+.answer-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #308c84;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.answer-section small {
+  display: block;
+  text-align: right;
+  color: #adb5bd;
+  margin-top: 1rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 5rem;
+  color: #888;
 }
 </style>
