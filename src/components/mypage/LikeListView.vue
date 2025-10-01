@@ -4,7 +4,7 @@
     <div v-if="wishlistItems.length > 0" class="like-grid">
       <div v-for="like in wishlistItems" :key="like.id" class="like-card">
         <div class="like-delete-btn"><i @click="deleteWishlist(like.contentId)" class="fa-solid fa-xmark"></i></div>
-        <img :src="like.imageUrl" alt="숙소 이미지" class="hotel-image">
+        <img :src="like.imageUrl || emptyImage" alt="숙소 이미지" class="hotel-image">
         <div class="card-content">
           <h3 class="hotel-name">{{ like.hotelName }}</h3>
           <p class="hotel-address">{{ like.address }}</p>
@@ -30,6 +30,7 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { storeToRefs } from 'pinia';
 
 const wishlistStore = useWishlistStore();
+const emptyImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23E5E7EB'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='30' fill='%239CA3AF' dominant-baseline='middle' text-anchor='middle'%3E제공되지 않는 이미지입니다.%3C/text%3E%3C/svg%3E"
 
 onMounted(() => {
   wishlistStore.fetchWishlist();

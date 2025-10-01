@@ -1,21 +1,24 @@
 <template>
   <div class="coupon-select-container">
-   
+    <div
+      v-if="selectedCoupon"
+      class="selected-coupon-info"
+      @click="toggleCouponSelection(selectedCoupon)"
+      style="cursor: pointer;"
+      title="클릭하면 선택 취소됩니다"
+    >
+      <div>
+        <strong>쿠폰명: {{ selectedCoupon.coupon.name }}</strong><br />
+        할인: {{ selectedCoupon.coupon.displayDiscount }}<br />
+        만료일: {{ selectedCoupon.expireAt?.slice(0, 10) || '정보 없음' }}
+      </div>
 
-    <!-- 선택된 쿠폰 정보 -->
-    <div v-if="selectedCoupon" class="selected-coupon-info">
-      <strong>쿠폰명: {{ selectedCoupon.coupon.name }}</strong><br/>
-      할인: {{ selectedCoupon.coupon.displayDiscount }}<br/>
-      만료일: {{ selectedCoupon.expireAt?.slice(0, 10) || '정보 없음' }}
+      <div style="color: #dc3545; font-weight: bold; white-space: nowrap; font-size: 14px;">
+        👉 쿠폰 취소
+      </div>
     </div>
 
-    <button @click="handleCouponButtonClick">
-  {{ selectedCouponId ? '쿠폰 선택 취소' : '쿠폰 선택' }}
-</button>
-
-
-    <!-- 쿠폰 목록 -->
-    <div v-if="showCouponList" class="coupon-list-container">
+    <div class="coupon-list-container">
       <h3>사용 가능한 쿠폰</h3>
       <div v-if="availableCoupons.length === 0" class="empty-msg">
         사용 가능한 쿠폰이 없습니다.
@@ -24,9 +27,10 @@
         <li
           v-for="coupon in availableCoupons"
           :key="coupon.id"
+          :ref="el => couponRefs[coupon.id] = el"
           :class="{ selected: selectedCouponId === coupon.id }"
           class="coupon-item"
-          @click="selectCoupon(coupon)"
+          @click="toggleCouponSelection(coupon)"
         >
           <strong>{{ coupon.coupon.name }}</strong>
           <span>{{ coupon.coupon.displayDiscount }}</span>
@@ -38,14 +42,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineEmits } from 'vue';
+import { ref, computed, onMounted, nextTick, defineEmits } from 'vue';
 import adminApi from '@/api/axios';
 
 const emit = defineEmits(['update:selectedCoupon']);
 
 const myCouponsPage = ref({ content: [], totalPages: 0 });
 const selectedCouponId = ref(null);
-const showCouponList = ref(false);
+const couponRefs = ref({}); // 쿠폰 DOM 참조 객체
 
 const availableCoupons = computed(() => {
   const now = new Date();
@@ -56,7 +60,7 @@ const availableCoupons = computed(() => {
 });
 
 const selectedCoupon = computed(() => {
-  return availableCoupons.value.find(c => c.id === selectedCouponId.value) || null;
+  return myCouponsPage.value.content.find(c => c.id === selectedCouponId.value) || null;
 });
 
 const fetchUserCoupons = async () => {
@@ -68,59 +72,61 @@ const fetchUserCoupons = async () => {
   }
 };
 
-const selectCoupon = async (coupon) => {
-  console.log("✅ 선택된 쿠폰 객체 확인:", coupon);
-
-  // 1️⃣ 기존 UI 처리 그대로
-  selectedCouponId.value = coupon.id;       
-  emit('update:selectedCoupon', coupon);    
-  showCouponList.value = false;
-
-  // 2️⃣ 선택 즉시 서버에 사용 처리
-  try {
-    if (!coupon.isUsed) {
-      await adminApi.patch(`/api/coupons/user/${coupon.id}/use`);
-      coupon.isUsed = true;
-      coupon.usedAt = new Date().toISOString();
-      
-    }
-  } catch (error) {
-    console.error("쿠폰 사용 처리 실패:", error);
-    alert("❌ 쿠폰 처리 중 오류가 발생했습니다.");
-  }
-};
-
-const handleCouponButtonClick = async () => {
-  if (selectedCouponId.value) {
+const toggleCouponSelection = async (coupon) => {
+  // 선택된 쿠폰을 다시 클릭하면 취소
+  if (selectedCouponId.value === coupon.id) {
     try {
-      // 서버 취소 요청
-      await adminApi.patch(`/api/coupons/user/${selectedCouponId.value}/cancel`);
-      
-      // 로컬 myCouponsPage.content 업데이트
-      const couponIndex = myCouponsPage.value.content.findIndex(c => c.id === selectedCouponId.value);
-      if (couponIndex !== -1) {
-        myCouponsPage.value.content[couponIndex].isUsed = false;
-        myCouponsPage.value.content[couponIndex].usedAt = null;
-      }
-
-      // 선택 초기화
+      await adminApi.patch(`/api/coupons/user/${coupon.id}/cancel`);
+      coupon.isUsed = false;
+      coupon.usedAt = null;
       selectedCouponId.value = null;
       emit('update:selectedCoupon', null);
+
+      // DOM 업데이트 후 스크롤 복원
+      await nextTick();
+      const el = couponRefs.value[coupon.id];
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
 
     } catch (error) {
       console.error("쿠폰 취소 실패:", error);
       alert("❌ 쿠폰 취소 중 오류가 발생했습니다.");
-      return;
+    }
+    return;
+  }
+
+  // 다른 쿠폰이 이미 선택되어 있으면 먼저 취소
+  if (selectedCouponId.value) {
+    try {
+      await adminApi.patch(`/api/coupons/user/${selectedCouponId.value}/cancel`);
+      const prevIndex = myCouponsPage.value.content.findIndex(c => c.id === selectedCouponId.value);
+      if (prevIndex !== -1) {
+        myCouponsPage.value.content[prevIndex].isUsed = false;
+        myCouponsPage.value.content[prevIndex].usedAt = null;
+      }
+    } catch (error) {
+      console.error("이전 쿠폰 취소 실패:", error);
+      alert("❌ 이전 쿠폰 취소 중 오류가 발생했습니다.");
     }
   }
 
-  showCouponList.value = !showCouponList.value;
+  // 새 쿠폰 사용 처리
+  try {
+    await adminApi.patch(`/api/coupons/user/${coupon.id}/use`);
+    coupon.isUsed = true;
+    coupon.usedAt = new Date().toISOString();
+    selectedCouponId.value = coupon.id;
+    emit('update:selectedCoupon', coupon);
+  } catch (error) {
+    console.error("쿠폰 사용 처리 실패:", error);
+    alert("❌ 쿠폰 사용 처리 중 오류가 발생했습니다.");
+  }
 };
-
-
 
 onMounted(fetchUserCoupons);
 </script>
+
 
 
 <style scoped>
@@ -185,5 +191,19 @@ onMounted(fetchUserCoupons);
 .empty-msg {
   color: #999;
   font-style: italic;
+}
+
+.selected-coupon-info {
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  background-color: #e9f5ff;
+  font-weight: 600;
+  
+  /* --- 추가된 스타일 --- */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

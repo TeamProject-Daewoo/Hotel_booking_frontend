@@ -12,7 +12,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-// import api from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
 import axios from 'axios';
 
@@ -58,6 +57,7 @@ onMounted(async () => {
 
     if (response.status === 200) {
       message.value = '결제가 성공적으로 완료되었습니다!';
+      await authStore.fetchAndUpdatePoints();
       setTimeout(() => {
         router.push(`/reservation-complete/${reservationId}`);
       }, 1);

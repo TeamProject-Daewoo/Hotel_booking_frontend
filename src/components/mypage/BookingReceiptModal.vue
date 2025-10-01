@@ -28,7 +28,15 @@
             <span>성인 {{ booking.numAdults }}명, 아동 {{ booking.numChildren }}명</span>
           </div>
         </div>
-        <div class="receipt-total">
+        <div class="receipt-section payment-details">
+          <div class="info-row">
+            <span>기본 가격</span>
+            <span>{{ booking.basePrice?.toLocaleString() }}원</span>
+          </div>
+          <div class="info-row">
+            <span>총 할인</span>
+            <span class="discount-price">- {{ booking.discountPrice?.toLocaleString() }}원</span>
+          </div>
           <div class="info-row total">
             <span>총 결제 금액</span>
             <span class="total-price" :class="{ 'is-cancelled': booking.status !== 'PAID' }">
@@ -102,6 +110,19 @@ defineEmits(['close']);
   margin-bottom: 20px;
 }
 
+.receipt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* [수정] 결제 정보 섹션 상단에 구분선 추가 */
+.payment-details {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
 .info-row {
   display: flex;
   justify-content: space-between;
@@ -117,9 +138,9 @@ defineEmits(['close']);
   color: #333;
 }
 
-.receipt-total {
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+.discount-price {
+  color: #e53e3e; /* Tailwind CSS red-600 */
+  font-weight: 500;
 }
 
 .info-row.total span {

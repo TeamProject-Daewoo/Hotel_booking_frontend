@@ -21,14 +21,14 @@
           <textarea id="review-content" v-model="review.content" class="form-textarea" rows="8" placeholder="다른 사람들을 위해 숙소에 대한 솔직한 리뷰를 작성해주세요." required></textarea>
         </div>
 
-        <div class="form-group">
-          <label for="review-photo" class="form-label">사진 첨부 (선택)</label>
-          <label for="review-photo" class="file-upload-button">
-            <i class="fa-solid fa-camera"></i> 파일 선택
-          </label>
-          <input type="file" id="review-photo" @change="handlePhotoUpload" accept="image/*">
-          <p v-if="review.photoName" class="file-name">{{ review.photoName }}</p>
-        </div>
+<!--        <div class="form-group">-->
+<!--          <label for="review-photo" class="form-label">사진 첨부 (선택)</label>-->
+<!--          <label for="review-photo" class="file-upload-button">-->
+<!--            <i class="fa-solid fa-camera"></i> 파일 선택-->
+<!--          </label>-->
+<!--          <input type="file" id="review-photo" @change="handlePhotoUpload" accept="image/*">-->
+<!--          <p v-if="review.photoName" class="file-name">{{ review.photoName }}</p>-->
+<!--        </div>-->
 
         <div class="button-container">
           <button type="button" @click="cancel" class="button-secondary">취소</button>
@@ -44,10 +44,12 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/axios';
 import { useUiStore } from '@/store/commonUiStore';
+import { useAuthStore } from '@/api/auth.js';
 
 const uiStore = useUiStore();
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const hotelName = ref('');
 const review = reactive({
@@ -82,6 +84,8 @@ const submitReview = async () => {
     await api.post('/api/mypage/reviews', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
+
+    await authStore.fetchAndUpdatePoints();
     uiStore.openModal('리뷰가 성공적으로 제출되었습니다.');
     router.push('/mypage');
   } catch (error) {

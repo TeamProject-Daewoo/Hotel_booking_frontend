@@ -1,38 +1,40 @@
 <template>
   <div class="view-container">
-    <!-- 페이지 제목 -->
     <h1 class="view-title">내 포인트</h1>
 
-    <!-- 현재 포인트 카드 -->
     <div class="point-card">
       <div class="current-point">{{ currentPoint.toLocaleString() }} P</div>
-      <div class="point-expire">180일 뒤 포인트 소멸</div>
+      <div class="point-expire">180일 뒤 첫 포인트가 소멸됩니다.</div>
     </div>
 
-    <!-- 필터 버튼 -->
     <div class="point-filters">
       <button :class="{ active: filter === 'all' }" @click="filter = 'all'">전체</button>
       <button :class="{ active: filter === 'earned' }" @click="filter = 'earned'">적립</button>
       <button :class="{ active: filter === 'used' }" @click="filter = 'used'">사용</button>
-      <button :class="{ active: filter === 'expired' }" @click="filter = 'expired'">소멸</button>
     </div>
 
-    <!-- 포인트 내역 리스트 -->
-    <div v-if="filteredList.length" class="point-list">
-      <div v-for="item in filteredList" :key="item.reservationId" class="point-item">
+    <div v-if="loading" class="loading-state">
+      <h2>포인트 내역을 불러오는 중입니다...</h2>
+    </div>
+
+    <div v-else-if="filteredList.length === 0" class="empty-state">
+      <h2>선택하신 내역이 없습니다.</h2>
+    </div>
+
+    <div v-else class="point-list">
+      <div v-for="item in filteredList" :key="item.id" class="point-item">
         <div class="point-info">
-          <span class="point-date">{{ item.date }}</span>
-          <span class="point-hotel">{{ item.hotelName }}</span>
+          <!-- [변경] 날짜와 시간을 하나의 div로 감싸 가로 정렬 -->
+          <div class="point-date-time-wrapper">
+            <span class="day-part">{{ formatDate(item.transactionDate) }}</span>
+            <span class="time-part">{{ formatTime(item.transactionDate) }}</span>
+          </div>
+          <span class="point-description">{{ item.hotelName || item.description }}</span>
         </div>
-        <div class="point-amount" :class="item.type">
-          {{ item.usedPoints.toLocaleString() }} P
+        <div class="point-amount" :class="item.type.toLowerCase()">
+          {{ item.points > 0 ? '+' : '' }}{{ item.points.toLocaleString() }} P
         </div>
       </div>
-    </div>
-
-    <!-- 항목 없을 때 -->
-    <div v-else class="empty-state">
-      <h2>포인트 내역이 없습니다.</h2>
     </div>
   </div>
 </template>
@@ -40,139 +42,113 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import api from '@/api/axios';
-import { useAuthStore } from '@/api/auth';
+import { useAuthStore } from '@/api/auth.js';
 
 const authStore = useAuthStore();
-const currentPoint = ref(authStore.points || 0);
 const pointList = ref([]);
 const filter = ref('all');
+const loading = ref(true);
+
+const currentPoint = computed(() => authStore.points);
 
 onMounted(async () => {
   try {
-    // DB PK(user_name)와 맞는 값으로 API 호출
-    const usernameForApi = authStore.userName || authStore.userName;
-    const res = await api.get(`/api/reservations/user/${usernameForApi}`);
-    pointList.value = res.data; // 이미 사용 포인트만 리턴되도록 백엔드에서 처리됨
+    await authStore.fetchAndUpdatePoints();
+    const res = await api.get('/api/mypage/points');
+    pointList.value = res.data;
   } catch (error) {
     console.error('포인트 내역 불러오기 실패', error);
+  } finally {
+    loading.value = false;
   }
 });
 
-// 필터 적용
 const filteredList = computed(() => {
-  if (filter.value === 'all') return pointList.value;
-  return pointList.value.filter(p => p.type === filter.value);
+  if (filter.value === 'all') {
+    return pointList.value;
+  }
+  return pointList.value.filter(p => p.type.toLowerCase() === filter.value);
 });
+
+// 날짜 포맷 함수
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month}.${day}`;
+};
+
+// 시간 포맷 함수
+const formatTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  let hours = date.getHours();
+  const ampm = hours >= 12 ? '오후' : '오전';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const strHours = String(hours).padStart(2, '0');
+  return `${ampm} ${strHours}:${minutes}`;
+};
 </script>
 
 <style scoped>
-.view-container {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
-}
-
-.view-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
-
-.point-card {
-  background-color: #f3f4f6;
-  padding: 1.5rem;
-  border-radius: 12px;
-  text-align: left;
-  margin-bottom: 2rem;
-}
-
-.current-point {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e40af;
-  margin-bottom: 0.25rem;
-}
-
-.point-expire {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-.point-filters {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.point-filters button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background-color: #f9fafb;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.point-filters button.active {
-  background-color: #1e40af;
-  color: white;
-  border-color: #1e40af;
-}
-
-.point-filters button:hover {
-  background-color: #e5e7eb;
-}
-
-.point-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.point-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background-color: #f9fafb;
-  align-items: center;
-}
+.view-container { min-height: 600px; background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
+.view-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; text-align: left; }
+.point-card { background-color: #f3f4f6; padding: 1.5rem; border-radius: 12px; text-align: left; margin-bottom: 2rem; }
+.current-point { font-size: 1.5rem; font-weight: 700; color: #1e40af; margin-bottom: 0.25rem; }
+.point-expire { font-size: 0.85rem; color: #6b7280; }
+.point-filters { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.point-filters button { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; background-color: #f9fafb; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+.point-filters button.active { background-color: #1e40af; color: white; border-color: #1e40af; }
+.point-filters button:hover { background-color: #e5e7eb; }
+.point-list { display: flex; flex-direction: column; gap: 1rem; }
+.point-item { display: flex; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 8px; background-color: #f9fafb; align-items: center; }
 
 .point-info {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  flex-grow: 1;
 }
 
-.point-date {
-  font-size: 0.85rem;
-  color: #6b7280;
+.point-date-time-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  width: 150px;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  color: #000000;
 }
 
-.point-hotel {
+.point-description {
   font-size: 0.95rem;
   font-weight: 500;
   color: #374151;
+  text-align: left;
+}
+
+.day-part{
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.time-part{
+  font-size: 0.8rem;
+  color: #3e3e40;
 }
 
 .point-amount {
   font-weight: 600;
   font-size: 1rem;
+  min-width: 90px;
+  text-align: right;
 }
 
-.point-amount.used {
-  color: #dc2626;
-}
-
-.empty-state {
-  text-align: center;
-  color: #6b7280;
-  font-size: 1rem;
-  padding: 3rem 0;
-}
+.empty-state, .loading-state { text-align: center; color: #6b7280; font-size: 1rem; padding: 3rem 0; }
+.point-amount.earned { color: #1e40af; }
+.point-amount.used { color: #dc2626; }
 </style>
+

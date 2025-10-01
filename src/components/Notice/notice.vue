@@ -1,54 +1,70 @@
 <template>
-  <div class="notice-list">
-    <h2>공지사항</h2>
-
-    <div class="filter-bar">
-      <button :class="{ active: selectedCategory === '' }" @click="selectedCategory = ''; fetchNoticesPaged(0)">전체</button>
-      <button :class="{ active: selectedCategory === 'notice' }" @click="selectedCategory = 'notice'; fetchNoticesPaged(0)">공지</button>
-      <button :class="{ active: selectedCategory === 'patch' }" @click="selectedCategory = 'patch'; fetchNoticesPaged(0)">패치</button>
-      <button :class="{ active: selectedCategory === 'event' }" @click="selectedCategory = 'event'; fetchNoticesPaged(0)">이벤트</button>
-
-      <input type="text" v-model="searchTerm" placeholder="제목" @input="fetchNoticesPaged(0)" />
-       
+  <div class="notice-container">
+    <div class="header-section">
+      <h2>NOTICE</h2>
+      <p>호텔의 새로운 소식을 확인해보세요.</p>
     </div>
 
-    <ul class="notice-items">
-      <li
-        v-for="notice in filteredNotices"
-        :key="notice.id"
-        class="notice-item"
-        @click="goDetail(notice.id)"
+    <div class="filter-bar">
+      <div class="categories">
+        <button :class="{ active: selectedCategory === '' }" @click="selectCategory('')">ALL</button>
+        <button :class="{ active: selectedCategory === 'notice' }" @click="selectCategory('notice')">공지</button>
+        <button :class="{ active: selectedCategory === 'patch' }" @click="selectCategory('patch')">패치</button>
+        <button :class="{ active: selectedCategory === 'event' }" @click="selectCategory('event')">이벤트</button>
+      </div>
+      <div class="search-wrapper">
+        <input type="text" v-model="searchTerm" placeholder="Search..." @input="debouncedFetch" />
+      </div>
+    </div>
+
+    <div v-if="isLoading" class="loading-spinner"></div>
+
+    <div v-if="!isLoading && notices.length === 0" class="no-results">
+      <p>검색 결과가 없습니다.</p>
+    </div>
+
+    <div v-if="!isLoading && notices.length > 0" class="notice-table">
+      <div class="table-header">
+        <div class="header-item category-col">분류</div>
+        <div class="header-item title-col">제목</div>
+        <div class="header-item date-col">작성일</div>
+      </div>
+      <div
+          v-for="(notice, index) in notices"
+          :key="notice.id"
+          class="notice-row"
+          :style="{ animationDelay: `${index * 0.07}s` }"
+          @click="goDetail(notice.id)"
       >
-        <span class="category" :class="notice.category">{{ categoryLabel(notice.category) }}</span>
-        <span class="title">{{ notice.title }}</span>
-        <span class="date">{{ formatDate(notice.createdAt) }}</span>
-      </li>
-    </ul>
+        <div class="row-item category-col">
+          <span class="category" :class="notice.category">{{ categoryLabel(notice.category) }}</span>
+        </div>
+        <div class="row-item title-col">{{ notice.title }}</div>
+        <div class="row-item date-col">{{ formatDate(notice.createdAt) }}</div>
+      </div>
+    </div>
 
-    <div class="pagination" v-if="totalPages > 1">
-      <button @click="goPrev" :disabled="currentPage === 0">이전</button>
-
+    <div class="pagination" v-if="totalPages > 1 && !isLoading">
+      <button @click="goPrev" :disabled="currentPage === 0">‹</button>
       <button
-        v-for="page in totalPages"
-        :key="page"
-        :class="{ active: page - 1 === currentPage }"
-        @click="goPage(page - 1)"
+          v-for="page in totalPages"
+          :key="page"
+          :class="{ active: page - 1 === currentPage }"
+          @click="goPage(page - 1)"
       >
         {{ page }}
       </button>
-
-      <button @click="goNext" :disabled="currentPage === totalPages - 1">다음</button>
+      <button @click="goNext" :disabled="currentPage === totalPages - 1">›</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useUiStore } from '@/store/commonUiStore';
-
-
 
 const router = useRouter();
 const uiStore = useUiStore();
@@ -59,211 +75,269 @@ const searchTerm = ref('');
 const totalPages = ref(0);
 const currentPage = ref(0);
 const pageSize = 10;
+const isLoading = ref(true);
 
-// 필터링된 데이터 (카테고리와 제목 검색 필터링)
-const filteredNotices = computed(() => {
-  return notices.value.filter(n => {
-    const matchCategory = selectedCategory.value === '' || n.category === selectedCategory.value;
-    const matchSearch = n.title.toLowerCase().includes(searchTerm.value.toLowerCase());
-    return matchCategory && matchSearch;
-  });
-});
-
-// 카테고리 라벨 표시 함수
-const categoryLabel = (cat) => {
-  switch (cat) {
-    case 'notice':
-      return '공지';
-    case 'patch':
-      return '점검';
-    case 'event':
-      return '이벤트';
-    default:
-      return '';
-  }
-};
-
-// 날짜 포맷팅
-const formatDate = (dateStr) => {
-  return new Date(dateStr).toISOString().split('T')[0];
-};
+const categoryLabel = (cat) => ({ notice: '공지', patch: '점검', event: '이벤트' }[cat] || '');
+const formatDate = (dateStr) => dateStr ? new Date(dateStr).toISOString().split('T')[0] : '';
 
 const goDetail = async (id) => {
   try {
-    // 상세 데이터 조회 API 호출 (예: /api/notices/{id})
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/${id}`);
-    // 정상적으로 데이터 있으면 상세 페이지로 이동
+    await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/${id}`);
     router.push({ name: 'NoticeDetail', params: { id } });
   } catch (error) {
-    // 404나 기타 에러면 삭제된 글로 간주하고 알림 띄우기
-    if (error.response && error.response.status === 404) {
-      uiStore.openModal('이 게시물은 삭제되었습니다.');
-    } else {
-      console.error('공지사항 상세 조회 실패:', error);
-      uiStore.openModal('공지사항 상세 조회 중 오류가 발생했습니다.');
-    }
+    uiStore.openModal(error.response?.status === 404 ? '삭제되었거나 존재하지 않는 게시물입니다.' : '게시물을 불러오는 중 오류가 발생했습니다.');
   }
 };
 
-// 공지사항 페이징 API 호출
+function debounce(func, delay = 400) {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
 const fetchNoticesPaged = async (page = 0) => {
+  isLoading.value = true;
+  if(page === 0) notices.value = []; // 첫 페이지 로드 시에만 초기화하여 깜빡임 최소화
+
   try {
-    // API 요청 파라미터로 카테고리, 검색어 포함하려면 백엔드 쪽도 수정 필요
-    // 지금은 페이징만 적용되어 있음
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/paged?page=${page}&size=${pageSize}`);
+    const params = { page, size: pageSize, category: selectedCategory.value || null, title: searchTerm.value || null };
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/paged`, { params });
     notices.value = res.data.content;
     totalPages.value = res.data.totalPages;
     currentPage.value = res.data.pageNumber;
   } catch (error) {
     console.error('공지사항 불러오기 실패:', error);
+    uiStore.openModal('공지사항을 불러오는 데 실패했습니다.');
+  } finally {
+    isLoading.value = false;
   }
 };
 
-// 페이징 버튼 함수들
-const goPage = (page) => {
-  if (page < 0 || page >= totalPages.value) return;
-  fetchNoticesPaged(page);
-};
+const debouncedFetch = debounce(() => fetchNoticesPaged(0));
 
-const goNext = () => {
-  if (currentPage.value < totalPages.value - 1) {
-    fetchNoticesPaged(currentPage.value + 1);
-  }
-};
-
-const goPrev = () => {
-  if (currentPage.value > 0) {
-    fetchNoticesPaged(currentPage.value - 1);
-  }
-};
-
-
-// 최초 데이터 로드
-fetchNoticesPaged(0);
-
-// 검색어나 카테고리 바뀌면 첫 페이지로 다시 조회 (필터링은 백엔드로 구현해야 정확)
-watch([selectedCategory, searchTerm], () => {
+const selectCategory = (category) => {
+  selectedCategory.value = category;
   fetchNoticesPaged(0);
-});
+};
+
+const goPage = (page) => fetchNoticesPaged(page);
+const goNext = () => currentPage.value < totalPages.value - 1 && fetchNoticesPaged(currentPage.value + 1);
+const goPrev = () => currentPage.value > 0 && fetchNoticesPaged(currentPage.value - 1);
+
+fetchNoticesPaged(0);
 </script>
 
 <style scoped>
-
-.notice-list {
-  max-width: 900px;
-  margin: 40px auto;
-  font-family: "Noto Sans KR", sans-serif;
+/* CSS 변수를 사용해 테마 색상을 쉽게 변경할 수 있습니다. */
+:root {
+  --bg-color: #1a1a1d;
+  --surface-color: #2c2c31;
+  --primary-color: #c3a177; /* 고급스러운 골드 컬러 */
+  --text-primary: #f0f0f0;
+  --text-secondary: #a9a9b3;
+  --border-color: #404046;
 }
 
-h2 {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  text-align: left;
+.notice-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 40px;
+  font-family: 'Noto Sans KR', sans-serif;
+  background-color: var(--bg-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.header-section h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--primary-color);
+  margin-bottom: 5px;
+}
+.header-section p {
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
 .filter-bar {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
-.filter-bar button {
-  padding: 8px 15px;
-  border: none;
+.categories button {
+  padding: 8px 18px;
+  border: 1px solid var(--border-color);
   border-radius: 20px;
-  background-color: #e0e0e0;
-  font-weight: 600;
+  background: none;
+  color: var(--text-secondary);
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  margin-right: 10px;
 }
 
-.filter-bar button.active {
-  background-color: #42b983;
-  color: white;
+.categories button:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
-.filter-bar input {
-  margin-left: auto;
-  padding: 8px 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  width: 200px;
+.categories button.active {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--bg-color);
+  font-weight: 700;
 }
 
-.notice-items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.search-wrapper input {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 280px;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
 }
 
-.notice-items li {
-  display: flex;
+.search-wrapper input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(195, 161, 119, 0.3);
+}
+
+.loading-spinner {
+  border: 4px solid var(--surface-color);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 80px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.no-results {
+  text-align: center;
+  padding: 80px 0;
+  color: var(--text-secondary);
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  font-size: 1.1rem;
+}
+
+/* --- 모던 테이블 레이아웃 --- */
+.notice-table {
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-header, .notice-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 150px;
   align-items: center;
-  padding: 12px 10px;
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
+  padding: 0 25px;
 }
 
-.notice-items li:hover {
-  background-color: #f0f9f5;
+.table-header {
+  padding: 18px 25px;
+  background-color: rgba(0,0,0,0.2);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-bottom: 2px solid var(--border-color);
 }
+
+.notice-row {
+  border-bottom: 1px solid var(--border-color);
+  padding: 20px 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  opacity: 0; /* 애니메이션 시작 전 숨김 */
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+.notice-row:last-child {
+  border-bottom: none;
+}
+
+.notice-row:hover {
+  background-color: rgba(195, 161, 119, 0.08); /* 골드 색상으로 은은하게 */
+  transform: scale(1.015);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title-col { font-weight: 500; color: var(--text-primary); }
+.date-col { text-align: right; color: var(--text-secondary); font-size: 0.9rem; }
 
 .category {
-  display: inline-block;
-  width: 50px;
-  font-weight: 600;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 15px;
+  color: #fff;
+  font-size: 0.8rem;
   text-align: center;
-  margin-right: 10px;
-  border-radius: 6px;
-  padding: 4px 6px;
-  color: white;
-  font-size: 0.9rem;
 }
 
-.category.notice {
-  background-color: #3498db;
-}
-.category.patch {
-  background-color: #27ae60;
-}
-.category.event {
-  background-color: #9b59b6;
-}
+.category.notice { background-color: #17a2b8; }
+.category.patch { background-color: #28a745; }
+.category.event { background-color: #6f42c1; }
 
-.title {
-  flex: 1;
-  color: #42b983;
-}
-
-.date {
-  font-size: 0.85rem;
-  color: #888;
-}
-
-/* 페이징 버튼 스타일 */
+/* 페이지네이션 */
 .pagination {
-  margin-top: 20px;
+  margin-top: 40px;
   display: flex;
   justify-content: center;
-  gap: 6px;
+  align-items: center;
+  gap: 10px;
 }
 
 .pagination button {
-  padding: 6px 12px;
-  border: none;
-  background-color: #eee;
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   cursor: pointer;
-  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .pagination button.active {
-  background-color: #42b983;
-  color: white;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--bg-color);
+  font-weight: 700;
 }
 
 .pagination button:disabled {
-  background-color: #ccc;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 </style>

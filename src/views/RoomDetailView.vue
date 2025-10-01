@@ -278,8 +278,7 @@ const applyPoints = async () => {
   }
 
   appliedPoints.value = pointsToUse.value;
-  pointModalMessage.value = "✅ 포인트가 적용되었습니다.";
-  showPointModal.value = true;};
+};
 </script>
 
 <style scoped>
