@@ -60,8 +60,7 @@
 </template>
 
 <script setup>
-// 스크립트 로직은 이전과 동일하게 강력한 기능을 유지합니다.
-// (Debouncing, 서버 필터링, 로딩/에러 처리 등)
+
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
@@ -140,8 +139,6 @@ fetchNoticesPaged(0);
   --text-secondary: #a9a9b3;
   --border-color: #404046;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 
 .notice-container {
   max-width: 1000px;

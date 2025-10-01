@@ -4,7 +4,7 @@
     <p class="view-description">특가, 쿠폰 등 이벤트 정보를 빠르게 알려드릴게요.</p>
 
     <div class="info-banner">
-      <p>ⓘ 앱 알림, 최근 본 상품 저장, 앱 푸시, 접근 권한 설정은 '여기어때' 앱에서 가능해요.</p>
+      <p>ⓘ 앱 알림, 최근 본 상품 저장, 앱 푸시, 접근 권한 설정은 'HotelHub' 앱에서 가능해요.</p>
     </div>
 
     <div class="settings-form">
