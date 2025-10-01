@@ -278,7 +278,7 @@ const applyPoints = async () => {
   }
 
   appliedPoints.value = pointsToUse.value;
-  };
+};
 </script>
 
 <style scoped>

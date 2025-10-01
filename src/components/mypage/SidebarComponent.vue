@@ -24,7 +24,6 @@ const menuItems = ref([
   { key: 'reviews', name: '리뷰 목록' },
   { key: 'likes', name: '찜 목록' },
   { key: 'points', name: '포인트 현황' },
-  { key: 'payment-methods', name: '결제 수단' },
   { key: 'settings', name: '설정' }
 
 ]);
