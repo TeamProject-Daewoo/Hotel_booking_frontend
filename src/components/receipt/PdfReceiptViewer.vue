@@ -25,7 +25,7 @@ const fetchAndOpenPdf = async () => {
   if (!reservationId.value) return;
 
   try {
-    const response = await apiClient.get(`/receipt/${reservationId.value}`, {
+    const response = await apiClient.get(`/api/receipt/${reservationId.value}`, {
       responseType: 'blob',
     });
 
