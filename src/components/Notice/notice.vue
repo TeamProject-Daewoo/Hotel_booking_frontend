@@ -63,7 +63,7 @@
 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import axios from '@/api/axios';
 import { useUiStore } from '@/store/commonUiStore';
 
 const router = useRouter();
@@ -78,7 +78,17 @@ const pageSize = 10;
 const isLoading = ref(true);
 
 const categoryLabel = (cat) => ({ notice: '공지', patch: '점검', event: '이벤트' }[cat] || '');
-const formatDate = (dateStr) => dateStr ? new Date(dateStr).toISOString().split('T')[0] : '';
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date:', dateStr);
+    return '';
+  }
+
+  return date.toISOString().split('T')[0];
+};
 
 const goDetail = async (id) => {
   try {

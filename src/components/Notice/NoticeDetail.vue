@@ -21,7 +21,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
+import axios from '@/api/axios';
 
 const route = useRoute();
 const notice = ref(null);
