@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import {ref, onMounted, computed, watch} from 'vue';
 import adminApi from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
 
@@ -58,8 +58,15 @@ const issueCoupon = async () => {
 // 페이지 이동
 const goToPage = (page) => fetchUserCoupons(page, myCouponsPage.value.size);
 
-onMounted(() => fetchUserCoupons());
-</script>
+watch(
+    () => authStore.isInitialized,
+    (isInitialized) => {
+      if (isInitialized && authStore.loggedInUser) {
+        fetchUserCoupons();
+      }
+    },
+    { immediate: true }
+);</script>
 
 <template>
   <div class="coupon-container">
