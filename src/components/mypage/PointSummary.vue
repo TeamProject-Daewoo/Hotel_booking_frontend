@@ -71,20 +71,31 @@ const filteredList = computed(() => {
 });
 
 // 날짜 문자열 보정 함수 (추가됨)
-const parseDate = (dateString) => {
-  if (!dateString) return null;
-  // ".413877" → ".413" (밀리초 3자리까지만 유지)
-  const fixed = dateString.replace(/\.\d+$/, (ms) => ms.substring(0, 4)) + 'Z';
-  return new Date(fixed);
+const parseDate = (dateArray) => {
+  // 1. dateArray가 유효한 배열인지 확인
+  if (!Array.isArray(dateArray) || dateArray.length < 6) {
+    return ''; // 유효하지 않으면 빈 문자열 반환
+  }
+
+  // 2. 배열의 각 요소를 변수에 할당
+  const [year, month, day, hour, minute, second] = dateArray;
+
+  // 3. Date 객체 생성 (⭐️ 월(month)은 0부터 시작하므로 1을 빼줘야 함)
+  const date = new Date(year, month - 1, day, hour, minute, second);
+
+  // 4. 생성된 date 객체가 유효한지 확인
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+
+  // 5. 원하는 형식으로 포맷팅
+  return date.toISOString().split('T')[0];
 };
 
 // 날짜 포맷 함수
 const formatDate = (dateString) => {
   const date = parseDate(dateString);
-  if (!date || isNaN(date)) return '';
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${month}.${day}`;
+  return date;
 };
 
 // 시간 포맷 함수
