@@ -70,27 +70,37 @@ const filteredList = computed(() => {
   return pointList.value.filter(p => p.type.toLowerCase() === filter.value);
 });
 
+// 날짜 문자열 보정 함수 (추가됨)
+const parseDate = (dateString) => {
+  if (!dateString) return null;
+  // ".413877" → ".413" (밀리초 3자리까지만 유지)
+  const fixed = dateString.replace(/\.\d+$/, (ms) => ms.substring(0, 4)) + 'Z';
+  console.log(fixed)
+  return new Date(fixed);
+};
+
 // 날짜 포맷 함수
 const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
+  if (!date || isNaN(date)) return '';
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
+  console.log(dateString);
   return `${month}.${day}`;
 };
 
 // 시간 포맷 함수
 const formatTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
+  if (!date || isNaN(date)) return '';
   const minutes = String(date.getMinutes()).padStart(2, '0');
   let hours = date.getHours();
   const ampm = hours >= 12 ? '오후' : '오전';
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  const strHours = String(hours).padStart(2, '0');
-  return `${ampm} ${strHours}:${minutes}`;
+  hours = hours % 12 || 12;
+  console.log(dateString);
+  return `${ampm} ${String(hours).padStart(2, '0')}:${minutes}`;
 };
+
 </script>
 
 <style scoped>
