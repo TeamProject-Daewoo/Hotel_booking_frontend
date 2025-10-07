@@ -7,18 +7,14 @@ import { useAuthStore } from './api/auth';
 import api from './api/axios';
 import { useWishlistStore } from './store/wishlistStore';
 import { useHistoryStore } from './store/recentHistoryStore';
-import AlertModal from './components/mypage/AlertModal.vue';
+import ModalComponent from './components/common/ModalComponent.vue';
 import { useUiStore } from './store/commonUiStore';
-import { storeToRefs } from 'pinia';
 import FloatingMenu from "@/components/FloatingMenu.vue";
 
 const authStore = useAuthStore();
 const route = useRoute(); // 현재 라우트 정보를 가져옵니다.
 const historyStore = useHistoryStore();
 const uiStore = useUiStore();
-
-const { isModalVisible, modalTitle, modalMessage } = storeToRefs(uiStore);
-const { closeModal } = uiStore;
 
 const headerStyle = computed(() => ({
   height: route.path === '/' ? '0px' : '80px'
@@ -29,11 +25,11 @@ onMounted(async () => {
   historyStore.loadRecentSearches();
   historyStore.loadViewHistory();
 
-    const currentPath = window.location.pathname;
-    if (currentPath.includes('/logout-callback')) {
+  const currentPath = window.location.pathname;
+  if (currentPath.includes('/logout-callback')) {
     console.log('로그아웃 콜백 경로이므로 자동 로그인을 건너뜁니다.');
-    const uiStore = useUiStore();
-      uiStore.openModal('로그아웃 되었습니다.', '');
+    // openModal의 인자를 객체 형태로 수정합니다.
+    uiStore.openModal({ title: '로그아웃 되었습니다.' });
     authStore.setInitialized(); // 초기화는 완료된 것으로 처리
     return; // 함수 종료
   }
@@ -68,12 +64,8 @@ onMounted(async () => {
     <footer class="footer-container">
       <Footer/>
     </footer>
-    <AlertModal
-      v-if="isModalVisible"
-      :title="modalTitle"
-      :message="modalMessage"
-      @close="closeModal" 
-    />
+    <ModalComponent />
+
     <FloatingMenu />
   </div>
 </template>

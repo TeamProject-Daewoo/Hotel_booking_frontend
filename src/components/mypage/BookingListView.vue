@@ -53,51 +53,25 @@
     <BookingReceiptModal v-if="isReceiptModalOpen" :booking="selectedBooking" @close="closeReceiptModal" />
     <PastBookingListView :bookings="pastBookings" />
 
-    <!-- 취소 모달 -->
-    <div v-if="isCancelModalOpen" class="modal-overlay" @click.self="closeCancelModal">
-      <div class="modal-content">
-        <h3>예약 취소 확인</h3>
-        <p>정말로 이 예약을 취소하시겠습니까?</p>
-        <p>
-          환불 예상 금액: <strong>{{ cancelPreview.refundAmount.toLocaleString() }}원</strong><br>
-          수수료: <strong>{{ cancelPreview.cancelFee.toLocaleString() }}원</strong>
-        </p>
-        <div class="modal-actions">
-          <button class="btn-secondary" @click="closeCancelModal">유지하기</button>
-          <button class="btn-danger" @click="handleConfirmCancellation">취소하기</button>
-        </div>
-      </div>
-    </div>
-
-    <AlertModal v-if="alertInfo.isOpen" :title="alertInfo.title" :message="alertInfo.message" @close="closeAlertModal" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import api from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
+import { useUiStore } from '@/store/commonUiStore'; // uiStore import
 import BookingReceiptModal from './BookingReceiptModal.vue';
 import PastBookingListView from './PastBookingListView.vue';
-import AlertModal from './AlertModal.vue';
+// AlertModal import 제거
 
 const authStore = useAuthStore();
+const uiStore = useUiStore(); // uiStore 사용
 const allBookings = ref([]);
 const isLoading = ref(true);
 const selectedBooking = ref(null);
 
 const isReceiptModalOpen = ref(false);
-const isCancelModalOpen = ref(false);
-const bookingToCancel = ref(null);
-
-// 취소 미리보기 금액
-const cancelPreview = ref({ refundAmount: 0, cancelFee: 0 });
-
-const alertInfo = reactive({
-  isOpen: false,
-  title: '',
-  message: '',
-});
 
 const upcomingBookings = computed(() => {
   const today = new Date();
@@ -129,56 +103,52 @@ const closeReceiptModal = () => {
 };
 
 const openCancelModal = async (booking) => {
-  bookingToCancel.value = booking;
-
   try {
     const response = await api.post('/api/payment/cancel-preview', {
       reservationId: booking.reservationId
     });
-    cancelPreview.value = response.data; // refundAmount, cancelFee
+    const { refundAmount, cancelFee } = response.data;
+
+    await uiStore.openModal({
+      title: '예약 취소 확인',
+      message: `정말로 이 예약을 취소하시겠습니까?\n\n환불 예상 금액: ${refundAmount.toLocaleString()}원\n수수료: ${cancelFee.toLocaleString()}원`,
+      showCancel: true,
+      confirmText: '취소하기',
+      cancelText: '유지하기'
+    });
+
+    // 사용자가 '취소하기'를 클릭했을 때만 아래 코드 실행
+    handleConfirmCancellation(booking);
+
   } catch (err) {
-    console.error("취소 미리보기 실패", err);
-    cancelPreview.value = { refundAmount: 0, cancelFee: 0 };
+    if (err instanceof Error && err.message === 'Modal closed by cancellation') {
+      console.log('사용자가 예약 취소를 취소했습니다.');
+    } else {
+      console.error("취소 미리보기 과정에서 오류 발생:", err);
+      uiStore.openModal({
+        title: '오류',
+        message: '예약 취소 정보를 불러오는 중 오류가 발생했습니다.'
+      });
+    }
   }
-
-  isCancelModalOpen.value = true;
 };
 
-const closeCancelModal = () => {
-  isCancelModalOpen.value = false;
-  bookingToCancel.value = null;
-  cancelPreview.value = { refundAmount: 0, cancelFee: 0 };
-};
-
-const openAlertModal = (title, message) => {
-  alertInfo.title = title;
-  alertInfo.message = message;
-  alertInfo.isOpen = true;
-};
-
-const closeAlertModal = () => {
-  alertInfo.isOpen = false;
-};
-
-async function handleConfirmCancellation() {
-  if (!bookingToCancel.value) return;
+async function handleConfirmCancellation(booking) {
+  if (!booking) return;
 
   try {
     const response = await api.post('/api/payment/cancel', {
-      reservationId: bookingToCancel.value.reservationId,
+      reservationId: booking.reservationId,
       cancelReason: '고객 요청'
     });
-    closeCancelModal();
-    openAlertModal('취소 완료', response.data);
 
-    // ✅ 포인트 정보 새로고침
+    uiStore.openModal({ title: '취소 완료', message: response.data });
+
     await authStore.fetchAndUpdatePoints();
-
     await fetchBookings();
   } catch (error) {
-    closeCancelModal();
     const errorMessage = error.response?.data || '예약 취소 중 오류가 발생했습니다.';
-    openAlertModal('취소 실패', errorMessage);
+    uiStore.openModal({ title: '취소 실패', message: errorMessage });
   }
 }
 
@@ -207,6 +177,7 @@ onMounted(fetchBookings);
 </script>
 
 <style scoped>
+/* 스타일은 변경되지 않았으므로 생략합니다. */
 .view-container { background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
 .view-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; }
 .loading-state, .empty-state { text-align: center; padding: 4rem 0; color: #6b7280; }
