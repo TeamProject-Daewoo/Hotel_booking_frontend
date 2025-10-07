@@ -35,7 +35,6 @@
         <PointUsage
             v-model="pointsToUse"
             :totalPrice="finalPriceAfterCoupon"
-            :disabled="!selectedCoupon"
             @apply-points="applyPoints"
             @cancel-points="handlePointsCancel"
         />
@@ -67,11 +66,6 @@
     <p>예약 정보를 불러오는 중입니다...</p>
   </div>
 
-  <PointAlertModal
-      :visible="showPointModal"
-      :message="pointModalMessage"
-      @close="showPointModal = false"
-  />
 </template>
 
 <script setup>
@@ -79,23 +73,24 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { onBeforeRouteLeave } from 'vue-router';
 import api from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore'; // uiStore import
 
 import Breadcrumb from '@/components/roomdetail/Breadcrumb.vue';
 import PointUsage from '@/components/point/PointUsage.vue';
 import SummaryCard from '@/components/roomdetail/SummaryCard.vue';
-import Coupon from '@/components/coupon/Coupon.vue'
-import PointAlertModal from '@/components/point/PointAlertModal.vue';
+import Coupon from '@/components/coupon/Coupon.vue';
+// PointAlertModal import 제거
 
 const route = useRoute();
 const router = useRouter();
+const uiStore = useUiStore(); // uiStore 사용
 
 const reservation = ref(null);
 const selectedCoupon = ref(null);
 const pointsToUse = ref(0);
 const appliedPoints = ref(0);
 
-const showPointModal = ref(false);
-const pointModalMessage = ref('');
+// PointAlertModal 관련 state 제거
 
 // 쿠폰 할인 금액 계산
 const couponDiscountAmount = computed(() => {
@@ -135,26 +130,31 @@ const handleCouponSelection = (coupon) => {
 };
 
 // 페이지 떠나기 전 확인 (결제 페이지 이동만 체크)
-onBeforeRouteLeave((to, from, next) => {
-  // 결제 페이지로 가는 경우는 통과
+onBeforeRouteLeave(async (to, from, next) => {
   if (to.name === 'Payment') {
     next();
     return;
   }
 
-  // 브라우저 뒤로가기나 다른 페이지로 이동 시 확인
-  const answer = window.confirm('예약을 취소하시겠습니까? 선택한 쿠폰과 포인트 정보가 초기화됩니다.');
-  if (answer) {
-    // 쿠폰 사용 취소 처리
+  try {
+    await uiStore.openModal({
+      title: '예약 취소',
+      message: '예약을 취소하시겠습니까?\n선택한 쿠폰과 포인트 정보가 초기화됩니다.',
+      showCancel: true,
+      confirmText: '확인',
+      cancelText: '취소'
+    });
+
+    // 사용자가 '확인'을 클릭한 경우
     if (selectedCoupon.value) {
-      cancelCoupon();
+      await cancelCoupon();
     }
-    // 예약 삭제 API 호출 (PENDING 상태인 경우)
     if (reservation.value?.reservationId) {
-      api.delete(`/api/reservations/pending/${reservation.value.reservationId}`).catch(() => {});
+      await api.delete(`/api/reservations/pending/${reservation.value.reservationId}`).catch(() => {});
     }
     next();
-  } else {
+  } catch {
+    // 사용자가 '취소'를 클릭한 경우
     next(false);
   }
 });
@@ -173,7 +173,7 @@ const cancelCoupon = async () => {
 onMounted(async () => {
   const reservationId = route.query.reservationId;
   if (!reservationId) {
-    alert("잘못된 접근입니다.");
+    await uiStore.openModal({ title: '오류', message: "잘못된 접근입니다." });
     router.push('/');
     return;
   }
@@ -188,20 +188,29 @@ onMounted(async () => {
 });
 
 // 브라우저 뒤로가기 감지
-window.addEventListener('popstate', handleBrowserBack);
-
-function handleBrowserBack(event) {
+async function handleBrowserBack(event) {
   event.preventDefault();
-  const answer = window.confirm('예약을 취소하시겠습니까? 입력하신 정보가 저장되지 않습니다.');
-  if (answer) {
+  try {
+    await uiStore.openModal({
+      title: '페이지 이동',
+      message: '예약을 취소하시겠습니까?\n입력하신 정보가 저장되지 않습니다.',
+      showCancel: true,
+      confirmText: '이동',
+      cancelText: '머무르기'
+    });
+    // '이동' 클릭 시
     if (selectedCoupon.value) {
-      cancelCoupon();
+      await cancelCoupon();
     }
+    window.removeEventListener('popstate', handleBrowserBack); // 리스너 제거
     router.push('/');
-  } else {
+  } catch {
+    // '머무르기' 클릭 시
     window.history.pushState(null, '', window.location.href);
   }
 }
+
+window.addEventListener('popstate', handleBrowserBack);
 
 onBeforeUnmount(() => {
   window.removeEventListener('popstate', handleBrowserBack);
@@ -225,7 +234,6 @@ const goToPayment = async () => {
   if (!reservation.value) return;
 
   try {
-    // 서버에 최종 가격 업데이트 요청
     const updateData = {
       reservationId: reservation.value.reservationId,
       totalPrice: finalPrice.value,
@@ -234,10 +242,8 @@ const goToPayment = async () => {
       usedPoints: appliedPoints.value
     };
 
-    // 예약 정보 업데이트 API 호출
     await api.patch(`/api/reservations/${reservation.value.reservationId}/update-price`, updateData);
 
-    // 결제 페이지로 이동
     router.push({
       name: 'Payment',
       params: { reservationId: reservation.value.reservationId },
@@ -245,8 +251,7 @@ const goToPayment = async () => {
     });
   } catch (error) {
     console.error("예약 정보 업데이트 실패:", error);
-    pointModalMessage.value = "결제 정보 업데이트에 실패했습니다.";
-    showPointModal.value = true;
+    uiStore.openModal({ title: '오류', message: "결제 정보 업데이트에 실패했습니다." });
   }
 };
 
@@ -257,23 +262,13 @@ const handlePointsCancel = () => {
 
 const applyPoints = async () => {
   if (!pointsToUse.value || pointsToUse.value <= 0) {
-    pointModalMessage.value = "사용할 포인트를 입력해주세요.";
-    showPointModal.value = true;
+    uiStore.openModal({ message: "사용할 포인트를 입력해주세요." });
     return;
   }
 
-  // 쿠폰이 선택되지 않았을 때
-  // if (!selectedCoupon.value) {
-  //   alert("쿠폰을 먼저 선택해주세요.");
-  //   pointsToUse.value = 0;
-  //   return;
-  // }
-
-  // 포인트가 쿠폰 적용 후 가격보다 큰 경우
   if (pointsToUse.value > finalPriceAfterCoupon.value) {
-    pointModalMessage.value = `최대 ${finalPriceAfterCoupon.value.toLocaleString()}원까지 사용 가능합니다.`;
+    uiStore.openModal({ message: `최대 ${finalPriceAfterCoupon.value.toLocaleString()}원까지 사용 가능합니다.` });
     pointsToUse.value = finalPriceAfterCoupon.value;
-    showPointModal.value = true;
     return;
   }
 
@@ -282,6 +277,7 @@ const applyPoints = async () => {
 </script>
 
 <style scoped>
+/* 스타일은 변경되지 않았으므로 생략합니다. */
 .booking-page { max-width: 1120px; margin: 24px auto; padding: 0 16px; }
 .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-top: 18px; align-items: start; }
 .left-col { display: flex; flex-direction: column; gap: 18px; }
@@ -295,7 +291,7 @@ const applyPoints = async () => {
 .info-item .value { font-weight: 500; }
 
 .reservation-button { width: 100%; padding: 15px; background-color: #2ecc9a; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-.reservation-button:hover { background-color: #2ecc9a; }
+.reservation-button:hover { background-color: #27a582; }
 
 .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
 .spinner { width: 48px; height: 48px; border: 5px solid #f3f4f6; border-bottom-color: #4f46e5; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-bottom: 16px; }

@@ -2,8 +2,10 @@
 import {ref, onMounted, computed, watch} from 'vue';
 import adminApi from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
+import { useUiStore } from '@/store/commonUiStore'; // uiStore import
 
 const authStore = useAuthStore();
+const uiStore = useUiStore(); // uiStore 사용
 const couponCode = ref('');
 
 // 페이징 구조 그대로 저장
@@ -30,7 +32,7 @@ const fetchUserCoupons = async (page = 0, size = 10) => {
     const res = await adminApi.get('/api/coupons/my', { params: { page, size } });
     myCouponsPage.value = res.data;
   } catch (e) {
-    alert('쿠폰 목록 불러오기 실패');
+    uiStore.openModal({ title: '오류', message: '쿠폰 목록을 불러오는데 실패했습니다.' });
     console.error(e);
   }
 };
@@ -38,7 +40,7 @@ const fetchUserCoupons = async (page = 0, size = 10) => {
 // 쿠폰 발급
 const issueCoupon = async () => {
   if (!couponCode.value.trim()) {
-    alert('쿠폰 코드를 입력하세요');
+    uiStore.openModal({ message: '쿠폰 코드를 입력하세요.' });
     return;
   }
 
@@ -46,11 +48,14 @@ const issueCoupon = async () => {
     await adminApi.post('/api/coupons/issue/code', null, {
       params: { couponCode: couponCode.value.trim(), source: 'CODE_INPUT' }
     });
-    alert('쿠폰이 발급되었습니다!');
+    uiStore.openModal({ message: '쿠폰이 발급되었습니다!' });
     couponCode.value = '';
     fetchUserCoupons(myCouponsPage.value.number, myCouponsPage.value.size);
   } catch (e) {
-    alert(e.response?.data?.message || '쿠폰 발급 실패');
+    uiStore.openModal({
+      title: '쿠폰 발급 실패',
+      message: e.response?.data?.message || '쿠폰 발급에 실패했습니다.'
+    });
     console.error(e);
   }
 };
@@ -91,10 +96,10 @@ watch(
 
     <div class="pagination" v-if="myCouponsPage.totalPages > 1">
       <button
-        v-for="p in myCouponsPage.totalPages"
-        :key="p"
-        @click="goToPage(p-1)"
-        :class="{ active: myCouponsPage.number === (p-1) }"
+          v-for="p in myCouponsPage.totalPages"
+          :key="p"
+          @click="goToPage(p-1)"
+          :class="{ active: myCouponsPage.number === (p-1) }"
       >
         {{ p }}
       </button>
@@ -103,6 +108,7 @@ watch(
 </template>
 
 <style scoped>
+/* 스타일은 변경되지 않았으므로 생략합니다. */
 .coupon-container {
   max-width: 600px;
   margin: 40px auto;
@@ -313,4 +319,3 @@ watch(
   border-color: #007bff;
 }
 </style>
-
