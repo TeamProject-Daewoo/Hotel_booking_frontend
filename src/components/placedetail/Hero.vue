@@ -72,10 +72,12 @@
 import { useAuthStore } from '@/api/auth';
 import router from '@/router';
 import { useWishlistStore } from '@/store/wishlistStore'
+import { useUiStore } from '@/store/commonUiStore'; // uiStore import
 import { computed, ref } from 'vue'
 
 const wishlistStore = useWishlistStore();
 const authStore = useAuthStore();
+const uiStore = useUiStore();
 
 const props = defineProps({
   rooms: { type: Array, default: () => [] },
@@ -163,17 +165,28 @@ const strikeValue = computed(() => {
 
 const showPrice = computed(() => priceValue.value != null && priceValue.value > 0)
 
-function likeToggle(hotelid) {
+async function likeToggle(hotelid) {
   if (!authStore.isLoggedIn) {
-    if(confirm('로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?')) {
-      router.push({ 
-        name: 'login',
-        query: { redirect: router.currentRoute.value.fullPath } 
+    try {
+      await uiStore.openModal({
+        title: '로그인 필요',
+        message: '로그인이 필요한 서비스입니다. \n로그인 페이지로 이동하시겠습니까?',
+        showCancel: true,
+        confirmText: '로그인',
+        cancelText: '취소'
       });
+      // 사용자가 '로그인'을 클릭하면
+      router.push({
+        name: 'login',
+        query: { redirect: router.currentRoute.value.fullPath }
+      });
+    } catch {
+      // 사용자가 '취소'를 클릭하거나 모달 외부를 클릭하면 아무것도 하지 않음
+      return;
     }
     return;
   }
-  wishlistStore.toggleWish(hotelid)
+  wishlistStore.toggleWish(hotelid);
 }
 
 // 예약 가능 여부

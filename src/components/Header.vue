@@ -59,7 +59,7 @@ const handleLogout = async () => {
       authStore.logout();
       await api.post('/api/auth/logout');
       const uiStore = useUiStore();
-      uiStore.openModal('로그아웃 되었습니다.', '');
+      uiStore.openModal({ title: '로그아웃 되었습니다.' });
       router.push('/');
     } catch (error) {
       console.error('로그아웃 실패:', error);

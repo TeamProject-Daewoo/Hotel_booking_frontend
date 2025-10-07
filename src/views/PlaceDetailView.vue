@@ -133,8 +133,7 @@ const processReservation = async (reservationData) => {
     });
   } catch (error) {
     console.error('예약 생성 실패:', error);
-    uiStore.openModal('예약 처리 중 오류가 발생했습니다.');
-  }
+    uiStore.openModal({ title: '예약 실패', message: '예약 처리 중 오류가 발생했습니다.' });  }
 };
 
 const proceedWithMemberReservation = () => {

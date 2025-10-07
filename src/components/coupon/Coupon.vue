@@ -1,11 +1,11 @@
 <template>
   <div class="coupon-select-container">
     <div
-      v-if="selectedCoupon"
-      class="selected-coupon-info"
-      @click="toggleCouponSelection(selectedCoupon)"
-      style="cursor: pointer;"
-      title="클릭하면 선택 취소됩니다"
+        v-if="selectedCoupon"
+        class="selected-coupon-info"
+        @click="toggleCouponSelection(selectedCoupon)"
+        style="cursor: pointer;"
+        title="클릭하면 선택 취소됩니다"
     >
       <div>
         <strong>쿠폰명: {{ selectedCoupon.coupon.name }}</strong><br />
@@ -25,12 +25,12 @@
       </div>
       <ul v-else class="coupon-list">
         <li
-          v-for="coupon in availableCoupons"
-          :key="coupon.id"
-          :ref="el => couponRefs[coupon.id] = el"
-          :class="{ selected: selectedCouponId === coupon.id }"
-          class="coupon-item"
-          @click="toggleCouponSelection(coupon)"
+            v-for="coupon in availableCoupons"
+            :key="coupon.id"
+            :ref="el => couponRefs[coupon.id] = el"
+            :class="{ selected: selectedCouponId === coupon.id }"
+            class="coupon-item"
+            @click="toggleCouponSelection(coupon)"
         >
           <strong>{{ coupon.coupon.name }}</strong>
           <span>{{ coupon.coupon.displayDiscount }}</span>
@@ -44,7 +44,9 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, defineEmits } from 'vue';
 import adminApi from '@/api/axios';
+import { useUiStore } from '@/store/commonUiStore'; // uiStore import
 
+const uiStore = useUiStore(); // uiStore 사용
 const emit = defineEmits(['update:selectedCoupon']);
 
 const myCouponsPage = ref({ content: [], totalPages: 0 });
@@ -91,7 +93,7 @@ const toggleCouponSelection = async (coupon) => {
 
     } catch (error) {
       console.error("쿠폰 취소 실패:", error);
-      alert("❌ 쿠폰 취소 중 오류가 발생했습니다.");
+      uiStore.openModal({ title: '오류', message: '쿠폰 취소를 실패했습니다.' });
     }
     return;
   }
@@ -107,7 +109,8 @@ const toggleCouponSelection = async (coupon) => {
       }
     } catch (error) {
       console.error("이전 쿠폰 취소 실패:", error);
-      alert("❌ 이전 쿠폰 취소 중 오류가 발생했습니다.");
+      // alert을 openModal로 수정
+      uiStore.openModal({ title: '오류', message: '이전 쿠폰 취소 중 오류가 발생했습니다.' });
     }
   }
 
@@ -120,7 +123,8 @@ const toggleCouponSelection = async (coupon) => {
     emit('update:selectedCoupon', coupon);
   } catch (error) {
     console.error("쿠폰 사용 처리 실패:", error);
-    alert("❌ 쿠폰 사용 처리 중 오류가 발생했습니다.");
+    // alert을 openModal로 수정
+    uiStore.openModal({ title: '오류', message: '쿠폰 사용 처리 중 오류가 발생했습니다.' });
   }
 };
 
@@ -200,7 +204,7 @@ onMounted(fetchUserCoupons);
   border-radius: 6px;
   background-color: #e9f5ff;
   font-weight: 600;
-  
+
   /* --- 추가된 스타일 --- */
   display: flex;
   justify-content: space-between;
