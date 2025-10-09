@@ -253,7 +253,7 @@ const sendButtonText = computed(() => {
 const sendVerificationCode = async () => {
   // 이메일 형식 검증 로직 추가
   if (!isValidEmail(formData.username)) {
-    uiStore.openModal("올바른 이메일 형식을 입력해주세요.");
+    uiStore.openModal({ title: '회원가입 실패' , message:"올바른 이메일 형식을 입력해주세요."});
     return;
   }
 
@@ -344,7 +344,7 @@ const formattedTime = computed(() => {
 
 const handleRegister = async () => {
   if (!isFormValid.value) {
-    uiStore.openModal("입력 양식을 모두 올바르게 채워주세요.");
+    uiStore.openModal({ title: '회원가입 실패' , message:"입력 양식을 모두 올바르게 채워주세요."});
     return;
   }
 
@@ -355,7 +355,7 @@ const handleRegister = async () => {
       name: formData.name,
       phoneNumber: formData.phoneNumber,
       role: formData.role, });
-      uiStore.openModal('회원가입이 완료되었습니다.','');
+      uiStore.openModal({title : '회원가입이 완료되었습니다.'} );
     router.push('/');
 
   } catch (error) {
@@ -369,7 +369,7 @@ const handleRegister = async () => {
     } else {
       // 그 외 다른 에러는 기존처럼 처리
       console.error('회원가입 실패:', error);
-      uiStore.openModal(error.response?.data || '회원가입 중 오류가 발생했습니다.');
+      uiStore.openModal({message : '회원가입 중 오류가 발생했습니다.'});
     }
   }
 };

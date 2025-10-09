@@ -101,7 +101,7 @@ const proceedToPayment = async () => {
 
   } catch (error) {
     console.error('예약 처리 중 오류 발생:', error);
-    uiStore.openModal(error.response?.data?.message || '예약 처리 중 오류가 발생했습니다.');
+    uiStore.openModal({message : '예약처리 중 오류가 발생했습니다.'});
   }
 };
 </script>

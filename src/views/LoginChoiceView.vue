@@ -48,7 +48,7 @@ onMounted(() => {
 // 카카오 로그인 실행 함수
 const handleKakaoLogin = () => {
   if (!window.Kakao || !window.Kakao.isInitialized()) {
-    uiStore.openModal("카카오 SDK가 로드되지 않았거나 초기화에 실패했습니다.");
+      uiStore.openModal({title: '로그인 오류',  message: '로그인 처리 중 오류가 발생했습니다.'});
     return;
   }
 

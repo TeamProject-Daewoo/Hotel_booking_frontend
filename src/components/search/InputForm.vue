@@ -128,7 +128,7 @@ const handleSearch = () => {
     }
     else {
         const uiStore = useUiStore();
-        uiStore.openModal('검색 실패', '호텔명 또는 지역명을 입력해주세요');
+        uiStore.openModal({title: '검색 실패', message: '호텔명 또는 지역명을 입력해주세요'});
     }
 };
 </script>

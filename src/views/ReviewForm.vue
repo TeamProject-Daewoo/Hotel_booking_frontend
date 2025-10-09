@@ -86,11 +86,11 @@ const submitReview = async () => {
     });
 
     await authStore.fetchAndUpdatePoints();
-    uiStore.openModal('리뷰가 성공적으로 제출되었습니다.');
+    uiStore.openModal({message:'리뷰가 성공적으로 제출되었습니다.'});
     router.push('/mypage');
   } catch (error) {
     console.error('리뷰 제출 실패:', error);
-    uiStore.openModal(error.response?.data?.message || '리뷰 제출 중 오류가 발생했습니다.');
+    uiStore.openModal({message:'리뷰 제출 중 오류가 발생했습니다.'});
   }
 };
 
