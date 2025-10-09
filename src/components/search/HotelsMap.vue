@@ -146,6 +146,6 @@ const displayAddresses = computed(() => {
 }
 #kakao-map-container {
   width: 100%;
-  height: 700px;
+  height: 600px;
 }
 </style>

@@ -9,10 +9,8 @@
         </div>
 
         <div class="card details-box">
-  <div class="card-header-with-button">
     <h3 class="card-title">예약 정보</h3>
     <ReceiptDownload class="receipt-download-btn" />
-  </div>
   <div class="info-grid">
             <p><strong>예약 번호</strong></p><p>{{ reservation.reservationId }}</p>
             <p><strong>숙소 이름</strong></p><p>{{ reservation.hotelName }}</p>
@@ -118,6 +116,11 @@ const goToBookingDetails = () => {
   text-align: left;
 }
 
+/* details-box에 position: relative 추가 */
+.details-box {
+  position: relative;
+}
+
 .card-title {
   font-weight: 700;
   font-size: 18px;
@@ -197,22 +200,9 @@ const goToBookingDetails = () => {
   padding: 40px;
   color: #868e96;
 }
-
-
-
-.card-header-with-button {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-right: 8px; /* 버튼 공간 확보용 */
-}
-
 .receipt-download-btn {
-  margin-left: auto;         /* 왼쪽 요소(제목)와 최대한 거리두기 */
-  padding-left: 12px;
-  padding-right: 12px;
+  position: absolute;
+  top: 5px; /* 카드 패딩과 버튼 높이를 고려한 위치 */
+  right: 24px;
 }
-
-
 </style>
