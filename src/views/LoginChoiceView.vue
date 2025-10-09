@@ -52,7 +52,7 @@
     }
     
     window.Kakao.Auth.authorize({
-      redirectUri: 'http://www.hotelhub.store/kakao-callback',
+      redirectUri: `${VITE_HOMPAGE_MAIN}/kakao-callback`,
     });
   };
   </script>
