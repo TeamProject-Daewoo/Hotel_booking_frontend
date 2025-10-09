@@ -1,11 +1,11 @@
 <template>
-    <div>
-        <button class="fixed-map-button" @click="openModal"><i class="fa-solid fa-map-location-dot"></i>&nbsp;지도보기</button>
-        <SearchModal :isOpen="isModalOpen" @close="closeModal" maxWidth="1600px" height="800px">
-            <h3>지도</h3>
-            <HotelsMap/>
-        </SearchModal>
-    </div>
+  <div>
+    <button class="fixed-map-button" @click="openModal"><i class="fa-solid fa-map-location-dot"></i>&nbsp;지도보기</button>
+    <SearchModal :isOpen="isModalOpen" @close="closeModal" maxWidth="90vw" height="90vh">
+      <h3>지도</h3>
+      <HotelsMap/>
+    </SearchModal>
+  </div>
 </template>
 
 <script setup>
@@ -19,15 +19,16 @@ const searchStore = useSearchStore();
 
 const isModalOpen = ref(false);
 const openModal = () => {
-    const searchCards = searchStore.result?.data?.searchCards;
-    if(Array.isArray(searchCards) && searchCards.length > 0) isModalOpen.value = true;
-    else {
-        const uiStore = useUiStore();
-        uiStore.openModal('검색 정보가 없습니다!', '');
-    }
+  const searchCards = searchStore.result?.data?.searchCards;
+  if(Array.isArray(searchCards) && searchCards.length > 0) isModalOpen.value = true;
+  else {
+    const uiStore = useUiStore();
+    // openModal 호출 방식을 객체 형태로 수정
+    uiStore.openModal({ title: '알림', message: '검색 정보가 없습니다!' });
+  }
 };
 const closeModal = () => {
-    isModalOpen.value = false;
+  isModalOpen.value = false;
 };
 </script>
 
@@ -49,6 +50,6 @@ const closeModal = () => {
 }
 
 .fixed-map-button:hover {
-    background-color: rgba(239, 239, 239, 0.95);
+  background-color: rgba(239, 239, 239, 0.95);
 }
 </style>

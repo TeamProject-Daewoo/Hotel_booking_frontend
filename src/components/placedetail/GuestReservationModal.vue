@@ -15,8 +15,6 @@
         <span>또는</span>
       </div>
 
-      <!-- 기존 비회원 예약 폼 -->
-
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label for="guestName">이름</label>
@@ -38,12 +36,14 @@
 <script setup>
 import { ref, watch, inject } from 'vue';
 import { useRouter } from 'vue-router';
+import { useUiStore } from '@/store/commonUiStore'; // uiStore import
 
 const guestName = ref('');
 const phone = ref('');
 const welcomePointAmount = inject('welcomePointAmount', 50000);
 const emit = defineEmits(['confirm', 'close', 'go-signup']);
 const router = useRouter();
+const uiStore = useUiStore(); // uiStore 사용
 
 watch(phone, (newValue) => {
   const digits = newValue.replace(/\D/g, '');
@@ -64,7 +64,11 @@ const handleSubmit = () => {
   if (guestName.value && phone.value.replace(/\D/g, '').length >= 10) {
     emit('confirm', { guestName: guestName.value, phone: phone.value });
   } else {
-    alert('이름과 올바른 연락처를 입력해주세요.');
+    // alert을 openModal로 교체
+    uiStore.openModal({
+      title: '입력 오류',
+      message: '이름과 올바른 연락처를 입력해주세요.'
+    });
   }
 };
 
@@ -75,6 +79,7 @@ const goToSignUp = () => {
 </script>
 
 <style scoped>
+/* 스타일은 변경되지 않았으므로 생략합니다. */
 .modal-backdrop {
   position: fixed;
   top: 0;
