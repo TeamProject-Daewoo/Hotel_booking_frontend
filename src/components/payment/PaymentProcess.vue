@@ -60,7 +60,7 @@ const requestPayment = async () => {
   } catch (error) {
     console.error("결제 요청 실패:", error);
     const uiStore = useUiStore();
-    uiStore.openModal('결제 실패', '결제 요청에 실패했습니다. 다시 시도해주세요.')
+    uiStore.openModal({ title: '결제 실패', message: '결제 요청에 실패했습니다. 다시 시도해주세요.'})
   }
 };
 </script>

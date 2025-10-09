@@ -95,7 +95,7 @@ const goDetail = async (id) => {
     await axios.get(`${import.meta.env.VITE_API_URL}/api/notices/${id}`);
     router.push({ name: 'NoticeDetail', params: { id } });
   } catch (error) {
-    uiStore.openModal(error.response?.status === 404 ? '삭제되었거나 존재하지 않는 게시물입니다.' : '게시물을 불러오는 중 오류가 발생했습니다.');
+    uiStore.openModal({ title: '오류', message: error.response?.status === 404  ? '삭제되었거나 존재하지 않는 게시물입니다.' : '게시물을 불러오는 중 오류가 발생했습니다.'});
   }
 };
 
@@ -119,7 +119,7 @@ const fetchNoticesPaged = async (page = 0) => {
     currentPage.value = res.data.pageNumber;
   } catch (error) {
     console.error('공지사항 불러오기 실패:', error);
-    uiStore.openModal('공지사항을 불러오는 데 실패했습니다.');
+    uiStore.openModal({ message: '공지사항을 불러오는 데 실패했습니다.'});
   } finally {
     isLoading.value = false;
   }

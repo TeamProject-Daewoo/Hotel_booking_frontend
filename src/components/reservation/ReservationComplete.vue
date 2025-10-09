@@ -58,7 +58,7 @@ onMounted(async () => {
   } catch (error) {
     console.error("완료된 예약 정보를 불러오는 데 실패했습니다.", error);
     const uiStore = useUiStore();
-    uiStore.openModal('예약 실패', '예약 정보를 불러오는 데 실패했습니다.');
+    uiStore.openModal({title: '예약 실패', message: '예약 정보를 불러오는 데 실패했습니다.'});
   }
 });
 

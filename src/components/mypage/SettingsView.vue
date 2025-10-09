@@ -52,7 +52,7 @@ const settings = ref({
 
 const saveSettings = () => {
   console.log('저장된 설정:', settings.value);
-  uiStore.openModal('설정이 저장되었습니다.');
+  uiStore.openModal({title: '설정이 저장되었습니다.'});
 };
 
 onMounted(() => {

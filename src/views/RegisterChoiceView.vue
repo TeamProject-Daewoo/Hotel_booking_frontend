@@ -48,7 +48,7 @@ onMounted(() => {
 // 2. 카카오 로그인 실행 함수
 const handleKakaoLogin = () => {
   if (!window.Kakao) {
-    uiStore.openModal("카카오 SDK가 로드되지 않았습니다.");
+    uiStore.openModal({ title: '로그인 오류' , message:"카카오 SDK가 로드되지 않았습니다."});
     return;
   }
   

@@ -84,7 +84,8 @@ const handleLogin = async (e) => {
   const uiStore = useUiStore();
 
   if (!isValidEmail(user_name.value)) {
-    uiStore.openModal('이메일 형식 오류!', '올바른 이메일 형식을 입력해주세요.')
+    uiStore.openModal({
+  title: '올바른 이메일 형식을 입력해주세요.'});
     return;
   }
 
@@ -109,7 +110,7 @@ const handleLogin = async (e) => {
 
   } catch (error) {
     console.error("로그인 실패:", error);
-    uiStore.openModal('로그인 실패', '아이디 또는 비밀번호가 올바르지 않습니다.')
+    uiStore.openModal({title: '로그인 실패', message: '아이디 또는 비밀번호가 올바르지 않습니다.'});
   }
 };
 
