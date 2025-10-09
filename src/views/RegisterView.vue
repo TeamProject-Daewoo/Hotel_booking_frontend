@@ -355,7 +355,7 @@ const handleRegister = async () => {
       name: formData.name,
       phoneNumber: formData.phoneNumber,
       role: formData.role, });
-      uiStore.openModal('회원가입이 완료되었습니다.');
+      uiStore.openModal('회원가입이 완료되었습니다.','');
     router.push('/');
 
   } catch (error) {
