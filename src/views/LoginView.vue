@@ -27,6 +27,16 @@
             <a href="#" class="forgot-password">비밀번호를 잊으셨나요?</a>
           </div>
 
+          <div class="recaptcha-wrapper">
+            <div 
+              id="recaptcha-widget"
+              class="g-recaptcha"
+              :data-sitekey="recaptchaSiteKey"
+              @verify="onRecaptchaVerified"
+              @expired="onRecaptchaExpired"
+            ></div>
+          </div>
+
           <button type="submit" class="auth-button">로그인</button>
         </form>
         
@@ -52,7 +62,7 @@
 
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api/axios';
 import { useAuthStore } from '@/api/auth';
@@ -65,6 +75,8 @@ const rememberMe = ref(false);
 const passwordFieldType = ref('password');
 const router = useRouter();
 const authStore = useAuthStore();
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const recaptchaToken = ref(null);
 
 // 👇 [추가] 이메일 형식 검증을 위한 정규식 함수
 const isValidEmail = (email) => {
@@ -79,6 +91,14 @@ const preventSpaces = (event) => {
   }
 };
 
+window.onRecaptchaVerified = (token) => {
+  recaptchaToken.value = token;
+};
+// reCAPTCHA가 만료되었을 때 호출될 콜백
+window.onRecaptchaExpired = () => {
+  recaptchaToken.value = null;
+};
+
 const handleLogin = async (e) => {
 
   const uiStore = useUiStore();
@@ -89,10 +109,16 @@ const handleLogin = async (e) => {
     return;
   }
 
+  if (!recaptchaToken.value) {
+    uiStore.openModal({title: 'reCAPTCHA 확인 필요', message: 'reCAPTCHA 확인란을 체크해주세요.'});
+    return;
+  }
+
   try {
     const response = await api.post('/api/auth/login', {
       username: user_name.value,
       password: password.value,
+      recaptchaToken: recaptchaToken.value
     });
     authStore.setToken(response.data.accessToken);
 
@@ -117,6 +143,17 @@ const handleLogin = async (e) => {
 const togglePasswordVisibility = () => {
   passwordFieldType.value = passwordFieldType.value === 'password' ? 'text' : 'password';
 };
+
+onMounted(() => {
+  if (window.grecaptcha && window.grecaptcha.render) {
+    window.grecaptcha.render('recaptcha-widget', {
+      'sitekey' : recaptchaSiteKey,
+      'callback' : 'onRecaptchaVerified',
+      'expired-callback': 'onRecaptchaExpired'
+    });
+  }
+});
+
 </script>
 
 <style scoped>
@@ -297,5 +334,13 @@ h1 {
 
 .dot.active {
   background-color: #fff;
+}
+
+.recaptcha-wrapper {
+  display: flex; /* Flexbox 사용하여 중앙 정렬 */
+  justify-content: center; /* 가로 중앙 정렬 */
+  margin: 25px 0; /* 상하 여백 추가 */
+  transform: scale(0.95); /* 위젯이 너무 크다면 살짝 축소 */
+  transform-origin: center; /* 중앙을 기준으로 축소 */
 }
 </style>
