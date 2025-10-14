@@ -35,6 +35,7 @@ jobs:
           echo "VITE_KAKAO_JAVASCRIPT_KEY=${{ secrets.VITE_KAKAO_JAVASCRIPT_KEY }}" >> .env.production
           echo "VITE_KAKAO_RESTAPI_KEY=${{ secrets.VITE_KAKAO_RESTAPI_KEY }}" >> .env.production
           echo "VITE_KAKAO_MAP_APPKEY=${{ secrets.VITE_KAKAO_MAP_APPKEY }}" >> .env.production
+          echo "VITE_RECAPTCHA_SITE_KEY=${{ secrets.VITE_RECAPTCHA_SITE_KEY }}" >> env.production
 
       # 3. Docker 이미지 빌드 및 ECR에 Push
       - name: Build and push frontend image
