@@ -21,14 +21,15 @@
           <textarea id="review-content" v-model="review.content" class="form-textarea" rows="8" placeholder="다른 사람들을 위해 숙소에 대한 솔직한 리뷰를 작성해주세요." required></textarea>
         </div>
 
-<!--        <div class="form-group">-->
-<!--          <label for="review-photo" class="form-label">사진 첨부 (선택)</label>-->
-<!--          <label for="review-photo" class="file-upload-button">-->
-<!--            <i class="fa-solid fa-camera"></i> 파일 선택-->
-<!--          </label>-->
-<!--          <input type="file" id="review-photo" @change="handlePhotoUpload" accept="image/*">-->
-<!--          <p v-if="review.photoName" class="file-name">{{ review.photoName }}</p>-->
-<!--        </div>-->
+<div class="form-group">
+  <label for="review-photo" class="form-label">사진 첨부 (선택)</label>
+  <label for="review-photo" class="file-upload-button">
+    <i class="fa-solid fa-camera"></i> 파일 선택
+  </label>
+  <input type="file" id="review-photo" @change="handlePhotoUpload" accept="image/*">
+  <p v-if="review.photoName" class="file-name">{{ review.photoName }}</p>
+</div>
+
 
         <div class="button-container">
           <button type="button" @click="cancel" class="button-secondary">취소</button>
@@ -65,6 +66,21 @@ onMounted(() => {
 
 const handlePhotoUpload = (event) => {
   const file = event.target.files[0];
+
+  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+  if (!allowedImageTypes.includes(file.type)) {
+    uiStore.openModal({
+      title: '파일 형식 오류',
+      message: '이미지 파일(jpg, png, gif)만 업로드할 수 있습니다.'
+    });
+    // input 값을 초기화하여 잘못된 파일이 선택된 상태로 남지 않도록 함
+    event.target.value = ''; 
+    review.photo = null;
+    review.photoName = '';
+    return;
+  }
+  
   if (file) {
     review.photo = file;
     review.photoName = file.name;
@@ -90,7 +106,11 @@ const submitReview = async () => {
     router.push('/mypage');
   } catch (error) {
     console.error('리뷰 제출 실패:', error);
-    uiStore.openModal({message:'리뷰 제출 중 오류가 발생했습니다.'});
+    const errorMessage = error.response?.data?.message || '리뷰 제출 중 오류가 발생했습니다.';
+  uiStore.openModal({
+    title: '제출 실패',
+    message: errorMessage // 서버 메시지를 여기에 표시
+  });
   }
 };
 
