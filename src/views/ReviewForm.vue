@@ -69,6 +69,14 @@ const handlePhotoUpload = (event) => {
 
   const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
+  if (file.size > 8 * 1024 * 1024) {
+    event.target.value = ''
+    uiStore.openModal({
+      title: '입력 오류',
+      message: '8MB 이하 파일만 가능합니다.'
+    });
+    return;
+  }
   if (!allowedImageTypes.includes(file.type)) {
     uiStore.openModal({
       title: '파일 형식 오류',
