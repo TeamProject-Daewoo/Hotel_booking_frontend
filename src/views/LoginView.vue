@@ -94,6 +94,7 @@ const preventSpaces = (event) => {
 window.onRecaptchaVerified = (token) => {
   recaptchaToken.value = token;
 };
+
 // reCAPTCHA가 만료되었을 때 호출될 콜백
 window.onRecaptchaExpired = () => {
   recaptchaToken.value = null;
@@ -136,7 +137,18 @@ const handleLogin = async (e) => {
 
   } catch (error) {
     console.error("로그인 실패:", error);
-    uiStore.openModal({title: '로그인 실패', message: '아이디 또는 비밀번호가 올바르지 않습니다.'});
+
+    recaptchaToken.value = null; // 1. 저장된 토큰을 비웁니다.
+    if (window.grecaptcha) {
+      window.grecaptcha.reset(); // 2. Google reCAPTCHA 위젯을 초기화하여 다시 체크하도록 합니다.
+    }
+
+    if (error.response?.status === 429) {
+      // 서버가 보낸 'body'의 메시지를 그대로 사용
+      uiStore.openModal({title:'로그인 시도 초과', message: '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.'});
+    } else {
+      uiStore.openModal({title: '로그인 실패', message: '아이디 또는 비밀번호가 올바르지 않습니다.'});
+    }
   }
 };
 
