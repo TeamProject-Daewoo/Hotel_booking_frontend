@@ -36,7 +36,7 @@ const VITE_HOMPAGE_MAIN = import.meta.env.VITE_HOMPAGE_MAIN;
 // 카카오 SDK 초기화
 const initializeKakaoSdk = () => {
   if (window.Kakao && !window.Kakao.isInitialized()) {
-    window.Kakao.init(KAKAO_JAVASCRIPT_KEY); // 👈 본인의 JavaScript 키 입력
+    window.Kakao.init(KAKAO_JAVASCRIPT_KEY);
     console.log('카카오 SDK가 초기화되었습니다.');
   }
 };
