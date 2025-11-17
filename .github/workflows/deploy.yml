@@ -29,7 +29,7 @@ jobs:
           echo "VITE_API_URL=" >> .env.production
           echo "VITE_BACK_ADMIN_URL=" >> .env.production
           echo "VITE_API_URL_ADMIN=" >> .env.production
-          echo "VITE_HOMPAGE_MAIN=https://hotelhub.store" >> .env.production
+          echo "VITE_HOMPAGE_MAIN=https://www.hotelhub.store" >> .env.production
           echo "VITE_BUS_URL=" >> .env.production
           # 민감한 정보는 GitHub Secrets에서 가져오기
           echo "VITE_KAKAO_JAVASCRIPT_KEY=${{ secrets.VITE_KAKAO_JAVASCRIPT_KEY }}" >> .env.production
