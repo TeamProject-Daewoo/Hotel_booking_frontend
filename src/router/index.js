@@ -61,7 +61,8 @@ const routes = [
   { path: "/notices", name: "NoticeList", component: () => import('@/components/Notice/notice.vue') },
   { path: '/notices/:id', name: 'NoticeDetail', component: () => import('@/components/Notice/NoticeDetail.vue'), props: true },
 
-  { path: '/coupon',name: 'CouponPage',component: () => import('@/components/coupon/CouponPage.vue'),meta: { requiresAuth: true }}
+  { path: '/coupon',name: 'CouponPage',component: () => import('@/components/coupon/CouponPage.vue'),meta: { requiresAuth: true }},
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: errorPage }
 ]
 
 const router = createRouter({

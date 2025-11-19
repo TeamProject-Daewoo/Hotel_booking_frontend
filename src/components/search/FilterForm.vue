@@ -124,7 +124,7 @@ const handleSearch = () => {
     editedMinPrice.value = currentMinPrice.value;
     editedMaxPrice.value = currentMaxPrice.value;
     if(searchStore.result != null)
-        searchStore.fetchSearchResult();
+        searchStore.fetchInitialSearch();
 };
 
 const focusInputPrice = (input) => {
@@ -211,7 +211,7 @@ const toggleFilter = (num) => {
 function clickRatingButton(value) {
     searchStore.rating = value;
     if(searchStore.result != null)
-        searchStore.fetchSearchResult();
+        searchStore.fetchInitialSearch();
 }
 
 const isMinPriceEditing = ref(false);

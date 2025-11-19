@@ -100,7 +100,7 @@ const finalizeSearch = () => {
     // isInputFocused.value = false;
     historyStore.addRecentSearch(inputData.value);
     //결과 화면 랜더링
-    searchStore.fetchSearchResult();
+    searchStore.fetchInitialSearch();
 
     inputRef.value?.blur();
   }
