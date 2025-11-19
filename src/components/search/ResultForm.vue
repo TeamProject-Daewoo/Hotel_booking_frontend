@@ -1,5 +1,5 @@
 <template>
-    <div class="result-main-container" v-if="searchStore.result">
+    <div class="result-main-container" v-if="searchStore.result && searchStore.result.data.counts">
         <div class="select-place">
             <button v-for="(count, category) in searchStore.result.data.counts" 
                     :key="category"
@@ -119,7 +119,7 @@
 </template>
 <script setup>
 import { useSearchStore } from '@/api/searchRequestStore';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import SearchModal from './SearchModal.vue';
 import axios from '@/api/axios';
 import { useWishlistStore } from '@/store/wishlistStore';
@@ -165,7 +165,7 @@ const likeToggle = (event, hotelId) => {
 const selectOption = (option) => {
   searchStore.order = option;
   if(searchStore.keyword.trim() != '')
-    searchStore.fetchSearchResult();
+    searchStore.fetchInitialSearch();
   closeModal();
 }
 
@@ -199,7 +199,7 @@ const closeModal = () => {
 const selectCategory = (category) => {
     searchStore.category = category;
     if(searchStore.keyword != '')
-      searchStore.fetchSearchResult();
+      searchStore.fetchInitialSearch();
 };
 
 function getDaysDifference(date1, date2) {
@@ -210,6 +210,26 @@ function getDaysDifference(date1, date2) {
 
   return Math.floor((utc2 - utc1) / MS_PER_DAY);
 }
+
+//무한 스크롤
+const handleScroll = () => {
+    if (searchStore.isLoading || searchStore.isLastPage) {
+        return;
+    }
+
+    const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
+
+    if (scrollTop + clientHeight >= scrollHeight-10) {
+        searchStore.fetchSearchResult();
+    }
+};
+onMounted(() => {
+    window.addEventListener('scroll', handleScroll);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+});
 </script>
 
 <style scoped>

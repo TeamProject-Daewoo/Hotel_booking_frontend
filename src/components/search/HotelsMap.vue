@@ -23,7 +23,7 @@ const emptyImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 const KAKAO_APPKEY = import.meta.env.VITE_KAKAO_MAP_APPKEY
 let kakaoSdkPromise
 function loadKakaoSdk () {
-  if (window.kakao && window.kakao.maps) return Promise.resolve()
+  if (window.kakao && window.kakao.maps && window.kakao.maps.__loaded) return Promise.resolve()
   if (!kakaoSdkPromise) {
     kakaoSdkPromise = new Promise((resolve, reject) => {
       const script = document.createElement('script')

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import axios from '@/api/axios';
 import { useUiStore } from '@/store/commonUiStore';
+import { result, size } from 'lodash';
 
 function formatDateToLocalISO(date) {
   if (!(date instanceof Date) || isNaN(date)) {
@@ -39,7 +40,11 @@ export const useSearchStore = defineStore('search', {
       category: '모두',
       result: null,
       isLoading: false,
+      isLastPage: false,
       error: null,
+
+      page: 1,
+      size: 10
     };
   },
 
@@ -56,7 +61,9 @@ export const useSearchStore = defineStore('search', {
       freebies: state.freebies,
       amenities: state.amenities,
       order: state.order,
-      category: state.category
+      category: state.category,
+      page: state.page,
+      size: state.size
     }),
 
     // 날짜를 "YYYY-MM-DD" 형식의 문자열로 변환
@@ -65,6 +72,19 @@ export const useSearchStore = defineStore('search', {
   },
 
   actions: {
+    async fetchInitialSearch() {
+      const uiStore = useUiStore();
+      if (this.keyword.trim() === '') {
+          uiStore.openModal({title: '검색 실패', message:'호텔명 또는 지역명을 입력해주세요'});
+          return;
+      }
+      this.page = 1;
+      this.result = null;
+      this.isLastPage = false;
+      this.isLoading = true;
+      
+      await this.fetchSearchResult(); 
+    },
     async fetchSearchResult() {
       const uiStore = useUiStore();
       if (this.keyword.trim() === '') {
@@ -72,13 +92,29 @@ export const useSearchStore = defineStore('search', {
         return;
       }
 
-      this.isLoading = true;
       this.error = null;
       const search_post_url = `${import.meta.env.VITE_API_URL}/api/search`;
-      
       try {
-        // getters로 만든 getRequestPayload를 사용합니다.
-        this.result = await axios.post(search_post_url, this.getRequestPayload);
+        const response = await axios.post(search_post_url, this.getRequestPayload);
+        this.page++;
+        if(this.result === null) {
+          this.result = response;
+          return;
+        }
+        if (this.result.data.searchCards.length >= this.result.data.counts[this.category]) {
+          this.isLastPage = true;
+          return;
+        }
+        const existingCards = this.result?.data.searchCards;
+        const newCards = response.data.searchCards || [];
+        
+        //기존 데이터에 추가
+        this.result = {
+          data: {
+            ...response.data,
+            searchCards: [...existingCards, ...newCards]
+          }
+        };
       } catch (e) {
         this.error = '데이터를 불러오는 데 실패했습니다.';
         console.error(e);

@@ -123,7 +123,7 @@ onMounted(() => {
 const handleSearch = () => {
     if(inputData.value.trim() !== '') {
         searchStore.keyword = inputData.value;
-        searchStore.fetchSearchResult();
+        searchStore.fetchInitialSearch();
         historyStore.addRecentSearch(inputData.value);
     }
     else {
