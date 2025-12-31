@@ -91,7 +91,7 @@ function initMap() {
         window.kakao.maps.event.addListener(marker, 'click', () => {
           // console.log(card)
             let content = `
-                <div style="width:300px; padding:5px;font-size:14px;text-align:center;">
+                <div style="width:300px; padding:5px;font-size:14px;text-align:center; border: 1px solid black; background-color: white;">
                     <img src="${card.image || emptyImage }" style="width:100%;object-fit:cover;border-radius:5px;"><br>
                     <b>${card.title}</b><br>
                     <span>${resolvedAddresses.value[card.id] || '주소 정보 없음'}</span><br>
